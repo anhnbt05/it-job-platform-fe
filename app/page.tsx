@@ -1,26 +1,26 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
-import { toast } from "react-toastify";
-import { Button } from "@/components/ui/button";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useAuthStore } from "@/store/useAuthStore";
 
 export default function Home() {
-  const { data, isLoading } = useQuery({
-    queryKey: ["hello"],
-    queryFn: async () => {
-      const res = await fetch("/api/hello");
-      if (!res.ok) throw new Error("Error");
-      return res.json();
-    },
-  });
+  const { isLoggedIn, role } = useAuthStore();
+  const router = useRouter();
 
-  if (isLoading) return <p>Loading...</p>;
+  useEffect(() => {
+    if (!isLoggedIn) {
+      router.replace("/login");
+    } else if (role === "recruiter") {
+      router.replace("/recruiter/manage-jobs");
+    } else {
+      router.replace("/candidate/find-jobs");
+    }
+  }, [isLoggedIn, role, router]);
 
   return (
-    <div className="p-10 space-y-4">
-      <Button onClick={() => toast.success("Success!")}>Show Toast</Button>
-
-      <pre>{JSON.stringify(data, null, 2)}</pre>
+    <div className="flex h-screen items-center justify-center">
+      <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#194d8e] border-t-transparent" />
     </div>
   );
 }
