@@ -26,4 +26,7 @@ export const recruiterService = {
 
     getProvinces: () =>
         api.get("/provinces"),
+
+    getCompanyBranches: (companyId: string) =>
+        api.get(`/companies/${companyId}/branches`),
 };

@@ -14,6 +14,31 @@ export const authService = {
         phoneNumber?: string;
     }) => api.post("/auth/signup", data),
 
+    signUpRecruiter: (data: {
+        email: string;
+        password: string;
+        full_name: string;
+        phone_number?: string;
+        recruiter: {
+            department?: string;
+            company_id?: string;
+            company?: {
+                name: string;
+                size?: string;
+                website?: string;
+                description?: string;
+                location?: string;
+            };
+            branch_id?: string;
+            branch?: {
+                name?: string;
+                address?: string;
+                city?: string;
+                country?: string;
+            };
+        };
+    }) => api.post("/auth/signup", { ...data, role: "recruiter" }),
+
     signOut: () => api.post("/auth/signout"),
 
     forgotPassword: (email: string) =>
