@@ -1,209 +1,277 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMemo, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { applicationService } from "@/services/application.service";
 import { Application, ApplicationStatus, ApplicationStatusLabel } from "@/types";
-import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import {
-    Search,
-    Building2,
-    Calendar,
-    MapPin,
-    DollarSign,
-    FileText,
-    X,
-    Loader2,
-    ChevronRight,
-} from "lucide-react";
-import { toast } from "react-toastify";
+import { Card } from "@/components/ui/card";
 import {
     Dialog,
     DialogContent,
-    DialogHeader,
-    DialogTitle,
     DialogDescription,
     DialogFooter,
+    DialogHeader,
+    DialogTitle,
 } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+    Calendar,
+    ChevronRight,
+    FileText,
+    Loader2,
+    MapPin,
+    Search,
+    Trash2,
+} from "lucide-react";
+import { toast } from "react-toastify";
 
 export default function AppliedJobsPage() {
+    const queryClient = useQueryClient();
     const [searchQuery, setSearchQuery] = useState("");
     const [statusFilter, setStatusFilter] = useState<string>("all");
-    const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
-    const [selectedAppId, setSelectedAppId] = useState<string | null>(null);
-    const queryClient = useQueryClient();
+    const [selectedApplication, setSelectedApplication] = useState<Application | null>(null);
 
-    const { data: applications, isLoading } = useQuery({
+    const { data: applications = [], isLoading } = useQuery({
         queryKey: ["applied-jobs"],
-        queryFn: async () => {
-            const res = await applicationService.getAppliedJobs();
-            return res as unknown as Application[];
-        },
+        queryFn: () => applicationService.getAppliedJobs(),
     });
 
-    const cancelMutation = useMutation({
-        mutationFn: (appId: string) => applicationService.deleteApplication(appId),
+    const deleteMutation = useMutation({
+        mutationFn: (applicationId: string) => applicationService.deleteApplication(applicationId),
         onSuccess: () => {
-            toast.success("Đã huỷ đơn ứng tuyển");
+            toast.success("Đã hủy đơn ứng tuyển");
+            setSelectedApplication(null);
             queryClient.invalidateQueries({ queryKey: ["applied-jobs"] });
-            setCancelDialogOpen(false);
         },
-        onError: () => toast.error("Có lỗi xảy ra"),
+        onError: () => toast.error("Không thể hủy đơn ứng tuyển"),
     });
 
-    const filteredApps = applications?.filter((app) => {
-        if (statusFilter !== "all" && app.Status !== statusFilter) return false;
-        if (searchQuery.trim() && !app.Job?.Title?.toLowerCase().includes(searchQuery.toLowerCase())) return false;
-        return true;
-    });
+    const filteredApplications = useMemo(() => {
+        const keyword = searchQuery.trim().toLowerCase();
 
-    const getStatusColor = (status: string) => {
-        switch (status) {
-            case "accepted": return "bg-green-50 text-green-700 border-green-200";
-            case "rejected": return "bg-red-50 text-red-700 border-red-200";
-            default: return "bg-amber-50 text-amber-700 border-amber-200";
-        }
-    };
+        return applications.filter((application) => {
+            const title = application.Job?.Title || application.JobTitle;
+            const address = application.Job?.Address || "";
+            const matchesKeyword = !keyword || [title, address].some((value) =>
+                value.toLowerCase().includes(keyword),
+            );
 
-    const formatDate = (dateStr: string) => {
-        const d = new Date(dateStr);
-        return `${d.getDate().toString().padStart(2, "0")}/${(d.getMonth() + 1).toString().padStart(2, "0")}/${d.getFullYear()}`;
-    };
+            const matchesStatus = statusFilter === "all" || application.Status === statusFilter;
+            return matchesKeyword && matchesStatus;
+        });
+    }, [applications, searchQuery, statusFilter]);
 
     return (
         <div className="mx-auto max-w-[1100px]">
-            {/* Search & Filter */}
-            <div className="mb-6 flex items-center gap-4">
+            <div className="mb-6 flex flex-col gap-4 lg:flex-row">
                 <div className="relative flex-1">
                     <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
                     <Input
-                        placeholder="Tìm kiếm theo tên công việc..."
+                        placeholder="Tìm theo tên công việc hoặc địa điểm"
                         value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="h-12 bg-white pl-12 shadow-sm border-gray-200"
+                        onChange={(event) => setSearchQuery(event.target.value)}
+                        className="h-12 border-gray-200 bg-white pl-12 shadow-sm"
                     />
                 </div>
+
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
-                    <SelectTrigger className="h-12 w-[200px] bg-white shadow-sm border-gray-200">
-                        <SelectValue placeholder="Trạng thái" />
+                    <SelectTrigger className="h-12 w-full border-gray-200 bg-white shadow-sm lg:w-[220px]">
+                        <SelectValue placeholder="Lọc trạng thái" />
                     </SelectTrigger>
                     <SelectContent>
-                        <SelectItem value="all">Tất cả</SelectItem>
+                        <SelectItem value="all">Tất cả trạng thái</SelectItem>
                         {Object.entries(ApplicationStatusLabel).map(([key, label]) => (
-                            <SelectItem key={key} value={key}>{label}</SelectItem>
+                            <SelectItem key={key} value={key}>
+                                {label}
+                            </SelectItem>
                         ))}
                     </SelectContent>
                 </Select>
             </div>
 
-            {/* Stats */}
-            <div className="mb-6 grid grid-cols-4 gap-4">
+            <div className="mb-6 grid gap-4 md:grid-cols-4">
                 {[
-                    { label: "Tổng cộng", count: applications?.length || 0, color: "bg-blue-50 text-blue-700" },
-                    { label: "Đang chờ", count: applications?.filter(a => a.Status === "pending").length || 0, color: "bg-amber-50 text-amber-700" },
-                    { label: "Chấp nhận", count: applications?.filter(a => a.Status === "accepted").length || 0, color: "bg-green-50 text-green-700" },
-                    { label: "Từ chối", count: applications?.filter(a => a.Status === "rejected").length || 0, color: "bg-red-50 text-red-700" },
+                    { label: "Tổng cộng", count: applications.length, className: "text-blue-700" },
+                    { label: "Đang chờ", count: applications.filter((item) => item.Status === "pending").length, className: "text-amber-700" },
+                    { label: "Đã duyệt", count: applications.filter((item) => item.Status === "accepted").length, className: "text-green-700" },
+                    { label: "Từ chối", count: applications.filter((item) => item.Status === "rejected").length, className: "text-red-700" },
                 ].map((stat) => (
                     <Card key={stat.label} className="border-gray-100 p-4 shadow-sm">
                         <p className="text-sm text-gray-500">{stat.label}</p>
-                        <p className={`mt-1 text-2xl font-bold ${stat.color.split(" ")[1]}`}>{stat.count}</p>
+                        <p className={`mt-1 text-2xl font-bold ${stat.className}`}>{stat.count}</p>
                     </Card>
                 ))}
             </div>
 
-            {/* List */}
             {isLoading ? (
                 <div className="space-y-4">
-                    {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-[120px] rounded-xl" />)}
+                    {[...Array(4)].map((_, index) => (
+                        <Skeleton key={index} className="h-[140px] rounded-xl" />
+                    ))}
                 </div>
             ) : (
                 <div className="space-y-3">
-                    {filteredApps?.map((app) => (
-                        <Card key={app.ID} className="group border-gray-100 p-0 shadow-sm transition-all hover:shadow-md">
-                            <div className="flex items-center gap-5 p-5">
-                                {/* Status indicator */}
-                                <div className={`h-full w-1 self-stretch rounded-full ${app.Status === "accepted" ? "bg-green-500" : app.Status === "rejected" ? "bg-red-500" : "bg-amber-400"}`} />
-
-                                {/* Logo */}
-                                <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-gray-50 border border-gray-100">
-                                    {app.Job?.Recruiter?.Company?.LogoUrl ? (
-                                        <img src={app.Job.Recruiter.Company.LogoUrl} alt="" className="h-8 w-8 rounded-lg object-cover" />
-                                    ) : (
-                                        <Building2 size={20} className="text-gray-400" />
-                                    )}
-                                </div>
-
-                                {/* Content */}
-                                <div className="min-w-0 flex-1">
-                                    <div className="flex items-center gap-3">
-                                        <Link href={`/candidate/jobs/${app.Job?.ID}`} className="text-base font-semibold text-gray-900 hover:text-[#194d8e] line-clamp-1">
-                                            {app.Job?.Title}
-                                        </Link>
-                                        <Badge variant="outline" className={getStatusColor(app.Status)}>
-                                            {ApplicationStatusLabel[app.Status as ApplicationStatus] || app.Status}
-                                        </Badge>
-                                    </div>
-                                    <p className="mt-0.5 text-sm text-gray-500">{app.Job?.Recruiter?.Company?.Name}</p>
-                                    <div className="mt-2 flex items-center gap-4 text-xs text-gray-400">
-                                        <span className="flex items-center gap-1"><Calendar size={12} /> Ứng tuyển: {formatDate(app.AppliedAt)}</span>
-                                        <span className="flex items-center gap-1"><DollarSign size={12} /> {app.Job?.Salary}</span>
-                                        <span className="flex items-center gap-1"><MapPin size={12} /> {app.Job?.Address}</span>
-                                    </div>
-                                </div>
-
-                                {/* Actions */}
-                                <div className="flex items-center gap-2">
-                                    {app.Status === "pending" && (
-                                        <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            className="text-red-500 hover:bg-red-50 hover:text-red-600"
-                                            onClick={() => { setSelectedAppId(app.ID); setCancelDialogOpen(true); }}
-                                        >
-                                            <X size={16} className="mr-1" /> Huỷ
-                                        </Button>
-                                    )}
-                                    <Link href={`/candidate/jobs/${app.Job?.ID}`}>
-                                        <Button variant="ghost" size="icon" className="text-gray-400 group-hover:text-[#194d8e]">
-                                            <ChevronRight size={18} />
-                                        </Button>
-                                    </Link>
-                                </div>
-                            </div>
-                        </Card>
+                    {filteredApplications.map((application) => (
+                        <ApplicationCard
+                            key={application.ID}
+                            application={application}
+                            onCancel={() => setSelectedApplication(application)}
+                        />
                     ))}
 
-                    {filteredApps?.length === 0 && (
+                    {filteredApplications.length === 0 && (
                         <div className="flex flex-col items-center justify-center py-20">
                             <FileText size={48} className="mb-4 text-gray-300" />
-                            <p className="text-lg font-medium text-gray-500">Chưa có đơn ứng tuyển nào</p>
+                            <p className="text-lg font-medium text-gray-500">Chưa có đơn ứng tuyển phù hợp bộ lọc</p>
+                            <Link href="/candidate/find-jobs" className="mt-2 text-sm text-[#194d8e] hover:underline">
+                                Tìm công việc để ứng tuyển
+                            </Link>
                         </div>
                     )}
                 </div>
             )}
 
-            {/* Cancel Dialog */}
-            <Dialog open={cancelDialogOpen} onOpenChange={setCancelDialogOpen}>
+            <Dialog open={!!selectedApplication} onOpenChange={(open) => !open && setSelectedApplication(null)}>
                 <DialogContent>
                     <DialogHeader>
-                        <DialogTitle>Xác nhận huỷ đơn</DialogTitle>
-                        <DialogDescription>Bạn có chắc muốn huỷ đơn ứng tuyển này? Hành động này không thể hoàn tác.</DialogDescription>
+                        <DialogTitle>Hủy đơn ứng tuyển</DialogTitle>
+                        <DialogDescription>
+                            Bạn có chắc muốn hủy đơn ứng tuyển cho vị trí{" "}
+                            <strong>{selectedApplication?.Job?.Title || selectedApplication?.JobTitle}</strong>?
+                        </DialogDescription>
                     </DialogHeader>
                     <DialogFooter>
-                        <Button variant="outline" onClick={() => setCancelDialogOpen(false)}>Đóng</Button>
-                        <Button variant="destructive" disabled={cancelMutation.isPending} onClick={() => selectedAppId && cancelMutation.mutate(selectedAppId)}>
-                            {cancelMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                            Huỷ đơn
+                        <Button variant="outline" onClick={() => setSelectedApplication(null)}>
+                            Đóng
+                        </Button>
+                        <Button
+                            variant="destructive"
+                            onClick={() => selectedApplication && deleteMutation.mutate(selectedApplication.ID)}
+                            disabled={deleteMutation.isPending}
+                        >
+                            {deleteMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            Hủy đơn
                         </Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
         </div>
     );
+}
+
+function ApplicationCard({
+    application,
+    onCancel,
+}: {
+    application: Application;
+    onCancel: () => void;
+}) {
+    const title = application.Job?.Title || application.JobTitle;
+    const address = application.Job?.Address || "Địa điểm sẽ được cập nhật sau";
+
+    return (
+        <Card className="group border-gray-100 p-0 shadow-sm transition-all hover:shadow-md">
+            <div className="flex items-start gap-4 p-5">
+                <div className={`mt-1 h-10 w-1 rounded-full ${getStatusStripe(application.Status)}`} />
+
+                <div className="flex-1">
+                    <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                        <div className="space-y-2">
+                            <div className="flex flex-wrap items-center gap-2">
+                                <Link
+                                    href={`/candidate/jobs/${application.JobId}`}
+                                    className="text-base font-semibold text-gray-900 hover:text-[#194d8e]"
+                                >
+                                    {title}
+                                </Link>
+                                <Badge variant="outline" className={getStatusColor(application.Status)}>
+                                    {ApplicationStatusLabel[application.Status as ApplicationStatus] || application.Status}
+                                </Badge>
+                            </div>
+
+                            <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500">
+                                <span className="flex items-center gap-1.5">
+                                    <Calendar size={14} />
+                                    Ứng tuyển ngày {formatDate(application.AppliedAt)}
+                                </span>
+                                <span className="flex items-center gap-1.5">
+                                    <MapPin size={14} />
+                                    {address}
+                                </span>
+                            </div>
+
+                            {application.ResumeUrl && (
+                                <a
+                                    href={application.ResumeUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center gap-1 text-sm text-[#194d8e] hover:underline"
+                                >
+                                    <FileText size={14} />
+                                    Xem CV đã nộp
+                                </a>
+                            )}
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                            {application.Status === "pending" && (
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="border-red-100 text-red-500 hover:bg-red-50 hover:text-red-600"
+                                    onClick={onCancel}
+                                >
+                                    <Trash2 size={14} className="mr-1.5" />
+                                    Hủy đơn
+                                </Button>
+                            )}
+                            <Link href={`/candidate/jobs/${application.JobId}`}>
+                                <Button variant="ghost" size="icon" className="text-gray-400 group-hover:text-[#194d8e]">
+                                    <ChevronRight size={18} />
+                                </Button>
+                            </Link>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </Card>
+    );
+}
+
+function getStatusColor(status: string) {
+    switch (status) {
+        case "accepted":
+            return "border-green-200 bg-green-50 text-green-700";
+        case "rejected":
+            return "border-red-200 bg-red-50 text-red-700";
+        default:
+            return "border-amber-200 bg-amber-50 text-amber-700";
+    }
+}
+
+function getStatusStripe(status: string) {
+    switch (status) {
+        case "accepted":
+            return "bg-green-500";
+        case "rejected":
+            return "bg-red-500";
+        default:
+            return "bg-amber-400";
+    }
+}
+
+function formatDate(dateString: string) {
+    if (!dateString) {
+        return "Chưa cập nhật";
+    }
+
+    const date = new Date(dateString);
+    return `${date.getDate().toString().padStart(2, "0")}/${(date.getMonth() + 1)
+        .toString()
+        .padStart(2, "0")}/${date.getFullYear()}`;
 }

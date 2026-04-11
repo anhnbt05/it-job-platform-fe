@@ -6,6 +6,7 @@ import Link from "next/link";
 import { toast } from "react-toastify";
 import { useAuthStore } from "@/store/useAuthStore";
 import { authService } from "@/services/auth.service";
+import { decodeJwtPayload } from "@/lib/auth-token";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -42,15 +43,14 @@ export default function LoginPage() {
         setIsLoading(true);
         try {
             const response = await authService.signIn(email.trim(), password.trim());
-            const data = response as unknown as Record<string, unknown>;
+            const data = response as { accessToken?: string; refreshToken?: string };
+            const token = data.accessToken || "";
+            const refreshToken = data.refreshToken || null;
+            const payload = decodeJwtPayload(token);
+            const role = payload.role as UserRole;
+            const userId = payload.id as string;
 
-            const token = data.accessToken as string;
-            const payload = data.payload as Record<string, unknown>;
-            const appMetadata = payload?.app_metadata as Record<string, string>;
-            const role = appMetadata?.role as UserRole;
-            const userId = payload?.sub as string;
-
-            setAuth(token, role, userId);
+            setAuth(token, refreshToken, role, userId);
             toast.success("Đăng nhập thành công!");
 
             if (role === "recruiter") {
@@ -66,7 +66,7 @@ export default function LoginPage() {
     };
 
     const handleDevLogin = (role: UserRole) => {
-        setAuth("dev-token", role, "dev-user-id");
+        setAuth("dev-token", null, role, "dev-user-id");
         toast.info(`Đã đăng nhập với quyền ${role === "recruiter" ? "Nhà tuyển dụng" : "Ứng viên"}`);
         if (role === "recruiter") {
             router.push("/recruiter/manage-jobs");

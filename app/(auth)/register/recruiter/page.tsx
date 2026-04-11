@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { toast } from "react-toastify";
 import { authService } from "@/services/auth.service";
 import { recruiterService } from "@/services/recruiter.service";
-import { Company, CompanyLocation } from "@/types";
+import { Company } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -31,7 +31,6 @@ import {
   MapPin,
   Globe,
   Check,
-  X,
 } from "lucide-react";
 
 const benefits = [
@@ -66,7 +65,6 @@ interface NewBranch {
 }
 
 type CompanyMode = "select" | "create";
-type BranchMode = "select" | "create";
 
 export default function RecruiterRegisterPage() {
   const [step, setStep] = useState<1 | 2 | 3>(1);
@@ -94,13 +92,6 @@ export default function RecruiterRegisterPage() {
   });
 
   // ── Step 3 – Branch ────────────────────────────────────
-  const [branchMode, setBranchMode] = useState<BranchMode>("select");
-  const [branches, setBranches] = useState<CompanyLocation[]>([]);
-  const [branchesLoading, setBranchesLoading] = useState(false);
-  const [branchSearch, setBranchSearch] = useState("");
-  const [selectedBranch, setSelectedBranch] = useState<CompanyLocation | null>(
-    null,
-  );
   const [newBranch, setNewBranch] = useState<NewBranch>({
     name: "",
     address: "",
@@ -125,20 +116,6 @@ export default function RecruiterRegisterPage() {
       .finally(() => setCompaniesLoading(false));
   }, [step, companyMode]);
 
-  // Load branches when company selected (existing company)
-  useEffect(() => {
-    if (!selectedCompany) return;
-    setBranchesLoading(true);
-    recruiterService
-      .getCompanyBranches(selectedCompany.ID)
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .then((res: any) =>
-        setBranches(Array.isArray(res) ? res : (res.data ?? [])),
-      )
-      .catch(() => setBranches([]))
-      .finally(() => setBranchesLoading(false));
-  }, [selectedCompany]);
-
   const filteredCompanies = useMemo(
     () =>
       companies.filter((c) =>
@@ -147,18 +124,10 @@ export default function RecruiterRegisterPage() {
     [companies, companySearch],
   );
 
-  const filteredBranches = useMemo(
-    () =>
-      branches.filter((b) =>
-        (b.BranchName ?? "").toLowerCase().includes(branchSearch.toLowerCase()),
-      ),
-    [branches, branchSearch],
-  );
-
   // ── Handlers ────────────────────────────────────────────
   const handleStep1 = (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!fullName.trim() || !email.trim() || !password.trim()) {
+    if (!fullName.trim() || !email.trim() || !password.trim() || !phone.trim()) {
       toast.error("Vui lòng nhập đầy đủ thông tin bắt buộc");
       return;
     }
@@ -174,19 +143,13 @@ export default function RecruiterRegisterPage() {
       toast.error("Vui lòng nhập tên công ty");
       return;
     }
-    // If new company → force create branch
-    if (companyMode === "create") setBranchMode("create");
     setStep(3);
   };
 
   const handleRegister = async (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    if (branchMode === "select" && !selectedBranch) {
-      toast.error("Vui lòng chọn chi nhánh hoặc tạo chi nhánh mới");
-      return;
-    }
-    if (branchMode === "create" && !newBranch.city.trim()) {
+    if (!newBranch.city.trim()) {
       toast.error("Vui lòng nhập thành phố cho chi nhánh");
       return;
     }
@@ -197,7 +160,7 @@ export default function RecruiterRegisterPage() {
         email: email.trim(),
         password: password.trim(),
         full_name: fullName.trim(),
-        phone_number: phone.trim() || undefined,
+        phone_number: phone.trim(),
         recruiter: {
           department: department.trim() || undefined,
           ...(companyMode === "select"
@@ -211,16 +174,12 @@ export default function RecruiterRegisterPage() {
                   location: newCompany.location.trim() || undefined,
                 },
               }),
-          ...(branchMode === "select"
-            ? { branch_id: selectedBranch!.ID }
-            : {
-                branch: {
-                  name: newBranch.name.trim() || undefined,
-                  address: newBranch.address.trim() || undefined,
-                  city: newBranch.city.trim() || undefined,
-                  country: newBranch.country.trim() || undefined,
-                },
-              }),
+          branch: {
+            name: newBranch.name.trim() || undefined,
+            address: newBranch.address.trim() || undefined,
+            city: newBranch.city.trim() || undefined,
+            country: newBranch.country.trim() || undefined,
+          },
         },
       });
       toast.success("Đăng ký thành công! Vui lòng kiểm tra email để xác thực.");
@@ -378,7 +337,9 @@ export default function RecruiterRegisterPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="phone">Số điện thoại</Label>
+                  <Label htmlFor="phone">
+                    Số điện thoại <span className="text-red-500">*</span>
+                  </Label>
                   <div className="relative">
                     <Phone className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
                     <Input
@@ -680,157 +641,71 @@ export default function RecruiterRegisterPage() {
               </div>
 
               <form onSubmit={handleRegister} className="space-y-4">
-                {/* If existing company: show select + option to create */}
-                {companyMode === "select" && branchMode === "select" && (
-                  <>
-                    <div className="relative mb-1">
-                      <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                <div className="rounded-lg border border-green-100 bg-green-50/60 p-3 text-sm text-green-800">
+                  Backend hiện yêu cầu recruiter phải có chi nhánh khi đăng ký.
+                  Ở bước này bạn sẽ khai báo chi nhánh làm việc để hệ thống tạo
+                  mới cùng lúc với tài khoản.
+                </div>
+
+                <div className="space-y-3 rounded-lg border border-gray-200 bg-white p-4">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">Tên chi nhánh</Label>
+                    <Input
+                      placeholder="Chi nhánh Hà Nội"
+                      value={newBranch.name}
+                      onChange={(e) =>
+                        setNewBranch({ ...newBranch, name: e.target.value })
+                      }
+                      className="h-9 text-sm bg-gray-50 border-gray-200"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">Địa chỉ</Label>
+                    <Input
+                      placeholder="123 Đường ABC, Quận 1"
+                      value={newBranch.address}
+                      onChange={(e) =>
+                        setNewBranch({
+                          ...newBranch,
+                          address: e.target.value,
+                        })
+                      }
+                      className="h-9 text-sm bg-gray-50 border-gray-200"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs">
+                        Thành phố <span className="text-red-500">*</span>
+                      </Label>
                       <Input
-                        placeholder="Tìm kiếm chi nhánh..."
-                        value={branchSearch}
-                        onChange={(e) => setBranchSearch(e.target.value)}
-                        className="h-10 pl-10 bg-white border-gray-200"
+                        placeholder="Hà Nội"
+                        value={newBranch.city}
+                        onChange={(e) =>
+                          setNewBranch({
+                            ...newBranch,
+                            city: e.target.value,
+                          })
+                        }
+                        className="h-9 text-sm bg-gray-50 border-gray-200"
                       />
                     </div>
-
-                    <div className="max-h-60 overflow-y-auto space-y-2 pr-1">
-                      {branchesLoading ? (
-                        <div className="flex items-center justify-center py-8 text-gray-400">
-                          <Loader2 size={20} className="animate-spin mr-2" />{" "}
-                          Đang tải...
-                        </div>
-                      ) : filteredBranches.length === 0 ? (
-                        <p className="py-6 text-center text-sm text-gray-400">
-                          Chưa có chi nhánh nào
-                        </p>
-                      ) : (
-                        filteredBranches.map((branch) => (
-                          <button
-                            key={branch.ID}
-                            type="button"
-                            onClick={() => setSelectedBranch(branch)}
-                            className={`w-full flex items-center gap-3 rounded-lg border p-3 text-left transition-all ${selectedBranch?.ID === branch.ID ? "border-green-600 bg-green-50 ring-1 ring-green-600" : "border-gray-200 bg-white hover:border-green-300 hover:bg-green-50/30"}`}
-                          >
-                            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-gray-100">
-                              <MapPin size={16} className="text-gray-400" />
-                            </div>
-                            <div className="min-w-0 flex-1">
-                              <p className="truncate text-sm font-medium text-gray-900">
-                                {branch.BranchName || "Chi nhánh chính"}
-                              </p>
-                              {branch.Address && (
-                                <p className="truncate text-xs text-gray-400">
-                                  {branch.Address}
-                                </p>
-                              )}
-                            </div>
-                            {selectedBranch?.ID === branch.ID && (
-                              <Check
-                                size={16}
-                                className="shrink-0 text-green-600"
-                              />
-                            )}
-                          </button>
-                        ))
-                      )}
+                    <div className="space-y-1.5">
+                      <Label className="text-xs">Quốc gia</Label>
+                      <Input
+                        placeholder="Vietnam"
+                        value={newBranch.country}
+                        onChange={(e) =>
+                          setNewBranch({
+                            ...newBranch,
+                            country: e.target.value,
+                          })
+                        }
+                        className="h-9 text-sm bg-gray-50 border-gray-200"
+                      />
                     </div>
-
-                    <div className="relative">
-                      <div className="absolute inset-0 flex items-center">
-                        <div className="w-full border-t border-gray-200" />
-                      </div>
-                      <div className="relative flex justify-center text-xs text-gray-400">
-                        <span className="bg-gray-50 px-2">hoặc</span>
-                      </div>
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setBranchMode("create");
-                        setSelectedBranch(null);
-                      }}
-                      className="flex w-full items-center justify-center gap-2 rounded-lg border border-dashed border-gray-300 bg-white py-3 text-sm font-medium text-gray-600 hover:border-green-500 hover:text-green-700 transition-colors"
-                    >
-                      <Plus size={16} /> Tạo chi nhánh mới
-                    </button>
-                  </>
-                )}
-
-                {/* Create branch form */}
-                {branchMode === "create" && (
-                  <>
-                    {companyMode === "select" && (
-                      <button
-                        type="button"
-                        onClick={() => setBranchMode("select")}
-                        className="mb-1 inline-flex items-center gap-1.5 text-xs text-green-700 hover:text-green-800 font-medium transition-colors"
-                      >
-                        <X size={12} /> Huỷ tạo chi nhánh mới
-                      </button>
-                    )}
-
-                    <div className="space-y-3 rounded-lg border border-gray-200 bg-white p-4">
-                      <div className="space-y-1.5">
-                        <Label className="text-xs">Tên chi nhánh</Label>
-                        <Input
-                          placeholder="Chi nhánh Hà Nội"
-                          value={newBranch.name}
-                          onChange={(e) =>
-                            setNewBranch({ ...newBranch, name: e.target.value })
-                          }
-                          className="h-9 text-sm bg-gray-50 border-gray-200"
-                        />
-                      </div>
-                      <div className="space-y-1.5">
-                        <Label className="text-xs">Địa chỉ</Label>
-                        <Input
-                          placeholder="123 Đường ABC, Quận 1"
-                          value={newBranch.address}
-                          onChange={(e) =>
-                            setNewBranch({
-                              ...newBranch,
-                              address: e.target.value,
-                            })
-                          }
-                          className="h-9 text-sm bg-gray-50 border-gray-200"
-                        />
-                      </div>
-                      <div className="grid grid-cols-2 gap-2">
-                        <div className="space-y-1.5">
-                          <Label className="text-xs">
-                            Thành phố <span className="text-red-500">*</span>
-                          </Label>
-                          <Input
-                            placeholder="Hà Nội"
-                            value={newBranch.city}
-                            onChange={(e) =>
-                              setNewBranch({
-                                ...newBranch,
-                                city: e.target.value,
-                              })
-                            }
-                            className="h-9 text-sm bg-gray-50 border-gray-200"
-                          />
-                        </div>
-                        <div className="space-y-1.5">
-                          <Label className="text-xs">Quốc gia</Label>
-                          <Input
-                            placeholder="Vietnam"
-                            value={newBranch.country}
-                            onChange={(e) =>
-                              setNewBranch({
-                                ...newBranch,
-                                country: e.target.value,
-                              })
-                            }
-                            className="h-9 text-sm bg-gray-50 border-gray-200"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </>
-                )}
+                  </div>
+                </div>
 
                 <Button
                   type="submit"

@@ -16,20 +16,16 @@ export enum Level {
     INTERN = "intern",
     FRESHER = "fresher",
     JUNIOR = "junior",
-    MIDDLE = "middle",
+    MID = "mid",
     SENIOR = "senior",
-    LEAD = "lead",
-    MANAGER = "manager",
 }
 
 export const LevelLabel: Record<Level, string> = {
     [Level.INTERN]: "Thực tập sinh",
     [Level.FRESHER]: "Fresher",
     [Level.JUNIOR]: "Junior",
-    [Level.MIDDLE]: "Middle",
+    [Level.MID]: "Middle",
     [Level.SENIOR]: "Senior",
-    [Level.LEAD]: "Lead",
-    [Level.MANAGER]: "Manager",
 };
 
 export enum JobStatus {

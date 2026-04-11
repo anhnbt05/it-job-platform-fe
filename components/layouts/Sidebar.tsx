@@ -1,8 +1,10 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuthStore } from "@/store/useAuthStore";
+import { authService } from "@/services/auth.service";
 import {
     Search,
     FileText,
@@ -41,12 +43,21 @@ const recruiterNavItems: NavItem[] = [
 export default function Sidebar() {
     const pathname = usePathname();
     const { role, logout } = useAuthStore();
+    const [isLoggingOut, setIsLoggingOut] = useState(false);
 
     const navItems = role === "recruiter" ? recruiterNavItems : candidateNavItems;
 
-    const handleLogout = () => {
-        logout();
-        window.location.href = "/login";
+    const handleLogout = async () => {
+        setIsLoggingOut(true);
+
+        try {
+            await authService.signOut();
+        } catch {
+            // Clear local session even if the server-side revoke request fails.
+        } finally {
+            logout();
+            window.location.href = "/login";
+        }
     };
 
     return (
@@ -90,10 +101,11 @@ export default function Sidebar() {
             <div className="border-t border-white/10 p-3">
                 <button
                     onClick={handleLogout}
+                    disabled={isLoggingOut}
                     className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-red-400 transition-all duration-200 hover:bg-red-500/10"
                 >
                     <LogOut size={20} />
-                    Đăng xuất
+                    {isLoggingOut ? "Đang đăng xuất..." : "Đăng xuất"}
                 </button>
             </div>
         </aside>

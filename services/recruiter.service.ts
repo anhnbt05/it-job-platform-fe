@@ -1,32 +1,52 @@
 import { api } from "@/lib/axios";
 import { RecruiterInfo } from "@/types";
+import { Company } from "@/types/company";
+import { mapCompany, mapRecruiter, unwrapData } from "@/services/mappers";
+
+type RecruiterProfileUpdatePayload = Partial<
+    Pick<RecruiterInfo, "FullName" | "PhoneNumber" | "Bio" | "Department">
+>;
 
 export const recruiterService = {
-    getProfile: () =>
-        api.get<RecruiterInfo>("/recruiters/profile"),
+    async getProfile() {
+        const response = await api.get("/identity/users/me");
+        return mapRecruiter(unwrapData<Record<string, unknown>>(response));
+    },
 
-    updateProfile: (data: Partial<RecruiterInfo>) =>
-        api.patch("/recruiters/profile", data),
+    updateProfile: (data: RecruiterProfileUpdatePayload) => {
+        const hasDepartment = Object.prototype.hasOwnProperty.call(data, "Department");
 
-    updateCompany: (data: Record<string, unknown>) =>
-        api.patch("/companies", data),
+        return api.patch("/identity/users/me", {
+            full_name: data.FullName,
+            phone_number: data.PhoneNumber,
+            bio: data.Bio,
+            ...(hasDepartment
+                ? {
+                    updateRecruiterDto: {
+                        department: data.Department,
+                    },
+                }
+                : {}),
+        });
+    },
 
-    uploadAvatar: (formData: FormData) =>
-        api.post("/recruiters/avatar", formData, {
+    updateCompany: (companyId: string, data: Record<string, unknown>) =>
+        api.patch(`/organization/companies/${companyId}`, data),
+
+    uploadAvatar: (file: File) => {
+        const formData = new FormData();
+        formData.append("avatar", file);
+
+        return api.patch("/identity/users/me/avatar", formData, {
             headers: { "Content-Type": "multipart/form-data" },
-        }),
+        });
+    },
 
-    uploadCompanyLogo: (formData: FormData) =>
-        api.post("/companies/logo", formData, {
-            headers: { "Content-Type": "multipart/form-data" },
-        }),
-
-    getCompanies: () =>
-        api.get("/companies"),
+    async getCompanies(): Promise<Company[]> {
+        const response = await api.get("/organization/companies");
+        return unwrapData<Record<string, unknown>[]>(response).map((item) => mapCompany(item));
+    },
 
     getProvinces: () =>
         api.get("/provinces"),
-
-    getCompanyBranches: (companyId: string) =>
-        api.get(`/companies/${companyId}/branches`),
 };

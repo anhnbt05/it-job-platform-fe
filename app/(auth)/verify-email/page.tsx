@@ -1,34 +1,83 @@
 "use client";
 
-import { Suspense } from "react";
-import { useSearchParams } from "next/navigation";
+import { Suspense, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { MailCheck, Loader2 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { MailCheck, Loader2, ArrowLeft, ShieldCheck } from "lucide-react";
+import { authService } from "@/services/auth.service";
+import { toast } from "react-toastify";
 
 function VerifyEmailContent() {
     const searchParams = useSearchParams();
+    const router = useRouter();
     const email = searchParams.get("email") || "";
+    const [otp, setOtp] = useState("");
+    const [isLoading, setIsLoading] = useState(false);
+
+    const handleVerify = async (event: React.FormEvent) => {
+        event.preventDefault();
+
+        if (!email.trim() || !otp.trim()) {
+            toast.error("Vui lòng nhập mã OTP được gửi tới email của bạn");
+            return;
+        }
+
+        setIsLoading(true);
+        try {
+            await authService.verifyEmailOtp(email.trim(), otp.trim());
+            toast.success("Xác thực email thành công");
+            router.push("/login");
+        } catch {
+            toast.error("Mã OTP không hợp lệ hoặc đã hết hạn");
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     return (
         <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
             <Card className="w-full max-w-md border-0 shadow-xl">
-                <CardContent className="p-8 text-center">
-                    <div className="mx-auto mb-6 inline-flex h-20 w-20 items-center justify-center rounded-full bg-green-50">
-                        <MailCheck size={40} className="text-green-600" />
-                    </div>
-                    <h2 className="mb-2 text-2xl font-bold text-gray-900">Kiểm tra email</h2>
-                    <p className="mb-6 text-gray-500">
-                        Chúng tôi đã gửi email xác thực đến <strong className="text-gray-700">{email}</strong>.
-                        Vui lòng kiểm tra hộp thư và xác thực tài khoản.
-                    </p>
-
-                    <Link href="/login">
-                        <Button className="h-11 w-full bg-[#194d8e] font-semibold hover:bg-[#194d8e]/90">
-                            QUAY LẠI ĐĂNG NHẬP
-                        </Button>
+                <CardContent className="p-8">
+                    <Link href="/login" className="mb-6 inline-flex items-center gap-2 text-sm text-gray-500 hover:text-gray-700">
+                        <ArrowLeft size={16} />
+                        Quay lại đăng nhập
                     </Link>
+
+                    <div className="mb-6 text-center">
+                        <div className="mx-auto mb-4 inline-flex h-16 w-16 items-center justify-center rounded-full bg-green-50">
+                            <MailCheck size={32} className="text-green-600" />
+                        </div>
+                        <h2 className="text-2xl font-bold text-gray-900">Xác thực email</h2>
+                        <p className="mt-1 text-sm text-gray-500">
+                            Nhập mã OTP đã được gửi tới <strong>{email}</strong>
+                        </p>
+                    </div>
+
+                    <form onSubmit={handleVerify} className="space-y-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="otp">Mã OTP</Label>
+                            <div className="relative">
+                                <ShieldCheck className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                                <Input
+                                    id="otp"
+                                    placeholder="Nhập mã OTP"
+                                    value={otp}
+                                    onChange={(event) => setOtp(event.target.value)}
+                                    className="h-11 bg-gray-50 pl-10 text-center text-lg tracking-[0.3em]"
+                                    maxLength={6}
+                                />
+                            </div>
+                        </div>
+
+                        <Button type="submit" disabled={isLoading} className="h-11 w-full bg-[#194d8e] font-semibold hover:bg-[#194d8e]/90">
+                            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            XÁC THỰC EMAIL
+                        </Button>
+                    </form>
                 </CardContent>
             </Card>
         </div>

@@ -17,14 +17,17 @@ export interface Candidate {
     PhoneNumber: string | null;
     AvatarUrl: string | null;
     ResumeUrl: string | null;
+    ResumeUrls: string[];
     Bio: string | null;
+    Headline: string | null;
+    Summary: string[];
     Level: string | null;
     Certifications: string[] | null;
-    WorkExperiences: WorkExperience[] | null;
+    WorkExperiences: WorkExperience[];
 }
 
 export interface CandidateApplied {
     ID: string;
     FullName: string;
-    AvatarUrl: string;
+    AvatarUrl: string | null;
 }

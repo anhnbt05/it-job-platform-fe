@@ -1,30 +1,66 @@
 import { api } from "@/lib/axios";
 import { Candidate } from "@/types";
+import { mapCandidate, mapWorkExperience } from "@/services/mappers";
 
 export const candidateService = {
-    getProfile: () =>
-        api.get<Candidate>("/candidates/profile"),
+    async getProfile() {
+        const profileResponse = await api.get("/identity/users/me");
+        const profile = profileResponse as Record<string, unknown>;
+        const profileId = typeof profile.id === "string" ? profile.id : "";
 
-    updateProfile: (data: Partial<Candidate>) =>
-        api.patch("/candidates/profile", data),
+        let workExperiences: ReturnType<typeof mapWorkExperience>[] = [];
+        if (profileId) {
+            const workExperienceResponse = await api.get(`/identity/users/${profileId}/work-experiences`);
+            workExperiences = (workExperienceResponse as Record<string, unknown>[])
+                .map((item) => mapWorkExperience(item));
+        }
 
-    uploadResume: (formData: FormData) =>
-        api.post("/candidates/resume", formData, {
+        return mapCandidate(profile, workExperiences);
+    },
+
+    updateProfile: (data: Partial<Candidate>) => {
+        const summary = Array.isArray(data.Summary)
+            ? data.Summary.filter(Boolean)
+            : undefined;
+
+        return api.patch("/identity/users/me", {
+            full_name: data.FullName,
+            phone_number: data.PhoneNumber,
+            bio: data.Bio,
+            updateCandidateDto: {
+                headline: data.Headline,
+                summary,
+                level: data.Level,
+                resume_urls: data.ResumeUrls,
+            },
+        });
+    },
+
+    uploadResume: (file: File) => {
+        const formData = new FormData();
+        formData.append("avatar", file);
+
+        return api.post("/identity/uploads/resume", formData, {
             headers: { "Content-Type": "multipart/form-data" },
-        }),
+        });
+    },
 
-    uploadAvatar: (formData: FormData) =>
-        api.post("/candidates/avatar", formData, {
+    uploadAvatar: (file: File) => {
+        const formData = new FormData();
+        formData.append("avatar", file);
+
+        return api.patch("/identity/users/me/avatar", formData, {
             headers: { "Content-Type": "multipart/form-data" },
-        }),
+        });
+    },
 
     // Work Experiences
     addWorkExperience: (data: Record<string, unknown>) =>
-        api.post("/work-experiences", data),
+        api.post("/identity/work-experiences", data),
 
     updateWorkExperience: (id: string, data: Record<string, unknown>) =>
-        api.patch(`/work-experiences/${id}`, data),
+        api.patch(`/identity/work-experiences/${id}`, data),
 
     deleteWorkExperience: (id: string) =>
-        api.delete(`/work-experiences/${id}`),
+        api.delete(`/identity/work-experiences/${id}`),
 };

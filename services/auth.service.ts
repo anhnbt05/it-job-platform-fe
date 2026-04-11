@@ -2,17 +2,23 @@ import { api } from "@/lib/axios";
 
 export const authService = {
     signIn: (email: string, password: string) =>
-        api.post("/auth/signin", { email, password }),
+        api.post("/identity/auth/sign-in", { email, password }),
 
-    signUp: (data: {
+    signUpCandidate: (data: {
         email: string;
         password: string;
-        fullName: string;
-        role: string;
-        companyId?: string;
-        position?: string;
-        phoneNumber?: string;
-    }) => api.post("/auth/signup", data),
+        full_name: string;
+        phone_number: string;
+        candidate: {
+            level: string;
+            headline?: string;
+            summary?: string[];
+            skills?: string[];
+            educations?: string[];
+            certifications?: string[];
+            resume_url?: string;
+        };
+    }) => api.post("/identity/auth/sign-up", { ...data, role: "candidate" }),
 
     signUpRecruiter: (data: {
         email: string;
@@ -37,21 +43,30 @@ export const authService = {
                 country?: string;
             };
         };
-    }) => api.post("/auth/signup", { ...data, role: "recruiter" }),
+    }) => api.post("/identity/auth/sign-up", { ...data, role: "recruiter" }),
 
-    signOut: () => api.post("/auth/signout"),
+    signOut: () => api.post("/identity/auth/sign-out"),
 
     forgotPassword: (email: string) =>
-        api.post("/auth/forget-password", { email }),
+        api.post("/identity/auth/forgot-password", { email }),
 
-    verifyEmail: (email: string) =>
-        api.post("/auth/verify-email", { email }),
+    verifyEmailOtp: (email: string, otp: string) =>
+        api.post("/identity/auth/verify-otp", {
+            email,
+            otp,
+            type: "email_verification",
+        }),
 
-    verifyOTP: (email: string, otp: string) =>
-        api.post("/auth/verify-otp", { email, otp }),
+    verifyPasswordResetOtp: (email: string, otp: string) =>
+        api.post("/identity/auth/verify-otp", {
+            email,
+            otp,
+            type: "password_reset",
+        }),
 
-    resetPassword: (email: string, password: string, otp: string) =>
-        api.post("/auth/reset-password", { email, password, otp }),
+    resetPassword: (newPassword: string, token: string) =>
+        api.post("/identity/auth/reset-password", { newPassword, token }),
 
-    refreshToken: () => api.post("/auth/refresh-token"),
+    refreshToken: (refreshToken: string) =>
+        api.post("/identity/auth/refresh-token", { refreshToken }),
 };

@@ -14,11 +14,12 @@ export interface RecruiterJob {
 
 export interface RecruiterInfo {
     ID: string;
-    FullName: string;
-    Email: string;
-    PhoneNumber: string;
-    Position: string;
-    AvatarUrl: string;
-    Company: Company;
-    CompanyLocations: CompanyLocation;
+    FullName: string | null;
+    Email: string | null;
+    PhoneNumber: string | null;
+    Department: string | null;
+    Bio: string | null;
+    AvatarUrl: string | null;
+    Company: Company | null;
+    CompanyLocations: CompanyLocation | null;
 }

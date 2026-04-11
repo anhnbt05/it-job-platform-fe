@@ -1,59 +1,152 @@
 "use client";
 
-import { useParams } from "next/navigation";
 import Link from "next/link";
-import { useQuery } from "@tanstack/react-query";
+import { useMemo, useState } from "react";
+import { useParams } from "next/navigation";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { applicationService } from "@/services/application.service";
+import { candidateService } from "@/services/candidate.service";
 import { jobService } from "@/services/job.service";
-import { JobDetail } from "@/types";
+import { JobType, JobTypeLabel, Level, LevelLabel } from "@/types";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-    MapPin,
-    DollarSign,
-    Clock,
-    Briefcase,
-    Building2,
-    Users,
-    Calendar,
-    Globe,
     ArrowLeft,
+    Briefcase,
+    Calendar,
     CheckCircle2,
-    Star,
+    Clock,
+    DollarSign,
     FileText,
     GraduationCap,
+    Heart,
+    Loader2,
+    MapPin,
+    Paperclip,
+    ShieldCheck,
+    Star,
+    Upload,
+    Users,
 } from "lucide-react";
-import { JobTypeLabel, LevelLabel, JobType, Level } from "@/types/enums";
+import { toast } from "react-toastify";
 
 export default function JobDetailPage() {
     const params = useParams();
+    const queryClient = useQueryClient();
     const jobId = params.id as string;
+    const [applyDialogOpen, setApplyDialogOpen] = useState(false);
+    const [resumeFile, setResumeFile] = useState<File | null>(null);
 
     const { data: job, isLoading } = useQuery({
         queryKey: ["job", jobId],
-        queryFn: async () => {
-            const res = await jobService.getJobById(jobId);
-            return res as unknown as JobDetail;
-        },
+        queryFn: () => jobService.getJobById(jobId),
         enabled: !!jobId,
     });
 
-    const formatDate = (dateStr: string) => {
-        const d = new Date(dateStr);
-        return `${d.getDate().toString().padStart(2, "0")}/${(d.getMonth() + 1).toString().padStart(2, "0")}/${d.getFullYear()}`;
-    };
+    const { data: favoriteJobs = [] } = useQuery({
+        queryKey: ["favorite-jobs"],
+        queryFn: () => jobService.getFavoriteJobs(),
+    });
+
+    const { data: applications = [] } = useQuery({
+        queryKey: ["applied-jobs"],
+        queryFn: () => applicationService.getAppliedJobs(),
+    });
+
+    const { data: candidate } = useQuery({
+        queryKey: ["candidate-profile"],
+        queryFn: () => candidateService.getProfile(),
+    });
+
+    const isFavorite = useMemo(
+        () => favoriteJobs.some((favorite) => favorite.Job.ID === jobId),
+        [favoriteJobs, jobId],
+    );
+
+    const existingApplication = useMemo(
+        () => applications.find((application) => application.JobId === jobId && application.Status === "pending"),
+        [applications, jobId],
+    );
+
+    const favoriteMutation = useMutation({
+        mutationFn: () => (isFavorite ? jobService.removeFavoriteJob(jobId) : jobService.addFavoriteJob(jobId)),
+        onSuccess: () => {
+            toast.success(isFavorite ? "Đã bỏ lưu công việc" : "Đã lưu công việc");
+            queryClient.invalidateQueries({ queryKey: ["favorite-jobs"] });
+        },
+        onError: () => toast.error("Không thể cập nhật yêu thích"),
+    });
+
+    const applyMutation = useMutation({
+        mutationFn: async () => {
+            if (!job || !candidate) {
+                throw new Error("missing-data");
+            }
+
+            let resumeUrl = candidate.ResumeUrl || candidate.ResumeUrls[0] || null;
+
+            if (resumeFile) {
+                const uploadResponse = await candidateService.uploadResume(resumeFile);
+                const uploadData = uploadResponse as {
+                    data?: {
+                        resumeUrl?: string;
+                    };
+                };
+
+                resumeUrl = uploadData.data?.resumeUrl ?? resumeUrl;
+            }
+
+            if (!resumeUrl) {
+                throw new Error("missing-resume");
+            }
+
+            return applicationService.applyForJob({
+                jobId: job.ID,
+                resumeUrl,
+                candidateName: candidate.FullName ?? "",
+                jobTitle: job.Title,
+                recruiterId: job.RecruiterId,
+            });
+        },
+        onSuccess: () => {
+            toast.success("Ứng tuyển thành công");
+            setApplyDialogOpen(false);
+            setResumeFile(null);
+            queryClient.invalidateQueries({ queryKey: ["applied-jobs"] });
+            queryClient.invalidateQueries({ queryKey: ["candidate-profile"] });
+        },
+        onError: (error) => {
+            if (error instanceof Error && error.message === "missing-resume") {
+                toast.error("Bạn cần có CV đã lưu hoặc tải CV mới trước khi ứng tuyển");
+                return;
+            }
+
+            toast.error("Không thể gửi đơn ứng tuyển");
+        },
+    });
 
     if (isLoading) {
         return (
             <div className="mx-auto max-w-[1100px] space-y-6">
                 <Skeleton className="h-10 w-40" />
-                <div className="grid grid-cols-3 gap-6">
-                    <div className="col-span-2 space-y-6">
-                        <Skeleton className="h-[200px] rounded-xl" />
-                        <Skeleton className="h-[300px] rounded-xl" />
+                <div className="grid gap-6 lg:grid-cols-[2fr_1fr]">
+                    <div className="space-y-6">
+                        <Skeleton className="h-[220px] rounded-xl" />
+                        <Skeleton className="h-[320px] rounded-xl" />
                     </div>
-                    <Skeleton className="h-[400px] rounded-xl" />
+                    <Skeleton className="h-[420px] rounded-xl" />
                 </div>
             </div>
         );
@@ -70,28 +163,51 @@ export default function JobDetailPage() {
 
     return (
         <div className="mx-auto max-w-[1100px]">
-            <Link href="/candidate/find-jobs" className="mb-6 inline-flex items-center gap-2 text-sm text-gray-500 hover:text-gray-700">
-                <ArrowLeft size={16} /> Quay lại tìm kiếm
+            <Link
+                href="/candidate/find-jobs"
+                className="mb-6 inline-flex items-center gap-2 text-sm text-gray-500 hover:text-gray-700"
+            >
+                <ArrowLeft size={16} />
+                Quay lại tìm việc
             </Link>
 
-            <div className="grid grid-cols-3 gap-6">
-                {/* Main Content */}
-                <div className="col-span-2 space-y-6">
-                    {/* Header Card */}
+            <div className="grid gap-6 lg:grid-cols-[2fr_1fr]">
+                <div className="space-y-6">
                     <Card className="border-gray-100 shadow-sm">
                         <CardContent className="p-6">
-                            <div className="flex items-start gap-5">
-                                <div className="flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-xl bg-gray-50 border border-gray-100">
-                                    {job.Recruiter?.Company?.LogoUrl ? (
-                                        <img src={job.Recruiter.Company.LogoUrl} alt="" className="h-12 w-12 rounded-lg object-cover" />
-                                    ) : (
-                                        <Building2 size={28} className="text-gray-400" />
-                                    )}
+                            <div className="flex flex-col gap-6 md:flex-row md:items-start">
+                                <div className="flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-2xl bg-[#194d8e]/8">
+                                    <Briefcase size={30} className="text-[#194d8e]" />
                                 </div>
+
                                 <div className="flex-1">
-                                    <h1 className="text-2xl font-bold text-gray-900">{job.Title}</h1>
-                                    <p className="mt-1 text-base text-gray-500">{job.Recruiter?.Company?.Name}</p>
-                                    <div className="mt-3 flex flex-wrap gap-2">
+                                    <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                                        <div>
+                                            <h1 className="text-2xl font-bold text-gray-900">{job.Title}</h1>
+                                            <p className="mt-1 text-base text-gray-500">
+                                                Cơ hội tuyển dụng đang mở trên IT Job Platform
+                                            </p>
+                                        </div>
+
+                                        <Button
+                                            variant="outline"
+                                            onClick={() => favoriteMutation.mutate()}
+                                            disabled={favoriteMutation.isPending}
+                                            className="border-red-100 text-red-500 hover:bg-red-50 hover:text-red-600"
+                                        >
+                                            {favoriteMutation.isPending ? (
+                                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                            ) : (
+                                                <Heart
+                                                    size={16}
+                                                    className={`mr-2 ${isFavorite ? "fill-red-500 text-red-500" : ""}`}
+                                                />
+                                            )}
+                                            {isFavorite ? "Đã lưu" : "Lưu việc"}
+                                        </Button>
+                                    </div>
+
+                                    <div className="mt-4 flex flex-wrap gap-2">
                                         <Badge className="bg-blue-50 text-[#194d8e]">
                                             <Briefcase size={12} className="mr-1" />
                                             {JobTypeLabel[job.Type as JobType] || job.Type}
@@ -100,9 +216,9 @@ export default function JobDetailPage() {
                                             <GraduationCap size={12} className="mr-1" />
                                             {LevelLabel[job.Level as Level] || job.Level}
                                         </Badge>
-                                        {job.Categories?.map((cat, idx) => (
-                                            <Badge key={idx} variant="outline" className="border-gray-200 text-gray-600">
-                                                {cat}
+                                        {job.Categories.map((category) => (
+                                            <Badge key={category} variant="outline" className="border-gray-200 text-gray-600">
+                                                {category}
                                             </Badge>
                                         ))}
                                     </div>
@@ -111,92 +227,159 @@ export default function JobDetailPage() {
 
                             <Separator className="my-5" />
 
-                            <div className="grid grid-cols-2 gap-4 text-sm">
-                                <InfoRow icon={<DollarSign size={16} className="text-green-500" />} label="Mức lương" value={job.Salary} />
-                                <InfoRow icon={<MapPin size={16} className="text-orange-400" />} label="Địa điểm" value={job.Address} />
-                                <InfoRow icon={<Users size={16} className="text-blue-500" />} label="Số lượng" value={`${job.Vacancies} người`} />
-                                <InfoRow icon={<Clock size={16} className="text-violet-500" />} label="Thời gian" value={job.WorkingTimes} />
+                            <div className="grid gap-4 text-sm md:grid-cols-2">
+                                <InfoRow icon={<DollarSign size={16} className="text-green-500" />} label="Mức lương" value={job.Salary || "Thoả thuận"} />
+                                <InfoRow icon={<MapPin size={16} className="text-orange-400" />} label="Địa điểm" value={job.Address || "Chưa cập nhật"} />
+                                <InfoRow icon={<Users size={16} className="text-blue-500" />} label="Số lượng tuyển" value={`${job.Vacancies} người`} />
+                                <InfoRow icon={<Clock size={16} className="text-violet-500" />} label="Thời gian làm việc" value={job.WorkingTimes || "Chưa cập nhật"} />
                                 <InfoRow icon={<Calendar size={16} className="text-teal-500" />} label="Ngày đăng" value={formatDate(job.PostedAt)} />
                                 <InfoRow icon={<Calendar size={16} className="text-red-400" />} label="Hạn nộp" value={formatDate(job.ExpiredAt)} />
                             </div>
                         </CardContent>
                     </Card>
 
-                    {/* Description */}
                     {job.Description && (
-                        <SectionCard icon={<FileText size={18} />} title="Mô tả">
-                            <p className="text-gray-700 whitespace-pre-line leading-relaxed">{job.Description}</p>
+                        <SectionCard icon={<FileText size={18} />} title="Tổng quan công việc">
+                            <p className="whitespace-pre-line text-gray-700">{job.Description}</p>
                         </SectionCard>
                     )}
 
-                    {/* Job Descriptions */}
-                    {job.JobDescriptions?.length > 0 && (
-                        <SectionCard icon={<FileText size={18} />} title="Chi tiết công việc">
+                    {job.JobDescriptions.length > 0 && (
+                        <SectionCard icon={<FileText size={18} />} title="Nhiệm vụ chính">
                             <BulletList items={job.JobDescriptions} />
                         </SectionCard>
                     )}
 
-                    {/* Requirements */}
-                    {job.JobRequirements?.length > 0 && (
-                        <SectionCard icon={<CheckCircle2 size={18} />} title="Yêu cầu">
+                    {job.JobRequirements.length > 0 && (
+                        <SectionCard icon={<CheckCircle2 size={18} />} title="Yêu cầu ứng viên">
                             <BulletList items={job.JobRequirements} />
                         </SectionCard>
                     )}
 
-                    {/* Benefits */}
-                    {job.JobBenefits?.length > 0 && (
+                    {job.JobBenefits.length > 0 && (
                         <SectionCard icon={<Star size={18} />} title="Quyền lợi">
                             <BulletList items={job.JobBenefits} />
                         </SectionCard>
                     )}
                 </div>
 
-                {/* Sidebar - Company Info */}
                 <div className="space-y-6">
                     <Card className="border-gray-100 shadow-sm">
                         <CardHeader className="pb-3">
-                            <CardTitle className="text-base font-semibold">Thông tin công ty</CardTitle>
+                            <CardTitle className="text-base font-semibold">Ứng tuyển ngay</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-4">
-                            <div className="flex items-center gap-3">
-                                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gray-50 border border-gray-100">
-                                    {job.Recruiter?.Company?.LogoUrl ? (
-                                        <img src={job.Recruiter.Company.LogoUrl} alt="" className="h-8 w-8 rounded-lg object-cover" />
-                                    ) : (
-                                        <Building2 size={20} className="text-gray-400" />
-                                    )}
+                            <div className="rounded-xl bg-[#194d8e]/5 p-4 text-sm text-gray-600">
+                                <div className="mb-2 flex items-center gap-2 font-medium text-gray-900">
+                                    <ShieldCheck size={16} className="text-[#194d8e]" />
+                                    Hồ sơ ứng tuyển
                                 </div>
-                                <div>
-                                    <p className="font-semibold text-gray-900">{job.Recruiter?.Company?.Name}</p>
-                                </div>
+                                <p>
+                                    {candidate?.ResumeUrl || candidate?.ResumeUrls[0]
+                                        ? "Bạn có thể dùng CV đã lưu hoặc tải CV mới cho lần ứng tuyển này."
+                                        : "Hồ sơ của bạn chưa có CV lưu sẵn. Tải CV mới để tiếp tục."}
+                                </p>
                             </div>
 
-                            {job.Recruiter?.Company?.WebsiteUrl && (
-                                <div className="flex items-center gap-2 text-sm">
-                                    <Globe size={14} className="text-gray-400" />
-                                    <a
-                                        href={job.Recruiter.Company.WebsiteUrl.startsWith("http") ? job.Recruiter.Company.WebsiteUrl : `https://${job.Recruiter.Company.WebsiteUrl}`}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="text-[#194d8e] hover:underline truncate"
-                                    >
-                                        {job.Recruiter.Company.WebsiteUrl}
-                                    </a>
-                                </div>
-                            )}
+                            <Button
+                                className="w-full bg-[#194d8e] hover:bg-[#194d8e]/90"
+                                onClick={() => setApplyDialogOpen(true)}
+                                disabled={!!existingApplication}
+                            >
+                                {existingApplication ? "Đã ứng tuyển" : "Ứng tuyển công việc này"}
+                            </Button>
 
-                            {job.Recruiter?.Company?.Description && (
-                                <>
-                                    <Separator />
-                                    <p className="text-sm leading-relaxed text-gray-600 line-clamp-6">
-                                        {job.Recruiter.Company.Description}
-                                    </p>
-                                </>
+                            {existingApplication && (
+                                <p className="text-xs text-amber-600">
+                                    Bạn đã gửi đơn cho công việc này và đang chờ phản hồi.
+                                </p>
                             )}
+                        </CardContent>
+                    </Card>
+
+                    <Card className="border-gray-100 shadow-sm">
+                        <CardHeader className="pb-3">
+                            <CardTitle className="text-base font-semibold">Thông tin tuyển dụng</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4 text-sm text-gray-600">
+                            <div>
+                                <p className="text-xs uppercase tracking-wide text-gray-400">Trạng thái</p>
+                                <p className="mt-1 font-medium text-gray-900">{job.Status}</p>
+                            </div>
+                            <div>
+                                <p className="text-xs uppercase tracking-wide text-gray-400">Mã nhà tuyển dụng</p>
+                                <p className="mt-1 break-all font-medium text-gray-900">{job.RecruiterId}</p>
+                            </div>
+                            <div>
+                                <p className="text-xs uppercase tracking-wide text-gray-400">Danh mục</p>
+                                <p className="mt-1">{job.Categories.join(", ") || "Chưa cập nhật"}</p>
+                            </div>
                         </CardContent>
                     </Card>
                 </div>
             </div>
+
+            <Dialog open={applyDialogOpen} onOpenChange={setApplyDialogOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Ứng tuyển công việc</DialogTitle>
+                        <DialogDescription>
+                            Bạn có thể dùng CV đã lưu trong hồ sơ hoặc tải thêm một CV mới để nộp cho vị trí này.
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <div className="space-y-4">
+                        <div className="rounded-xl border border-gray-100 bg-gray-50 p-4">
+                            <div className="mb-2 flex items-center gap-2 text-sm font-medium text-gray-900">
+                                <Paperclip size={16} className="text-[#194d8e]" />
+                                CV đang có trong hồ sơ
+                            </div>
+                            {candidate?.ResumeUrl || candidate?.ResumeUrls[0] ? (
+                                <a
+                                    href={candidate.ResumeUrl || candidate.ResumeUrls[0]}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-sm text-[#194d8e] hover:underline"
+                                >
+                                    Xem CV đã lưu
+                                </a>
+                            ) : (
+                                <p className="text-sm text-gray-500">Bạn chưa có CV đã lưu.</p>
+                            )}
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium text-gray-700">Tải CV mới (tuỳ chọn)</label>
+                            <Input
+                                type="file"
+                                accept=".pdf,.doc,.docx"
+                                onChange={(event) => setResumeFile(event.target.files?.[0] ?? null)}
+                            />
+                            <p className="text-xs text-gray-400">
+                                Nếu chọn file mới, hệ thống sẽ tải file đó lên và dùng file mới cho đơn ứng tuyển.
+                            </p>
+                        </div>
+                    </div>
+
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setApplyDialogOpen(false)}>
+                            Đóng
+                        </Button>
+                        <Button
+                            onClick={() => applyMutation.mutate()}
+                            disabled={applyMutation.isPending}
+                            className="bg-[#194d8e] hover:bg-[#194d8e]/90"
+                        >
+                            {applyMutation.isPending ? (
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            ) : (
+                                <Upload size={16} className="mr-2" />
+                            )}
+                            Gửi đơn ứng tuyển
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }
@@ -213,7 +396,15 @@ function InfoRow({ icon, label, value }: { icon: React.ReactNode; label: string;
     );
 }
 
-function SectionCard({ icon, title, children }: { icon: React.ReactNode; title: string; children: React.ReactNode }) {
+function SectionCard({
+    icon,
+    title,
+    children,
+}: {
+    icon: React.ReactNode;
+    title: string;
+    children: React.ReactNode;
+}) {
     return (
         <Card className="border-gray-100 shadow-sm">
             <CardHeader className="pb-3">
@@ -230,12 +421,23 @@ function SectionCard({ icon, title, children }: { icon: React.ReactNode; title: 
 function BulletList({ items }: { items: string[] }) {
     return (
         <ul className="space-y-2">
-            {items.map((item, idx) => (
-                <li key={idx} className="flex items-start gap-2.5 text-sm text-gray-700">
+            {items.map((item) => (
+                <li key={item} className="flex items-start gap-2.5 text-sm text-gray-700">
                     <span className="mt-2 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-[#194d8e]" />
                     <span className="leading-relaxed">{item}</span>
                 </li>
             ))}
         </ul>
     );
+}
+
+function formatDate(dateString: string) {
+    if (!dateString) {
+        return "Chưa cập nhật";
+    }
+
+    const date = new Date(dateString);
+    return `${date.getDate().toString().padStart(2, "0")}/${(date.getMonth() + 1)
+        .toString()
+        .padStart(2, "0")}/${date.getFullYear()}`;
 }

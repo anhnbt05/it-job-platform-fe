@@ -3,10 +3,15 @@ import { CandidateApplied } from "./candidate";
 
 export interface Application {
     ID: string;
+    JobId: string;
+    JobTitle: string;
+    CandidateId: string;
+    CandidateName: string;
+    RecruiterId: string;
     Status: string;
     AppliedAt: string;
     ResumeUrl: string | null;
-    Job: JobListItem | null;
+    Job: Partial<JobListItem> | null;
 }
 
 export interface AppliedJobWithDetail {
@@ -15,6 +20,11 @@ export interface AppliedJobWithDetail {
 
 export interface ApplicationRecruiter {
     ID: string;
+    JobId: string;
+    JobTitle: string;
+    CandidateId: string;
+    CandidateName: string;
+    RecruiterId: string;
     Status: string;
     AppliedAt: string;
     ResumeUrl: string | null;

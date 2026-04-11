@@ -13,8 +13,9 @@ export interface JobListItem {
     PostedAt: string;
     ExpiredAt: string;
     Level: string;
-    DeletedAt: string | null;
-    Recruiter: RecruiterPost;
+    RecruiterId: string;
+    DeletedAt?: string | null;
+    Recruiter?: RecruiterPost | null;
     Categories: string[];
 }
 
@@ -31,17 +32,25 @@ export interface JobDetail {
     PostedAt: string;
     ExpiredAt: string;
     Level: string;
+    RecruiterId: string;
     JobDescriptions: string[];
     JobBenefits: string[];
     JobRequirements: string[];
     Categories: string[];
-    Recruiter: RecruiterJob;
-    DeletedAt: string | null;
+    Recruiter?: RecruiterJob | null;
+    DeletedAt?: string | null;
+}
+
+export interface JobFavorite {
+    ID: string;
+    SavedAt: string;
+    Job: JobDetail;
 }
 
 export interface CreateJobPayload {
     Title: string;
     Description: string;
+    Address: string;
     Vacancies: number;
     Type: string;
     Level: string;

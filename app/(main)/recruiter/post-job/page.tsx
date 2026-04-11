@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation } from "@tanstack/react-query";
 import { jobService } from "@/services/job.service";
-import { CreateJobPayload, JobTypeLabel, LevelLabel, JobType, Level } from "@/types";
+import { CreateJobPayload, JobTypeLabel, LevelLabel } from "@/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -59,21 +59,39 @@ export default function PostJobPage() {
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
 
-        if (!form.Title.trim() || !form.Type || !form.Level) {
+        if (
+            !form.Title.trim() ||
+            !form.Type ||
+            !form.Level ||
+            !form.Address.trim() ||
+            !form.WorkingTimes.trim() ||
+            !form.ExpiredAt
+        ) {
             toast.error("Vui lòng điền đầy đủ thông tin bắt buộc");
+            return;
+        }
+
+        const categories = form.Categories.split("\n").map((s) => s.trim()).filter(Boolean);
+        const descriptions = form.JobDescriptions.split("\n").map((s) => s.trim()).filter(Boolean);
+        const requirements = form.JobRequirements.split("\n").map((s) => s.trim()).filter(Boolean);
+        const benefits = form.JobBenefits.split("\n").map((s) => s.trim()).filter(Boolean);
+
+        if (categories.length === 0 || descriptions.length === 0 || requirements.length === 0 || benefits.length === 0) {
+            toast.error("Vui lòng nhập ít nhất 1 dòng cho danh mục, mô tả, yêu cầu và quyền lợi");
             return;
         }
 
         const payload: CreateJobPayload = {
             Title: form.Title.trim(),
             Description: form.Description.trim(),
+            Address: form.Address.trim(),
             Vacancies: form.Vacancies,
             Type: form.Type,
             Level: form.Level,
-            Categories: form.Categories.split("\n").map(s => s.trim()).filter(Boolean),
-            JobDescriptions: form.JobDescriptions.split("\n").map(s => s.trim()).filter(Boolean),
-            JobRequirements: form.JobRequirements.split("\n").map(s => s.trim()).filter(Boolean),
-            JobBenefits: form.JobBenefits.split("\n").map(s => s.trim()).filter(Boolean),
+            Categories: categories,
+            JobDescriptions: descriptions,
+            JobRequirements: requirements,
+            JobBenefits: benefits,
             WorkingTimes: form.WorkingTimes.trim(),
             Salary: computeSalary(),
             ExpiredAt: form.ExpiredAt,
@@ -204,12 +222,12 @@ export default function PostJobPage() {
                         )}
 
                         <div className="space-y-2">
-                            <Label>Thời gian làm việc</Label>
+                            <Label>Thời gian làm việc <span className="text-red-500">*</span></Label>
                             <Input value={form.WorkingTimes} onChange={(e) => setForm({ ...form, WorkingTimes: e.target.value })} placeholder="VD: Thứ 2 - Thứ 6, 8:00 - 17:00" className="h-11" />
                         </div>
 
                         <div className="space-y-2">
-                            <Label>Địa điểm làm việc</Label>
+                            <Label>Địa điểm làm việc <span className="text-red-500">*</span></Label>
                             <div className="relative">
                                 <MapPin className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
                                 <Input value={form.Address} onChange={(e) => setForm({ ...form, Address: e.target.value })} placeholder="VD: Quận 1, TP. Hồ Chí Minh" className="h-11 pl-10" />
@@ -217,7 +235,7 @@ export default function PostJobPage() {
                         </div>
 
                         <div className="space-y-2">
-                            <Label>Hạn nộp đơn</Label>
+                            <Label>Hạn nộp đơn <span className="text-red-500">*</span></Label>
                             <div className="relative">
                                 <Calendar className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
                                 <Input type="date" value={form.ExpiredAt} onChange={(e) => setForm({ ...form, ExpiredAt: e.target.value })} className="h-11 pl-10" />

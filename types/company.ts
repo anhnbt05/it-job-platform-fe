@@ -1,9 +1,11 @@
 export interface Company {
     ID: string;
     Name: string;
-    Description: string;
-    WebsiteUrl: string;
+    Description: string | null;
+    WebsiteUrl: string | null;
     LogoUrl: string | null;
+    Location?: string | null;
+    Size?: number | null;
 }
 
 export interface CompanyLocation {
@@ -11,4 +13,6 @@ export interface CompanyLocation {
     BranchName: string | null;
     Address: string | null;
     Province?: string | null;
+    City?: string | null;
+    Country?: string | null;
 }

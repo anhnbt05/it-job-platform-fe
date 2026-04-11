@@ -1,15 +1,13 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
-import { jobService } from "@/services/job.service";
+import { useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { applicationService } from "@/services/application.service";
-import { useAuthStore } from "@/store/useAuthStore";
-import { JobListItem, ApplicationRecruiter } from "@/types";
-import { Card } from "@/components/ui/card";
+import { jobService } from "@/services/job.service";
+import { ApplicationRecruiter, ApplicationStatus, ApplicationStatusLabel, JobListItem } from "@/types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Card } from "@/components/ui/card";
 import {
     Accordion,
     AccordionContent,
@@ -17,24 +15,24 @@ import {
     AccordionTrigger,
 } from "@/components/ui/accordion";
 import {
-    Users,
-    FileText,
-    User,
-    Calendar,
-    ExternalLink,
-    Briefcase,
-} from "lucide-react";
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Textarea } from "@/components/ui/textarea";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Check, Clock, FileText, Loader2, Users, X } from "lucide-react";
+import { toast } from "react-toastify";
 
 export default function CandidatesPage() {
-    const { userId } = useAuthStore();
-
     const { data: jobs, isLoading } = useQuery({
-        queryKey: ["recruiter-jobs-for-candidates", userId],
-        queryFn: async () => {
-            const res = await jobService.getJobsByRecruiter(userId!);
-            return res as unknown as JobListItem[];
-        },
-        enabled: !!userId,
+        queryKey: ["recruiter-jobs-for-candidates"],
+        queryFn: () => jobService.getJobsByRecruiter(),
     });
 
     if (isLoading) {
@@ -68,55 +66,55 @@ export default function CandidatesPage() {
 function JobApplicationItem({ job }: { job: JobListItem }) {
     const { data: applications, isLoading } = useQuery({
         queryKey: ["job-applications", job.ID],
-        queryFn: async () => {
-            const res = await applicationService.getApplicationsByJob(job.ID);
-            return res as unknown as ApplicationRecruiter[];
-        },
+        queryFn: () => applicationService.getApplicationsByJob(job.ID),
     });
 
-    const hasNew = applications?.some((a) => a.Status === "pending") || false;
-    const acceptedCount = applications?.filter((a) => a.Status === "accepted").length || 0;
-
-    const formatDate = (dateStr: string) => {
-        const d = new Date(dateStr);
-        return `${d.getDate().toString().padStart(2, "0")}/${(d.getMonth() + 1).toString().padStart(2, "0")}/${d.getFullYear()}`;
-    };
+    const pendingCount = applications?.filter((application) => application.Status === ApplicationStatus.PENDING).length || 0;
+    const acceptedCount = applications?.filter((application) => application.Status === ApplicationStatus.ACCEPTED).length || 0;
 
     return (
         <AccordionItem value={job.ID} className="rounded-xl border border-gray-100 bg-white shadow-sm">
             <AccordionTrigger className="px-5 py-4 hover:no-underline [&[data-state=open]]:pb-2">
-                <div className="flex flex-1 flex-col items-start gap-1 text-left">
-                    <div className="flex items-center gap-2">
+                <div className="flex flex-1 flex-col items-start gap-2 text-left">
+                    <div className="flex flex-wrap items-center gap-2">
                         <span className="font-semibold text-gray-900">{job.Title}</span>
-                        {hasNew && (
-                            <Badge className="bg-red-50 text-red-600 text-[10px]">Mới</Badge>
+                        {pendingCount > 0 && (
+                            <Badge className="bg-red-50 text-red-600 text-[10px]">
+                                {pendingCount} mới
+                            </Badge>
                         )}
                     </div>
                     <span className="text-xs text-gray-400">
                         {formatDate(job.PostedAt)} - {formatDate(job.ExpiredAt)}
                     </span>
-                    <div className="mt-1 flex items-center gap-2 text-xs text-gray-500">
-                        <Users size={14} />
-                        Có {applications?.length || 0} đơn ứng tuyển
+                    <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-gray-500">
+                        <span className="flex items-center gap-1">
+                            <Users size={14} />
+                            {applications?.length || 0} đơn ứng tuyển
+                        </span>
+                        <span className="rounded-full bg-green-50 px-2 py-1 text-green-700">
+                            Đã duyệt {acceptedCount}/{job.Vacancies}
+                        </span>
                     </div>
                 </div>
             </AccordionTrigger>
 
             <AccordionContent className="px-5 pb-4">
-                <div className="mb-3 text-right text-xs text-gray-500">
-                    Số ứng viên được duyệt: <strong className="text-base">{acceptedCount}/{job.Vacancies}</strong> người
-                </div>
-
                 {isLoading ? (
                     <div className="space-y-2">
-                        {[...Array(2)].map((_, i) => <Skeleton key={i} className="h-[60px] rounded-lg" />)}
+                        {[...Array(2)].map((_, i) => <Skeleton key={i} className="h-[96px] rounded-lg" />)}
                     </div>
                 ) : !applications || applications.length === 0 ? (
                     <p className="py-4 text-center text-sm text-gray-400">Chưa có ứng viên nào ứng tuyển</p>
                 ) : (
-                    <div className="space-y-2">
-                        {applications.map((app) => (
-                            <CandidateCard key={app.ID} application={app} />
+                    <div className="space-y-3">
+                        {applications.map((application) => (
+                            <CandidateCard
+                                key={application.ID}
+                                application={application}
+                                jobId={job.ID}
+                                reachedVacancy={acceptedCount >= job.Vacancies}
+                            />
                         ))}
                     </div>
                 )}
@@ -125,56 +123,179 @@ function JobApplicationItem({ job }: { job: JobListItem }) {
     );
 }
 
-function CandidateCard({ application }: { application: ApplicationRecruiter }) {
-    const getStatusBorder = (status: string) => {
-        switch (status) {
-            case "accepted": return "border-l-green-500";
-            case "rejected": return "border-l-red-500";
-            default: return "border-l-transparent";
-        }
-    };
+function CandidateCard({
+    application,
+    jobId,
+    reachedVacancy,
+}: {
+    application: ApplicationRecruiter;
+    jobId: string;
+    reachedVacancy: boolean;
+}) {
+    const queryClient = useQueryClient();
+    const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
+    const [rejectReason, setRejectReason] = useState("");
 
-    const getAvatarBorder = (status: string) => {
-        switch (status) {
-            case "accepted": return "ring-2 ring-green-500";
-            case "rejected": return "ring-2 ring-red-500";
-            default: return "";
-        }
-    };
+    const acceptMutation = useMutation({
+        mutationFn: () => applicationService.acceptApplications([application.ID]),
+        onSuccess: () => {
+            toast.success("Đã duyệt ứng viên");
+            queryClient.invalidateQueries({ queryKey: ["job-applications", jobId] });
+        },
+        onError: () => toast.error("Không thể duyệt ứng viên"),
+    });
 
-    const formatDate = (dateStr: string) => {
-        const d = new Date(dateStr);
-        return `${d.getDate().toString().padStart(2, "0")}/${(d.getMonth() + 1).toString().padStart(2, "0")}/${d.getFullYear()}`;
-    };
+    const rejectMutation = useMutation({
+        mutationFn: () => applicationService.rejectApplication(application.ID, rejectReason.trim() || undefined),
+        onSuccess: () => {
+            toast.success("Đã từ chối ứng viên");
+            setRejectDialogOpen(false);
+            setRejectReason("");
+            queryClient.invalidateQueries({ queryKey: ["job-applications", jobId] });
+        },
+        onError: () => toast.error("Không thể từ chối ứng viên"),
+    });
+
+    const isPending = application.Status === ApplicationStatus.PENDING;
+    const canAccept = isPending && !reachedVacancy;
 
     return (
-        <div className={`flex items-center gap-4 rounded-lg border-l-[3px] bg-gray-50/50 p-3 ${getStatusBorder(application.Status)}`}>
-            <Avatar className={`h-10 w-10 ${getAvatarBorder(application.Status)}`}>
-                <AvatarImage src={application.Candidate.AvatarUrl} />
-                <AvatarFallback className="bg-gray-200 text-sm text-gray-600">
-                    {application.Candidate.FullName.charAt(0)}
-                </AvatarFallback>
-            </Avatar>
+        <>
+            <Card className={`border-l-4 p-0 ${getCardBorder(application.Status)}`}>
+                <div className="flex flex-col gap-4 p-4 md:flex-row md:items-center">
+                    <div className="flex min-w-0 flex-1 items-center gap-4">
+                        <Avatar className="h-11 w-11">
+                            <AvatarImage src={application.Candidate.AvatarUrl || undefined} />
+                            <AvatarFallback className="bg-[#194d8e]/10 text-[#194d8e]">
+                                {application.Candidate.FullName.charAt(0) || "U"}
+                            </AvatarFallback>
+                        </Avatar>
 
-            <div className="min-w-0 flex-1">
-                <p className="text-sm font-medium text-gray-900">{application.Candidate.FullName}</p>
-                <Badge variant="secondary" className="mt-0.5 bg-blue-50 text-[#194d8e] text-[10px]">
-                    <Calendar size={10} className="mr-1" /> {formatDate(application.AppliedAt)}
-                </Badge>
-            </div>
+                        <div className="min-w-0 flex-1">
+                            <div className="flex flex-wrap items-center gap-2">
+                                <p className="truncate text-sm font-semibold text-gray-900">
+                                    {application.Candidate.FullName}
+                                </p>
+                                <Badge variant="outline" className={getStatusBadge(application.Status)}>
+                                    {ApplicationStatusLabel[application.Status as ApplicationStatus] || application.Status}
+                                </Badge>
+                            </div>
+                            <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-gray-500">
+                                <span className="flex items-center gap-1">
+                                    <Clock size={12} />
+                                    Ứng tuyển lúc {formatDateTime(application.AppliedAt)}
+                                </span>
+                                {application.ResumeUrl ? (
+                                    <a
+                                        href={application.ResumeUrl}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="inline-flex items-center gap-1 text-[#194d8e] hover:underline"
+                                    >
+                                        <FileText size={12} />
+                                        Xem CV
+                                    </a>
+                                ) : (
+                                    <span className="text-gray-400">Chưa có CV đính kèm</span>
+                                )}
+                            </div>
+                        </div>
+                    </div>
 
-            <div className="flex items-center gap-1">
-                {application.ResumeUrl && (
-                    <a href={application.ResumeUrl} target="_blank" rel="noopener noreferrer">
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400 hover:text-[#194d8e]">
-                            <FileText size={16} />
+                    <div className="flex flex-wrap items-center gap-2">
+                        <Button
+                            type="button"
+                            size="sm"
+                            className="bg-green-600 hover:bg-green-700"
+                            disabled={!canAccept || acceptMutation.isPending}
+                            onClick={() => acceptMutation.mutate()}
+                        >
+                            {acceptMutation.isPending ? <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> : <Check size={14} className="mr-1.5" />}
+                            Duyệt
                         </Button>
-                    </a>
-                )}
-                <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400 hover:text-[#194d8e]">
-                    <User size={16} />
-                </Button>
-            </div>
-        </div>
+                        <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            className="border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
+                            disabled={!isPending || rejectMutation.isPending}
+                            onClick={() => setRejectDialogOpen(true)}
+                        >
+                            <X size={14} className="mr-1.5" />
+                            Từ chối
+                        </Button>
+                    </div>
+                </div>
+            </Card>
+
+            <Dialog open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Từ chối ứng viên</DialogTitle>
+                        <DialogDescription>
+                            Bạn có thể nhập lý do để lưu cùng kết quả xử lý hồ sơ.
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <div className="space-y-2">
+                        <Label htmlFor={`reject-reason-${application.ID}`}>Lý do từ chối</Label>
+                        <Textarea
+                            id={`reject-reason-${application.ID}`}
+                            rows={4}
+                            value={rejectReason}
+                            onChange={(event) => setRejectReason(event.target.value)}
+                            placeholder="Ví dụ: Hồ sơ chưa phù hợp với yêu cầu hiện tại"
+                        />
+                    </div>
+
+                    <DialogFooter>
+                        <Button type="button" variant="outline" onClick={() => setRejectDialogOpen(false)}>
+                            Hủy
+                        </Button>
+                        <Button
+                            type="button"
+                            variant="destructive"
+                            disabled={rejectMutation.isPending}
+                            onClick={() => rejectMutation.mutate()}
+                        >
+                            {rejectMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            Xác nhận từ chối
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+        </>
     );
+}
+
+function getCardBorder(status: string) {
+    switch (status) {
+        case ApplicationStatus.ACCEPTED:
+            return "border-l-green-500";
+        case ApplicationStatus.REJECTED:
+            return "border-l-red-500";
+        default:
+            return "border-l-blue-200";
+    }
+}
+
+function getStatusBadge(status: string) {
+    switch (status) {
+        case ApplicationStatus.ACCEPTED:
+            return "border-green-200 bg-green-50 text-green-700";
+        case ApplicationStatus.REJECTED:
+            return "border-red-200 bg-red-50 text-red-700";
+        default:
+            return "border-amber-200 bg-amber-50 text-amber-700";
+    }
+}
+
+function formatDate(dateStr: string) {
+    const date = new Date(dateStr);
+    return `${date.getDate().toString().padStart(2, "0")}/${(date.getMonth() + 1).toString().padStart(2, "0")}/${date.getFullYear()}`;
+}
+
+function formatDateTime(dateStr: string) {
+    const date = new Date(dateStr);
+    return `${formatDate(dateStr)} ${date.getHours().toString().padStart(2, "0")}:${date.getMinutes().toString().padStart(2, "0")}`;
 }

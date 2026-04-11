@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { toast } from "react-toastify";
 import { authService } from "@/services/auth.service";
-import { candidateService } from "@/services/candidate.service";
 import { Level, LevelLabel } from "@/types/enums";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -129,7 +128,7 @@ export default function CandidateRegisterPage() {
   // ── Steps ────────────────────────────────────────────────
   const handleStep1 = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!fullName.trim() || !email.trim() || !password.trim()) {
+    if (!fullName.trim() || !email.trim() || !password.trim() || !phone.trim()) {
       toast.error("Vui lòng nhập đầy đủ thông tin bắt buộc");
       return;
     }
@@ -138,40 +137,40 @@ export default function CandidateRegisterPage() {
 
   const handleRegister = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
+    if (!level) {
+      toast.error("Vui lòng chọn cấp độ kinh nghiệm");
+      return;
+    }
+
     setIsLoading(true);
     try {
-      await authService.signUp({
+      await authService.signUpCandidate({
         email: email.trim(),
         password: password.trim(),
-        fullName: fullName.trim(),
-        role: "candidate",
-        phoneNumber: phone.trim(),
+        full_name: fullName.trim(),
+        phone_number: phone.trim(),
+        candidate: {
+          level,
+          ...(skills.length ? { skills } : {}),
+          ...(certifications.length ? { certifications } : {}),
+          ...(educations.length
+            ? {
+                educations: educations.map((edu) =>
+                  [
+                    edu.school.trim(),
+                    edu.degree.trim(),
+                    edu.field.trim(),
+                    edu.startYear.trim() && `Từ ${edu.startYear.trim()}`,
+                    edu.endYear.trim() && `đến ${edu.endYear.trim()}`,
+                  ]
+                    .filter(Boolean)
+                    .join(" - "),
+                ),
+              }
+            : {}),
+        },
       });
-
-      // Try to update profile with step-2 data
-      if (
-        level ||
-        skills.length ||
-        certifications.length ||
-        educations.length
-      ) {
-        try {
-          await candidateService.updateProfile({
-            Level: level || null,
-            Certifications: certifications.length ? certifications : null,
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            ...(skills.length ? ({ Skills: skills } as any) : {}),
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            ...(educations.length ? ({ Educations: educations } as any) : {}),
-          });
-        } catch {
-          // profile update requires auth — save for after login
-          localStorage.setItem(
-            "pendingCandidateProfile",
-            JSON.stringify({ level, skills, certifications, educations }),
-          );
-        }
-      }
 
       toast.success("Đăng ký thành công! Vui lòng kiểm tra email để xác thực.");
       router.push("/verify-email?email=" + encodeURIComponent(email));
@@ -325,7 +324,9 @@ export default function CandidateRegisterPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="phone">Số điện thoại</Label>
+                  <Label htmlFor="phone">
+                    Số điện thoại <span className="text-red-500">*</span>
+                  </Label>
                   <div className="relative">
                     <Phone className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
                     <Input
