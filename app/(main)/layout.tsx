@@ -67,7 +67,7 @@ export default function MainLayout({
 
     if (!isLoggedIn) {
         return (
-            <div className="flex h-screen items-center justify-center">
+            <div className="flex h-screen items-center justify-center bg-background text-foreground">
                 <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
             </div>
         );
@@ -82,7 +82,7 @@ export default function MainLayout({
             />
             <div
                 className={cn(
-                    "flex flex-1 flex-col transition-[margin-left] duration-300 ease-in-out",
+                    "flex min-w-0 flex-1 flex-col transition-[margin-left] duration-300 ease-in-out",
                     desktopSidebarCollapsed ? "lg:ml-[88px]" : "lg:ml-[240px]",
                 )}
             >
@@ -91,7 +91,7 @@ export default function MainLayout({
                     desktopSidebarCollapsed={desktopSidebarCollapsed}
                     onToggleDesktopSidebar={() => setDesktopSidebarCollapsed((current) => !current)}
                 />
-                <main className="flex-1 p-4 sm:p-6 lg:p-8">{children}</main>
+                <main className="min-w-0 flex-1 overflow-x-hidden p-4 sm:p-6 lg:p-8">{children}</main>
             </div>
         </div>
     );

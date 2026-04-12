@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { applicationService } from "@/services/application.service";
 import { jobService } from "@/services/job.service";
@@ -22,23 +22,52 @@ import {
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Check, Clock, FileText, Loader2, Users, X } from "lucide-react";
+import { Check, Clock, FileText, Loader2, Search, Users, X } from "lucide-react";
 import { toast } from "react-toastify";
 
 export default function CandidatesPage() {
-    const { data: jobs, isLoading } = useQuery({
+    const [searchTerm, setSearchTerm] = useState("");
+    const { data: jobs, isLoading, isError } = useQuery({
         queryKey: ["recruiter-jobs-for-candidates"],
         queryFn: () => jobService.getJobsByRecruiter(),
     });
+
+    const filteredJobs = useMemo(() => {
+        const keyword = searchTerm.trim().toLowerCase();
+        if (!keyword) {
+            return jobs || [];
+        }
+
+        return (jobs || []).filter((job) =>
+            [job.Title, job.Address, ...job.Categories]
+                .filter(Boolean)
+                .some((value) => value.toLowerCase().includes(keyword)),
+        );
+    }, [jobs, searchTerm]);
 
     if (isLoading) {
         return (
             <div className="mx-auto max-w-[1000px] space-y-4">
                 {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-[100px] rounded-xl" />)}
+            </div>
+        );
+    }
+
+    if (isError) {
+        return (
+            <div className="mx-auto max-w-[1000px]">
+                <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-card py-20 text-center">
+                    <Users size={48} className="mb-4 text-muted-foreground" />
+                    <p className="text-lg font-medium text-foreground">Không thể tải danh sách ứng viên</p>
+                    <p className="mt-2 max-w-md text-sm text-muted-foreground">
+                        Kiểm tra kết nối tới `job-service` hoặc `application-service`, rồi thử tải lại trang.
+                    </p>
+                </div>
             </div>
         );
     }
@@ -53,12 +82,46 @@ export default function CandidatesPage() {
     }
 
     return (
-        <div className="mx-auto max-w-[1000px]">
+        <div className="mx-auto max-w-[1000px] space-y-4">
+            <div className="space-y-3">
+                <div className="relative">
+                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                        value={searchTerm}
+                        onChange={(event) => setSearchTerm(event.target.value)}
+                        className="h-10 border-border bg-card pl-10 shadow-sm"
+                        placeholder="Tìm theo tên job, địa điểm hoặc danh mục"
+                    />
+                </div>
+                <div className="flex items-center justify-between text-sm text-muted-foreground">
+                    <span>Hiển thị {filteredJobs.length}/{jobs.length} bài đăng</span>
+                    {searchTerm && (
+                        <button
+                            type="button"
+                            className="font-medium text-primary hover:underline"
+                            onClick={() => setSearchTerm("")}
+                        >
+                            Xóa tìm kiếm
+                        </button>
+                    )}
+                </div>
+            </div>
+
             <Accordion type="multiple" className="space-y-3">
-                {jobs.map((job) => (
+                {filteredJobs.map((job) => (
                     <JobApplicationItem key={job.ID} job={job} />
                 ))}
             </Accordion>
+
+            {filteredJobs.length === 0 && (
+                <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-card py-16 text-center">
+                    <Users size={42} className="mb-4 text-muted-foreground" />
+                    <p className="text-lg font-medium text-foreground">Không có bài đăng phù hợp</p>
+                    <p className="mt-2 text-sm text-muted-foreground">
+                        Thử thay đổi từ khóa để xem các job khác.
+                    </p>
+                </div>
+            )}
         </div>
     );
 }

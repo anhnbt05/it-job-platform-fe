@@ -35,13 +35,18 @@ export default function Header({
     const getPageTitle = () => {
         if (pathname.includes("/admin/dashboard")) return "Tổng quan hệ thống";
         if (pathname.includes("/admin/users")) return "Quản lý người dùng";
+        if (pathname.includes("/admin/categories")) return "Quản lý danh mục";
+        if (pathname.includes("/admin/companies")) return "Quản lý công ty";
+        if (pathname.includes("/admin/uploads")) return "Tải tệp nội bộ";
         if (pathname.includes("/admin/jobs-review")) return "Duyệt tin tuyển dụng";
+        if (pathname.includes("/candidate/applied-jobs/")) return "Chi tiết đơn ứng tuyển";
         if (pathname.includes("/find-jobs")) return "Tìm kiếm việc làm";
         if (pathname.includes("/applied-jobs")) return "Đã ứng tuyển";
         if (pathname.includes("/favorite-jobs")) return "Việc làm yêu thích";
         if (pathname.includes("/notifications")) return "Thông báo";
         if (pathname.includes("/profile/edit")) return "Chỉnh sửa hồ sơ";
         if (pathname.includes("/profile")) return "Hồ sơ cá nhân";
+        if (pathname.includes("/recruiter/branches")) return "Quản lý chi nhánh";
         if (pathname.includes("/manage-jobs")) return "Quản lý bài đăng";
         if (pathname.includes("/candidates")) return "Danh sách ứng viên";
         if (pathname.includes("/post-job")) return "Thêm tin tuyển dụng";

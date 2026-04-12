@@ -36,7 +36,7 @@ export default function AppliedJobsPage() {
     const [statusFilter, setStatusFilter] = useState<string>("all");
     const [selectedApplication, setSelectedApplication] = useState<Application | null>(null);
 
-    const { data: applications = [], isLoading } = useQuery({
+    const { data: applications = [], isLoading, isError } = useQuery({
         queryKey: ["applied-jobs"],
         queryFn: () => applicationService.getAppliedJobs(),
     });
@@ -94,6 +94,26 @@ export default function AppliedJobsPage() {
                 </Select>
             </div>
 
+            <div className="mb-4 flex items-center justify-between text-sm text-muted-foreground">
+                <span>
+                    {isLoading
+                        ? "Đang tải đơn ứng tuyển..."
+                        : `Hiển thị ${filteredApplications.length}/${applications.length} đơn ứng tuyển`}
+                </span>
+                {(searchQuery || statusFilter !== "all") && (
+                    <button
+                        type="button"
+                        className="font-medium text-primary hover:underline"
+                        onClick={() => {
+                            setSearchQuery("");
+                            setStatusFilter("all");
+                        }}
+                    >
+                        Xóa bộ lọc
+                    </button>
+                )}
+            </div>
+
             <div className="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
                 {[
                     { label: "Tổng cộng", count: applications.length, className: "text-blue-700" },
@@ -113,6 +133,14 @@ export default function AppliedJobsPage() {
                     {[...Array(4)].map((_, index) => (
                         <Skeleton key={index} className="h-[140px] rounded-xl" />
                     ))}
+                </div>
+            ) : isError ? (
+                <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-card py-20 text-center">
+                    <FileText size={48} className="mb-4 text-muted-foreground" />
+                    <p className="text-lg font-medium text-foreground">Không thể tải danh sách ứng tuyển</p>
+                    <p className="mt-2 max-w-md text-sm text-muted-foreground">
+                        Thử tải lại trang hoặc kiểm tra kết nối tới `application-service`.
+                    </p>
                 </div>
             ) : (
                 <div className="space-y-3">

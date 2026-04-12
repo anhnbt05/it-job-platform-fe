@@ -162,7 +162,7 @@ export default function CandidateProfilePage() {
                                                 <ul className="mt-3 space-y-1.5">
                                                     {experience.Descriptions.map((description) => (
                                                         <li key={description} className="flex items-start gap-2 text-sm text-muted-foreground">
-                                                            <span className="mt-2 h-1 w-1 flex-shrink-0 rounded-full bg-gray-400" />
+                                                            <span className="mt-2 h-1 w-1 flex-shrink-0 rounded-full bg-muted-foreground/70" />
                                                             <span>{description}</span>
                                                         </li>
                                                     ))}

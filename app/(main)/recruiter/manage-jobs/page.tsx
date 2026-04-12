@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { jobService } from "@/services/job.service";
@@ -9,6 +9,7 @@ import { JobListItem, JobStatus, JobStatusLabel, JobTypeLabel, LevelLabel, JobTy
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
@@ -29,17 +30,19 @@ import {
     Users,
     PlusCircle,
     Loader2,
+    Search,
 } from "lucide-react";
 import { toast } from "react-toastify";
 
 export default function ManageJobsPage() {
     const { userId } = useAuthStore();
+    const [searchTerm, setSearchTerm] = useState("");
     const [statusFilter, setStatusFilter] = useState<string>("all");
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [deletingJobId, setDeletingJobId] = useState<string | null>(null);
     const queryClient = useQueryClient();
 
-    const { data: jobs, isLoading } = useQuery({
+    const { data: jobs, isLoading, isError } = useQuery({
         queryKey: ["recruiter-jobs", userId],
         queryFn: async () => {
             const res = await jobService.getJobsByRecruiter(userId!);
@@ -58,10 +61,21 @@ export default function ManageJobsPage() {
         onError: () => toast.error("Có lỗi xảy ra"),
     });
 
-    const filteredJobs = jobs?.filter((job) => {
+    const filteredJobs = useMemo(() => (jobs || []).filter((job) => {
         if (statusFilter !== "all" && job.Status !== statusFilter) return false;
-        return true;
-    });
+
+        const keyword = searchTerm.trim().toLowerCase();
+        if (!keyword) return true;
+
+        return [
+            job.Title,
+            job.Address,
+            job.Salary,
+            ...job.Categories,
+        ]
+            .filter(Boolean)
+            .some((value) => value.toLowerCase().includes(keyword));
+    }), [jobs, searchTerm, statusFilter]);
 
     const getStatusColor = (status: string) => {
         switch (status) {
@@ -109,23 +123,61 @@ export default function ManageJobsPage() {
             </div>
 
             {/* Filter */}
-            <div className="mb-4">
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
-                    <SelectTrigger className="h-10 w-full border-border bg-card shadow-sm sm:w-[220px]">
-                        <SelectValue placeholder="Trạng thái" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="all">Tất cả</SelectItem>
-                        {Object.entries(JobStatusLabel).map(([key, label]) => (
-                            <SelectItem key={key} value={key}>{label}</SelectItem>
-                        ))}
-                    </SelectContent>
-                </Select>
+            <div className="mb-4 space-y-4">
+                <div className="grid gap-3 lg:grid-cols-[1fr_220px]">
+                    <div className="relative">
+                        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                        <Input
+                            value={searchTerm}
+                            onChange={(event) => setSearchTerm(event.target.value)}
+                            placeholder="Tìm theo tiêu đề, địa điểm, lương hoặc danh mục"
+                            className="h-10 border-border bg-card pl-10 shadow-sm"
+                        />
+                    </div>
+
+                    <Select value={statusFilter} onValueChange={setStatusFilter}>
+                        <SelectTrigger className="h-10 w-full border-border bg-card shadow-sm sm:w-[220px]">
+                            <SelectValue placeholder="Trạng thái" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">Tất cả</SelectItem>
+                            {Object.entries(JobStatusLabel).map(([key, label]) => (
+                                <SelectItem key={key} value={key}>{label}</SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                </div>
+
+                <div className="flex items-center justify-between text-sm text-muted-foreground">
+                    <span>
+                        {isLoading ? "Đang tải bài đăng..." : `Hiển thị ${filteredJobs.length}/${jobs?.length || 0} bài đăng`}
+                    </span>
+                    {(searchTerm || statusFilter !== "all") && (
+                        <button
+                            type="button"
+                            className="font-medium text-primary hover:underline"
+                            onClick={() => {
+                                setSearchTerm("");
+                                setStatusFilter("all");
+                            }}
+                        >
+                            Xóa bộ lọc
+                        </button>
+                    )}
+                </div>
             </div>
 
             {/* Job List */}
             {isLoading ? (
                 <div className="space-y-4">{[...Array(4)].map((_, i) => <Skeleton key={i} className="h-[140px] rounded-xl" />)}</div>
+            ) : isError ? (
+                <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-card py-20 text-center">
+                    <Briefcase size={48} className="mb-4 text-muted-foreground" />
+                    <p className="text-lg font-medium text-foreground">Không thể tải danh sách bài đăng</p>
+                    <p className="mt-2 max-w-md text-sm text-muted-foreground">
+                        Kiểm tra kết nối tới `job-service` hoặc thử tải lại trang.
+                    </p>
+                </div>
             ) : (
                 <div className="space-y-3">
                     {filteredJobs?.map((job) => (
