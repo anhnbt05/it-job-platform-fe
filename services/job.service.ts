@@ -28,6 +28,13 @@ export const jobService = {
         return unwrapData<Record<string, unknown>[]>(response).map((job) => mapJobListItem(job));
     },
 
+    async getRecommendedJobs(candidateId: string, level: string) {
+        const response = await api.get(`/jobs/candidates/${candidateId}/recommended`, {
+            params: { level },
+        });
+        return unwrapData<Record<string, unknown>[]>(response).map((job) => mapJobDetail(job));
+    },
+
     async getJobById(id: string) {
         const response = await api.get(`/jobs/${id}`);
         return mapJobDetail(unwrapData<Record<string, unknown>>(response));
@@ -47,6 +54,20 @@ export const jobService = {
 
     deleteJob: (id: string) =>
         api.delete(`/jobs/${id}`),
+
+    processJobStatus: (payload: {
+        openJobIds?: string[];
+        rejectedJobs?: Array<{ jobId: string; reason?: string }>;
+    }) =>
+        api.patch("/jobs/process/status", payload),
+
+    approveJob: (jobId: string) =>
+        api.patch("/jobs/process/status", { openJobIds: [jobId] }),
+
+    rejectJob: (jobId: string, reason?: string) =>
+        api.patch("/jobs/process/status", {
+            rejectedJobs: [{ jobId, reason }],
+        }),
 
     async getFavoriteJobs() {
         const response = await api.get("/jobs/favorites");

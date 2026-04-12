@@ -66,10 +66,10 @@ export default function ManageJobsPage() {
     const getStatusColor = (status: string) => {
         switch (status) {
             case "open": return "bg-green-50 text-green-700 border-green-200";
-            case "closed": return "bg-gray-100 text-gray-600 border-gray-200";
+            case "closed": return "bg-muted text-muted-foreground border-border";
             case "pending": return "bg-amber-50 text-amber-700 border-amber-200";
             case "rejected": return "bg-red-50 text-red-700 border-red-200";
-            default: return "bg-gray-50 text-gray-600 border-gray-200";
+            default: return "bg-muted/40 text-muted-foreground border-border";
         }
     };
 
@@ -81,28 +81,28 @@ export default function ManageJobsPage() {
     return (
         <div className="mx-auto max-w-[1100px]">
             {/* Header */}
-            <div className="mb-6 flex items-center justify-between">
+            <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                    <h1 className="text-xl font-bold text-gray-900">Quản lý bài đăng</h1>
-                    <p className="text-sm text-gray-500">{jobs?.length || 0} bài đăng</p>
+                    <h1 className="text-xl font-bold text-foreground">Quản lý bài đăng</h1>
+                    <p className="text-sm text-muted-foreground">{jobs?.length || 0} bài đăng</p>
                 </div>
                 <Link href="/recruiter/post-job">
-                    <Button className="bg-[#194d8e] hover:bg-[#194d8e]/90">
+                    <Button className="w-full bg-primary hover:bg-primary/90 sm:w-auto">
                         <PlusCircle size={16} className="mr-2" /> Thêm tin tuyển dụng
                     </Button>
                 </Link>
             </div>
 
             {/* Stats */}
-            <div className="mb-6 grid grid-cols-4 gap-4">
+            <div className="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
                 {[
                     { label: "Tổng", count: jobs?.length || 0, color: "text-blue-700" },
                     { label: "Đang mở", count: jobs?.filter(j => j.Status === "open").length || 0, color: "text-green-700" },
                     { label: "Chờ duyệt", count: jobs?.filter(j => j.Status === "pending").length || 0, color: "text-amber-700" },
                     { label: "Đã đóng", count: jobs?.filter(j => j.Status === "closed" || j.Status === "rejected").length || 0, color: "text-red-700" },
                 ].map((s) => (
-                    <Card key={s.label} className="border-gray-100 p-4 shadow-sm">
-                        <p className="text-sm text-gray-500">{s.label}</p>
+                    <Card key={s.label} className="border-border p-4 shadow-sm">
+                        <p className="text-sm text-muted-foreground">{s.label}</p>
                         <p className={`mt-1 text-2xl font-bold ${s.color}`}>{s.count}</p>
                     </Card>
                 ))}
@@ -111,7 +111,7 @@ export default function ManageJobsPage() {
             {/* Filter */}
             <div className="mb-4">
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
-                    <SelectTrigger className="h-10 w-[200px] bg-white shadow-sm border-gray-200">
+                    <SelectTrigger className="h-10 w-full border-border bg-card shadow-sm sm:w-[220px]">
                         <SelectValue placeholder="Trạng thái" />
                     </SelectTrigger>
                     <SelectContent>
@@ -129,11 +129,11 @@ export default function ManageJobsPage() {
             ) : (
                 <div className="space-y-3">
                     {filteredJobs?.map((job) => (
-                        <Card key={job.ID} className="border-gray-100 p-0 shadow-sm transition-all hover:shadow-md">
-                            <div className="flex items-center gap-5 p-5">
+                        <Card key={job.ID} className="border-border p-0 shadow-sm transition-all hover:shadow-md">
+                            <div className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:gap-5">
                                 <div className="min-w-0 flex-1">
                                     <div className="flex items-center gap-3">
-                                        <Link href={`/recruiter/manage-jobs/${job.ID}`} className="text-base font-semibold text-gray-900 hover:text-[#194d8e] line-clamp-1">
+                                        <Link href={`/recruiter/manage-jobs/${job.ID}`} className="text-base font-semibold text-foreground hover:text-primary line-clamp-1">
                                             {job.Title}
                                         </Link>
                                         <Badge variant="outline" className={getStatusColor(job.Status)}>
@@ -142,18 +142,18 @@ export default function ManageJobsPage() {
                                     </div>
 
                                     <div className="mt-2 flex flex-wrap gap-2">
-                                        <Badge variant="secondary" className="bg-blue-50 text-[#194d8e] text-xs">
+                                        <Badge variant="secondary" className="bg-primary/10 text-primary text-xs">
                                             <Briefcase size={10} className="mr-1" /> {JobTypeLabel[job.Type as JobType] || job.Type}
                                         </Badge>
                                         <Badge variant="secondary" className="bg-purple-50 text-purple-700 text-xs">
                                             {LevelLabel[job.Level as Level] || job.Level}
                                         </Badge>
                                         {job.Categories?.slice(0, 3).map((cat, idx) => (
-                                            <Badge key={idx} variant="outline" className="border-gray-200 text-gray-500 text-xs">{cat}</Badge>
+                                            <Badge key={idx} variant="outline" className="border-border text-muted-foreground text-xs">{cat}</Badge>
                                         ))}
                                     </div>
 
-                                    <div className="mt-2.5 flex items-center gap-4 text-xs text-gray-400">
+                                    <div className="mt-2.5 flex items-center gap-4 text-xs text-muted-foreground">
                                         <span className="flex items-center gap-1"><DollarSign size={12} /> {job.Salary}</span>
                                         <span className="flex items-center gap-1"><MapPin size={12} /> {job.Address}</span>
                                         <span className="flex items-center gap-1"><Users size={12} /> {job.Vacancies} người</span>
@@ -161,16 +161,16 @@ export default function ManageJobsPage() {
                                     </div>
                                 </div>
 
-                                <div className="flex items-center gap-1">
+                                <div className="flex items-center gap-1 self-end sm:self-auto">
                                     <Link href={`/recruiter/edit-job/${job.ID}`}>
-                                        <Button variant="ghost" size="icon" className="text-gray-400 hover:text-[#194d8e]">
+                                        <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-primary">
                                             <Edit size={16} />
                                         </Button>
                                     </Link>
                                     <Button
                                         variant="ghost"
                                         size="icon"
-                                        className="text-gray-400 hover:text-red-500"
+                                        className="text-muted-foreground hover:text-red-500"
                                         onClick={() => { setDeletingJobId(job.ID); setDeleteDialogOpen(true); }}
                                     >
                                         <Trash2 size={16} />
@@ -182,9 +182,9 @@ export default function ManageJobsPage() {
 
                     {filteredJobs?.length === 0 && (
                         <div className="flex flex-col items-center justify-center py-20">
-                            <Briefcase size={48} className="mb-4 text-gray-300" />
-                            <p className="text-lg font-medium text-gray-500">Chưa có bài đăng tuyển dụng nào</p>
-                            <Link href="/recruiter/post-job" className="mt-2 text-sm text-[#194d8e] hover:underline">Thêm tin tuyển dụng</Link>
+                            <Briefcase size={48} className="mb-4 text-muted-foreground" />
+                            <p className="text-lg font-medium text-muted-foreground">Chưa có bài đăng tuyển dụng nào</p>
+                            <Link href="/recruiter/post-job" className="mt-2 text-sm text-primary hover:underline">Thêm tin tuyển dụng</Link>
                         </div>
                     )}
                 </div>

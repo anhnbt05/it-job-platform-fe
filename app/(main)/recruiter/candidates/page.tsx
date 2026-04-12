@@ -46,8 +46,8 @@ export default function CandidatesPage() {
     if (!jobs || jobs.length === 0) {
         return (
             <div className="flex flex-col items-center justify-center py-20">
-                <Users size={48} className="mb-4 text-gray-300" />
-                <p className="text-lg font-medium text-gray-500">Hiện tại bạn chưa có bài đăng tuyển dụng nào</p>
+                <Users size={48} className="mb-4 text-muted-foreground" />
+                <p className="text-lg font-medium text-muted-foreground">Hiện tại bạn chưa có bài đăng tuyển dụng nào</p>
             </div>
         );
     }
@@ -73,21 +73,21 @@ function JobApplicationItem({ job }: { job: JobListItem }) {
     const acceptedCount = applications?.filter((application) => application.Status === ApplicationStatus.ACCEPTED).length || 0;
 
     return (
-        <AccordionItem value={job.ID} className="rounded-xl border border-gray-100 bg-white shadow-sm">
+        <AccordionItem value={job.ID} className="rounded-xl border border-border bg-card shadow-sm">
             <AccordionTrigger className="px-5 py-4 hover:no-underline [&[data-state=open]]:pb-2">
                 <div className="flex flex-1 flex-col items-start gap-2 text-left">
                     <div className="flex flex-wrap items-center gap-2">
-                        <span className="font-semibold text-gray-900">{job.Title}</span>
+                        <span className="font-semibold text-foreground">{job.Title}</span>
                         {pendingCount > 0 && (
                             <Badge className="bg-red-50 text-red-600 text-[10px]">
                                 {pendingCount} mới
                             </Badge>
                         )}
                     </div>
-                    <span className="text-xs text-gray-400">
+                    <span className="text-xs text-muted-foreground">
                         {formatDate(job.PostedAt)} - {formatDate(job.ExpiredAt)}
                     </span>
-                    <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-gray-500">
+                    <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                         <span className="flex items-center gap-1">
                             <Users size={14} />
                             {applications?.length || 0} đơn ứng tuyển
@@ -105,7 +105,7 @@ function JobApplicationItem({ job }: { job: JobListItem }) {
                         {[...Array(2)].map((_, i) => <Skeleton key={i} className="h-[96px] rounded-lg" />)}
                     </div>
                 ) : !applications || applications.length === 0 ? (
-                    <p className="py-4 text-center text-sm text-gray-400">Chưa có ứng viên nào ứng tuyển</p>
+                    <p className="py-4 text-center text-sm text-muted-foreground">Chưa có ứng viên nào ứng tuyển</p>
                 ) : (
                     <div className="space-y-3">
                         {applications.map((application) => (
@@ -166,21 +166,21 @@ function CandidateCard({
                     <div className="flex min-w-0 flex-1 items-center gap-4">
                         <Avatar className="h-11 w-11">
                             <AvatarImage src={application.Candidate.AvatarUrl || undefined} />
-                            <AvatarFallback className="bg-[#194d8e]/10 text-[#194d8e]">
+                            <AvatarFallback className="bg-primary/10 text-primary">
                                 {application.Candidate.FullName.charAt(0) || "U"}
                             </AvatarFallback>
                         </Avatar>
 
                         <div className="min-w-0 flex-1">
                             <div className="flex flex-wrap items-center gap-2">
-                                <p className="truncate text-sm font-semibold text-gray-900">
+                                <p className="truncate text-sm font-semibold text-foreground">
                                     {application.Candidate.FullName}
                                 </p>
                                 <Badge variant="outline" className={getStatusBadge(application.Status)}>
                                     {ApplicationStatusLabel[application.Status as ApplicationStatus] || application.Status}
                                 </Badge>
                             </div>
-                            <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-gray-500">
+                            <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
                                 <span className="flex items-center gap-1">
                                     <Clock size={12} />
                                     Ứng tuyển lúc {formatDateTime(application.AppliedAt)}
@@ -190,13 +190,13 @@ function CandidateCard({
                                         href={application.ResumeUrl}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="inline-flex items-center gap-1 text-[#194d8e] hover:underline"
+                                        className="inline-flex items-center gap-1 text-primary hover:underline"
                                     >
                                         <FileText size={12} />
                                         Xem CV
                                     </a>
                                 ) : (
-                                    <span className="text-gray-400">Chưa có CV đính kèm</span>
+                                    <span className="text-muted-foreground">Chưa có CV đính kèm</span>
                                 )}
                             </div>
                         </div>

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 import AppProviders from "@/providers/app-providers";
 
@@ -24,10 +25,22 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        <Script id="theme-init" strategy="beforeInteractive">
+          {`
+            (() => {
+              try {
+                const theme = localStorage.getItem("app-theme");
+                const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+                const shouldUseDark = theme ? theme === "dark" : prefersDark;
+                document.documentElement.classList.toggle("dark", shouldUseDark);
+              } catch {}
+            })();
+          `}
+        </Script>
         <AppProviders>{children}</AppProviders>
       </body>
     </html>

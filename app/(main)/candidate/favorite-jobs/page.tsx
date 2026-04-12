@@ -37,7 +37,7 @@ export default function FavoriteJobsPage() {
 
     return (
         <div className="mx-auto max-w-[1100px]">
-            <p className="mb-4 text-sm text-gray-500">
+            <p className="mb-4 text-sm text-muted-foreground">
                 {isLoading ? "Đang tải danh sách đã lưu..." : `${favorites.length} công việc yêu thích`}
             </p>
 
@@ -50,35 +50,35 @@ export default function FavoriteJobsPage() {
             ) : (
                 <div className="space-y-3">
                     {favorites.map((favorite) => (
-                        <Card key={favorite.ID} className="group border-gray-100 p-0 shadow-sm transition-all hover:shadow-md">
+                        <Card key={favorite.ID} className="group border-border p-0 shadow-sm transition-all hover:shadow-md">
                             <div className="flex items-start gap-5 p-5">
-                                <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-[#194d8e]/5">
-                                    <Briefcase size={20} className="text-[#194d8e]" />
+                                <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-primary/5">
+                                    <Briefcase size={20} className="text-primary" />
                                 </div>
 
                                 <div className="min-w-0 flex-1">
                                     <Link
                                         href={`/candidate/jobs/${favorite.Job.ID}`}
-                                        className="line-clamp-1 text-base font-semibold text-gray-900 hover:text-[#194d8e]"
+                                        className="line-clamp-1 text-base font-semibold text-foreground hover:text-primary"
                                     >
                                         {favorite.Job.Title}
                                     </Link>
 
                                     <div className="mt-2 flex flex-wrap gap-2">
-                                        <Badge variant="secondary" className="bg-blue-50 text-[#194d8e]">
+                                        <Badge variant="secondary" className="bg-primary/10 text-primary">
                                             {JobTypeLabel[favorite.Job.Type as JobType] || favorite.Job.Type}
                                         </Badge>
                                         <Badge variant="secondary" className="bg-purple-50 text-purple-700">
                                             {LevelLabel[favorite.Job.Level as Level] || favorite.Job.Level}
                                         </Badge>
                                         {favorite.Job.Categories.slice(0, 2).map((category) => (
-                                            <Badge key={category} variant="outline" className="border-gray-200 text-gray-500">
+                                            <Badge key={category} variant="outline" className="border-border text-muted-foreground">
                                                 {category}
                                             </Badge>
                                         ))}
                                     </div>
 
-                                    <div className="mt-3 flex flex-wrap items-center gap-4 text-sm text-gray-500">
+                                    <div className="mt-3 flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
                                         <span className="flex items-center gap-1.5">
                                             <DollarSign size={14} />
                                             {favorite.Job.Salary || "Thoả thuận"}
@@ -104,7 +104,7 @@ export default function FavoriteJobsPage() {
                                         <Heart size={18} className="fill-red-400" />
                                     </Button>
                                     <Link href={`/candidate/jobs/${favorite.Job.ID}`}>
-                                        <Button variant="ghost" size="icon" className="text-gray-400 group-hover:text-[#194d8e]">
+                                        <Button variant="ghost" size="icon" className="text-muted-foreground group-hover:text-primary">
                                             <ChevronRight size={18} />
                                         </Button>
                                     </Link>
@@ -115,9 +115,9 @@ export default function FavoriteJobsPage() {
 
                     {favorites.length === 0 && (
                         <div className="flex flex-col items-center justify-center py-20">
-                            <Heart size={48} className="mb-4 text-gray-300" />
-                            <p className="text-lg font-medium text-gray-500">Bạn chưa lưu công việc nào</p>
-                            <Link href="/candidate/find-jobs" className="mt-2 text-sm text-[#194d8e] hover:underline">
+                            <Heart size={48} className="mb-4 text-muted-foreground" />
+                            <p className="text-lg font-medium text-muted-foreground">Bạn chưa lưu công việc nào</p>
+                            <Link href="/candidate/find-jobs" className="mt-2 text-sm text-primary hover:underline">
                                 Khám phá việc làm
                             </Link>
                         </div>

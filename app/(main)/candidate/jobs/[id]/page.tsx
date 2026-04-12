@@ -155,8 +155,8 @@ export default function JobDetailPage() {
     if (!job) {
         return (
             <div className="flex flex-col items-center justify-center py-20">
-                <Briefcase size={48} className="mb-4 text-gray-300" />
-                <p className="text-lg font-medium text-gray-500">Không tìm thấy công việc</p>
+                <Briefcase size={48} className="mb-4 text-muted-foreground" />
+                <p className="text-lg font-medium text-muted-foreground">Không tìm thấy công việc</p>
             </div>
         );
     }
@@ -165,7 +165,7 @@ export default function JobDetailPage() {
         <div className="mx-auto max-w-[1100px]">
             <Link
                 href="/candidate/find-jobs"
-                className="mb-6 inline-flex items-center gap-2 text-sm text-gray-500 hover:text-gray-700"
+                className="mb-6 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
             >
                 <ArrowLeft size={16} />
                 Quay lại tìm việc
@@ -173,18 +173,18 @@ export default function JobDetailPage() {
 
             <div className="grid gap-6 lg:grid-cols-[2fr_1fr]">
                 <div className="space-y-6">
-                    <Card className="border-gray-100 shadow-sm">
+                    <Card className="border-border shadow-sm">
                         <CardContent className="p-6">
                             <div className="flex flex-col gap-6 md:flex-row md:items-start">
-                                <div className="flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-2xl bg-[#194d8e]/8">
-                                    <Briefcase size={30} className="text-[#194d8e]" />
+                                <div className="flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-2xl bg-primary/10">
+                                    <Briefcase size={30} className="text-primary" />
                                 </div>
 
                                 <div className="flex-1">
                                     <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                                         <div>
-                                            <h1 className="text-2xl font-bold text-gray-900">{job.Title}</h1>
-                                            <p className="mt-1 text-base text-gray-500">
+                                            <h1 className="text-2xl font-bold text-foreground">{job.Title}</h1>
+                                            <p className="mt-1 text-base text-muted-foreground">
                                                 Cơ hội tuyển dụng đang mở trên IT Job Platform
                                             </p>
                                         </div>
@@ -208,7 +208,7 @@ export default function JobDetailPage() {
                                     </div>
 
                                     <div className="mt-4 flex flex-wrap gap-2">
-                                        <Badge className="bg-blue-50 text-[#194d8e]">
+                                        <Badge className="bg-primary/10 text-primary">
                                             <Briefcase size={12} className="mr-1" />
                                             {JobTypeLabel[job.Type as JobType] || job.Type}
                                         </Badge>
@@ -217,7 +217,7 @@ export default function JobDetailPage() {
                                             {LevelLabel[job.Level as Level] || job.Level}
                                         </Badge>
                                         {job.Categories.map((category) => (
-                                            <Badge key={category} variant="outline" className="border-gray-200 text-gray-600">
+                                            <Badge key={category} variant="outline" className="border-border text-muted-foreground">
                                                 {category}
                                             </Badge>
                                         ))}
@@ -240,7 +240,7 @@ export default function JobDetailPage() {
 
                     {job.Description && (
                         <SectionCard icon={<FileText size={18} />} title="Tổng quan công việc">
-                            <p className="whitespace-pre-line text-gray-700">{job.Description}</p>
+                            <p className="whitespace-pre-line text-foreground">{job.Description}</p>
                         </SectionCard>
                     )}
 
@@ -264,14 +264,14 @@ export default function JobDetailPage() {
                 </div>
 
                 <div className="space-y-6">
-                    <Card className="border-gray-100 shadow-sm">
+                    <Card className="border-border shadow-sm">
                         <CardHeader className="pb-3">
                             <CardTitle className="text-base font-semibold">Ứng tuyển ngay</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-4">
-                            <div className="rounded-xl bg-[#194d8e]/5 p-4 text-sm text-gray-600">
-                                <div className="mb-2 flex items-center gap-2 font-medium text-gray-900">
-                                    <ShieldCheck size={16} className="text-[#194d8e]" />
+                            <div className="rounded-xl bg-primary/5 p-4 text-sm text-muted-foreground">
+                                <div className="mb-2 flex items-center gap-2 font-medium text-foreground">
+                                    <ShieldCheck size={16} className="text-primary" />
                                     Hồ sơ ứng tuyển
                                 </div>
                                 <p>
@@ -282,7 +282,7 @@ export default function JobDetailPage() {
                             </div>
 
                             <Button
-                                className="w-full bg-[#194d8e] hover:bg-[#194d8e]/90"
+                                className="w-full bg-primary hover:bg-primary/90"
                                 onClick={() => setApplyDialogOpen(true)}
                                 disabled={!!existingApplication}
                             >
@@ -297,21 +297,21 @@ export default function JobDetailPage() {
                         </CardContent>
                     </Card>
 
-                    <Card className="border-gray-100 shadow-sm">
+                    <Card className="border-border shadow-sm">
                         <CardHeader className="pb-3">
                             <CardTitle className="text-base font-semibold">Thông tin tuyển dụng</CardTitle>
                         </CardHeader>
-                        <CardContent className="space-y-4 text-sm text-gray-600">
+                        <CardContent className="space-y-4 text-sm text-muted-foreground">
                             <div>
-                                <p className="text-xs uppercase tracking-wide text-gray-400">Trạng thái</p>
-                                <p className="mt-1 font-medium text-gray-900">{job.Status}</p>
+                                <p className="text-xs uppercase tracking-wide text-muted-foreground">Trạng thái</p>
+                                <p className="mt-1 font-medium text-foreground">{job.Status}</p>
                             </div>
                             <div>
-                                <p className="text-xs uppercase tracking-wide text-gray-400">Mã nhà tuyển dụng</p>
-                                <p className="mt-1 break-all font-medium text-gray-900">{job.RecruiterId}</p>
+                                <p className="text-xs uppercase tracking-wide text-muted-foreground">Mã nhà tuyển dụng</p>
+                                <p className="mt-1 break-all font-medium text-foreground">{job.RecruiterId}</p>
                             </div>
                             <div>
-                                <p className="text-xs uppercase tracking-wide text-gray-400">Danh mục</p>
+                                <p className="text-xs uppercase tracking-wide text-muted-foreground">Danh mục</p>
                                 <p className="mt-1">{job.Categories.join(", ") || "Chưa cập nhật"}</p>
                             </div>
                         </CardContent>
@@ -329,9 +329,9 @@ export default function JobDetailPage() {
                     </DialogHeader>
 
                     <div className="space-y-4">
-                        <div className="rounded-xl border border-gray-100 bg-gray-50 p-4">
-                            <div className="mb-2 flex items-center gap-2 text-sm font-medium text-gray-900">
-                                <Paperclip size={16} className="text-[#194d8e]" />
+                        <div className="rounded-xl border border-border bg-muted/40 p-4">
+                            <div className="mb-2 flex items-center gap-2 text-sm font-medium text-foreground">
+                                <Paperclip size={16} className="text-primary" />
                                 CV đang có trong hồ sơ
                             </div>
                             {candidate?.ResumeUrl || candidate?.ResumeUrls[0] ? (
@@ -339,23 +339,23 @@ export default function JobDetailPage() {
                                     href={candidate.ResumeUrl || candidate.ResumeUrls[0]}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="text-sm text-[#194d8e] hover:underline"
+                                    className="text-sm text-primary hover:underline"
                                 >
                                     Xem CV đã lưu
                                 </a>
                             ) : (
-                                <p className="text-sm text-gray-500">Bạn chưa có CV đã lưu.</p>
+                                <p className="text-sm text-muted-foreground">Bạn chưa có CV đã lưu.</p>
                             )}
                         </div>
 
                         <div className="space-y-2">
-                            <label className="text-sm font-medium text-gray-700">Tải CV mới (tuỳ chọn)</label>
+                            <label className="text-sm font-medium text-foreground">Tải CV mới (tuỳ chọn)</label>
                             <Input
                                 type="file"
                                 accept=".pdf,.doc,.docx"
                                 onChange={(event) => setResumeFile(event.target.files?.[0] ?? null)}
                             />
-                            <p className="text-xs text-gray-400">
+                            <p className="text-xs text-muted-foreground">
                                 Nếu chọn file mới, hệ thống sẽ tải file đó lên và dùng file mới cho đơn ứng tuyển.
                             </p>
                         </div>
@@ -368,7 +368,7 @@ export default function JobDetailPage() {
                         <Button
                             onClick={() => applyMutation.mutate()}
                             disabled={applyMutation.isPending}
-                            className="bg-[#194d8e] hover:bg-[#194d8e]/90"
+                            className="bg-primary hover:bg-primary/90"
                         >
                             {applyMutation.isPending ? (
                                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -389,8 +389,8 @@ function InfoRow({ icon, label, value }: { icon: React.ReactNode; label: string;
         <div className="flex items-start gap-3">
             <span className="mt-0.5">{icon}</span>
             <div>
-                <p className="text-xs text-gray-400">{label}</p>
-                <p className="font-medium text-gray-700">{value}</p>
+                <p className="text-xs text-muted-foreground">{label}</p>
+                <p className="font-medium text-foreground">{value}</p>
             </div>
         </div>
     );
@@ -406,10 +406,10 @@ function SectionCard({
     children: React.ReactNode;
 }) {
     return (
-        <Card className="border-gray-100 shadow-sm">
+        <Card className="border-border shadow-sm">
             <CardHeader className="pb-3">
                 <CardTitle className="flex items-center gap-2 text-base font-semibold">
-                    <span className="text-[#194d8e]">{icon}</span>
+                    <span className="text-primary">{icon}</span>
                     {title}
                 </CardTitle>
             </CardHeader>
@@ -422,8 +422,8 @@ function BulletList({ items }: { items: string[] }) {
     return (
         <ul className="space-y-2">
             {items.map((item) => (
-                <li key={item} className="flex items-start gap-2.5 text-sm text-gray-700">
-                    <span className="mt-2 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-[#194d8e]" />
+                <li key={item} className="flex items-start gap-2.5 text-sm text-foreground">
+                    <span className="mt-2 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-primary" />
                     <span className="leading-relaxed">{item}</span>
                 </li>
             ))}

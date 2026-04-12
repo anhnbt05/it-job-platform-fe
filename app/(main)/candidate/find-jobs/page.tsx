@@ -3,9 +3,11 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { candidateService } from "@/services/candidate.service";
 import { categoryService } from "@/services/category.service";
 import { jobService } from "@/services/job.service";
-import { JobListItem, JobType, JobTypeLabel, Level, LevelLabel } from "@/types";
+import { useAuthStore } from "@/store/useAuthStore";
+import { JobDetail, JobListItem, JobType, JobTypeLabel, Level, LevelLabel } from "@/types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -13,6 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
+    BrainCircuit,
     Briefcase,
     ChevronRight,
     Clock,
@@ -26,6 +29,7 @@ import {
 import { toast } from "react-toastify";
 
 export default function FindJobsPage() {
+    const { userId } = useAuthStore();
     const queryClient = useQueryClient();
     const [searchQuery, setSearchQuery] = useState("");
     const [filterType, setFilterType] = useState<string>("all");
@@ -43,17 +47,20 @@ export default function FindJobsPage() {
         queryFn: () => jobService.getFavoriteJobs(),
     });
 
+    const { data: candidate } = useQuery({
+        queryKey: ["candidate-profile"],
+        queryFn: () => candidateService.getProfile(),
+    });
+
+    const { data: recommendedJobs = [], isLoading: isLoadingRecommended } = useQuery({
+        queryKey: ["recommended-jobs", userId, candidate?.Level],
+        queryFn: () => jobService.getRecommendedJobs(userId || "", candidate?.Level || ""),
+        enabled: !!userId && !!candidate?.Level,
+    });
+
     const { data: categories = [] } = useQuery({
         queryKey: ["categories"],
-        queryFn: async () => {
-            const response = await categoryService.getCategories();
-            return (response as unknown as Record<string, unknown>[])
-                .map((item) => ({
-                    id: typeof item.id === "string" ? item.id : "",
-                    name: typeof item.name === "string" ? item.name : "",
-                }))
-                .filter((item) => item.name);
-        },
+        queryFn: () => categoryService.getCategories(),
     });
 
     const favoriteIds = useMemo(
@@ -96,20 +103,87 @@ export default function FindJobsPage() {
 
     return (
         <div className="mx-auto max-w-[1100px]">
+            <section className="mb-6 overflow-hidden rounded-[28px] border border-primary/10 bg-[radial-gradient(circle_at_top_left,_rgba(25,77,142,0.16),_transparent_38%),linear-gradient(135deg,_#f8fbff_0%,_#eef6ff_46%,_#f4fbf7_100%)] shadow-sm dark:border-white/10 dark:bg-[radial-gradient(circle_at_top_left,_rgba(25,77,142,0.28),_transparent_36%),linear-gradient(135deg,_rgba(15,23,42,0.98)_0%,_rgba(17,24,39,0.95)_52%,_rgba(8,47,73,0.92)_100%)]">
+                <div className="grid gap-6 px-6 py-6 lg:grid-cols-[1.1fr_0.9fr] lg:px-8">
+                    <div>
+                        <Badge className="bg-card text-primary shadow-sm">Dành riêng cho bạn</Badge>
+                        <h2 className="mt-3 text-2xl font-bold text-foreground">
+                            Công việc gợi ý theo cấp độ {candidate?.Level ? `(${LevelLabel[candidate.Level as Level] || candidate.Level})` : ""}
+                        </h2>
+                        <p className="mt-2 max-w-[620px] text-sm leading-relaxed text-muted-foreground">
+                            Hệ thống đang ưu tiên các vị trí phù hợp với level hiện tại trong hồ sơ ứng viên của bạn để bạn lọc nhanh hơn.
+                        </p>
+
+                        <div className="mt-4 flex flex-wrap gap-3">
+                            <div className="rounded-2xl border border-white/70 bg-white/80 px-4 py-3 shadow-sm dark:border-white/10 dark:bg-white/5 dark:shadow-none">
+                                <p className="text-xs uppercase tracking-wide text-muted-foreground">Level hồ sơ</p>
+                                <p className="mt-1 text-sm font-semibold text-primary">
+                                    {candidate?.Level ? (LevelLabel[candidate.Level as Level] || candidate.Level) : "Chưa cập nhật"}
+                                </p>
+                            </div>
+                            <div className="rounded-2xl border border-white/70 bg-white/80 px-4 py-3 shadow-sm dark:border-white/10 dark:bg-white/5 dark:shadow-none">
+                                <p className="text-xs uppercase tracking-wide text-muted-foreground">Số gợi ý</p>
+                                <p className="mt-1 text-sm font-semibold text-primary">
+                                    {isLoadingRecommended ? "Đang tải..." : `${recommendedJobs.length} công việc`}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="rounded-[24px] border border-white/60 bg-white/85 p-4 shadow-sm backdrop-blur dark:border-white/10 dark:bg-slate-950/40 dark:shadow-none">
+                        <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-primary">
+                            <BrainCircuit size={16} />
+                            Top gợi ý nổi bật
+                        </div>
+
+                        {isLoadingRecommended ? (
+                            <div className="space-y-3">
+                                {[...Array(3)].map((_, index) => (
+                                    <Skeleton key={index} className="h-20 rounded-2xl" />
+                                ))}
+                            </div>
+                        ) : recommendedJobs.length > 0 ? (
+                            <div className="space-y-3">
+                                {recommendedJobs.slice(0, 3).map((job) => (
+                                    <RecommendedJobCard
+                                        key={job.ID}
+                                        job={job}
+                                        isFavorite={favoriteIds.has(job.ID)}
+                                        isUpdatingFavorite={favoriteMutation.isPending && favoriteMutation.variables?.jobId === job.ID}
+                                        onToggleFavorite={() =>
+                                            favoriteMutation.mutate({
+                                                jobId: job.ID,
+                                                shouldSave: !favoriteIds.has(job.ID),
+                                            })
+                                        }
+                                    />
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="rounded-2xl border border-dashed border-border bg-muted/40 px-4 py-6 text-sm text-muted-foreground">
+                                {candidate?.Level
+                                    ? "Hiện chưa có công việc gợi ý phù hợp với level của bạn."
+                                    : "Cập nhật level trong hồ sơ để hệ thống gợi ý công việc tốt hơn."}
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </section>
+
             <div className="mb-6 flex items-center gap-3">
                 <div className="relative flex-1">
-                    <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+                    <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
                     <Input
                         placeholder="Tìm theo vị trí, mô tả, kỹ năng hoặc địa điểm"
                         value={searchQuery}
                         onChange={(event) => setSearchQuery(event.target.value)}
-                        className="h-12 border-gray-200 bg-white pl-12 text-base shadow-sm"
+                        className="h-12 border-border bg-card pl-12 text-base shadow-sm"
                     />
                 </div>
                 <Button
                     variant="outline"
                     size="icon"
-                    className="h-12 w-12 border-gray-200 shadow-sm"
+                    className="h-12 w-12 border-border shadow-sm"
                     onClick={() => setShowFilters((current) => !current)}
                 >
                     <SlidersHorizontal size={20} />
@@ -117,9 +191,9 @@ export default function FindJobsPage() {
             </div>
 
             {showFilters && (
-                <div className="mb-6 grid gap-4 rounded-xl bg-white p-4 shadow-sm md:grid-cols-3">
+                <div className="mb-6 grid gap-4 rounded-xl bg-card p-4 shadow-sm md:grid-cols-3">
                     <div className="space-y-1.5">
-                        <label className="block text-xs font-medium text-gray-500">Hình thức</label>
+                        <label className="block text-xs font-medium text-muted-foreground">Hình thức</label>
                         <Select value={filterType} onValueChange={setFilterType}>
                             <SelectTrigger className="h-10">
                                 <SelectValue placeholder="Tất cả" />
@@ -136,7 +210,7 @@ export default function FindJobsPage() {
                     </div>
 
                     <div className="space-y-1.5">
-                        <label className="block text-xs font-medium text-gray-500">Cấp độ</label>
+                        <label className="block text-xs font-medium text-muted-foreground">Cấp độ</label>
                         <Select value={filterLevel} onValueChange={setFilterLevel}>
                             <SelectTrigger className="h-10">
                                 <SelectValue placeholder="Tất cả" />
@@ -153,7 +227,7 @@ export default function FindJobsPage() {
                     </div>
 
                     <div className="space-y-1.5">
-                        <label className="block text-xs font-medium text-gray-500">Lĩnh vực</label>
+                        <label className="block text-xs font-medium text-muted-foreground">Lĩnh vực</label>
                         <Select value={filterCategory} onValueChange={setFilterCategory}>
                             <SelectTrigger className="h-10">
                                 <SelectValue placeholder="Tất cả" />
@@ -161,8 +235,8 @@ export default function FindJobsPage() {
                             <SelectContent>
                                 <SelectItem value="all">Tất cả</SelectItem>
                                 {categories.map((category) => (
-                                    <SelectItem key={category.id || category.name} value={category.name}>
-                                        {category.name}
+                                    <SelectItem key={category.ID || category.Name} value={category.Name}>
+                                        {category.Name}
                                     </SelectItem>
                                 ))}
                             </SelectContent>
@@ -172,7 +246,7 @@ export default function FindJobsPage() {
             )}
 
             <div className="mb-4 flex items-center justify-between">
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-muted-foreground">
                     {isLoading ? "Đang tải danh sách công việc..." : `Tìm thấy ${filteredJobs.length} công việc phù hợp`}
                 </p>
             </div>
@@ -202,14 +276,77 @@ export default function FindJobsPage() {
 
                     {filteredJobs.length === 0 && (
                         <div className="flex flex-col items-center justify-center py-20">
-                            <Briefcase size={48} className="mb-4 text-gray-300" />
-                            <p className="text-lg font-medium text-gray-500">Không tìm thấy công việc phù hợp</p>
-                            <p className="mt-1 text-sm text-gray-400">Thử đổi bộ lọc hoặc dùng từ khóa ngắn hơn</p>
+                            <Briefcase size={48} className="mb-4 text-muted-foreground" />
+                            <p className="text-lg font-medium text-muted-foreground">Không tìm thấy công việc phù hợp</p>
+                            <p className="mt-1 text-sm text-muted-foreground">Thử đổi bộ lọc hoặc dùng từ khóa ngắn hơn</p>
                         </div>
                     )}
                 </div>
             )}
         </div>
+    );
+}
+
+function RecommendedJobCard({
+    job,
+    isFavorite,
+    isUpdatingFavorite,
+    onToggleFavorite,
+}: {
+    job: JobDetail;
+    isFavorite: boolean;
+    isUpdatingFavorite: boolean;
+    onToggleFavorite: () => void;
+}) {
+    return (
+        <Link
+            href={`/candidate/jobs/${job.ID}`}
+            className="block rounded-2xl border border-border bg-card p-4 transition-all hover:border-primary/20 hover:shadow-sm"
+        >
+            <div className="flex items-start gap-3">
+                <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-2xl bg-primary/10">
+                    <Briefcase size={18} className="text-primary" />
+                </div>
+
+                <div className="min-w-0 flex-1">
+                    <div className="flex items-start justify-between gap-3">
+                        <div>
+                            <p className="line-clamp-1 text-sm font-semibold text-foreground">{job.Title}</p>
+                            <p className="mt-1 line-clamp-1 text-xs text-muted-foreground">{job.Address || "Chưa cập nhật địa điểm"}</p>
+                        </div>
+
+                        <button
+                            type="button"
+                            disabled={isUpdatingFavorite}
+                            onClick={(event) => {
+                                event.preventDefault();
+                                onToggleFavorite();
+                            }}
+                            className="rounded-full p-1.5 text-muted-foreground transition-colors hover:bg-red-50 disabled:opacity-60"
+                        >
+                            <Heart size={16} className={isFavorite ? "fill-red-500 text-red-500" : "text-muted-foreground"} />
+                        </button>
+                    </div>
+
+                    <div className="mt-3 flex flex-wrap gap-2">
+                        <Badge variant="secondary" className="bg-primary/10 text-primary">
+                            {JobTypeLabel[job.Type as JobType] || job.Type}
+                        </Badge>
+                        <Badge variant="secondary" className="bg-purple-50 text-purple-700">
+                            {LevelLabel[job.Level as Level] || job.Level}
+                        </Badge>
+                    </div>
+
+                    <div className="mt-3 flex items-center justify-between text-xs text-muted-foreground">
+                        <span>{job.Salary || "Thoả thuận"}</span>
+                        <span className="inline-flex items-center gap-1">
+                            Xem chi tiết
+                            <ChevronRight size={14} />
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </Link>
     );
 }
 
@@ -225,10 +362,10 @@ function JobCard({
     onToggleFavorite: () => void;
 }) {
     return (
-        <Card className="group overflow-hidden border-gray-100 bg-white p-0 shadow-sm transition-all duration-300 hover:border-[#194d8e]/20 hover:shadow-md">
+        <Card className="group overflow-hidden border-border bg-card p-0 shadow-sm transition-all duration-300 hover:border-primary/20 hover:shadow-md">
             <div className="flex items-start gap-5 p-5">
-                <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-xl border border-gray-100 bg-[#194d8e]/5">
-                    <Briefcase size={24} className="text-[#194d8e]" />
+                <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-xl border border-border bg-primary/5">
+                    <Briefcase size={24} className="text-primary" />
                 </div>
 
                 <div className="min-w-0 flex-1">
@@ -236,11 +373,11 @@ function JobCard({
                         <div>
                             <Link
                                 href={`/candidate/jobs/${job.ID}`}
-                                className="line-clamp-1 text-lg font-semibold text-gray-900 transition-colors hover:text-[#194d8e]"
+                                className="line-clamp-1 text-lg font-semibold text-foreground transition-colors hover:text-primary"
                             >
                                 {job.Title}
                             </Link>
-                            <p className="mt-0.5 text-sm text-gray-500">Tin tuyển dụng dành cho ứng viên trên IT Job Platform</p>
+                            <p className="mt-0.5 text-sm text-muted-foreground">Tin tuyển dụng dành cho ứng viên trên IT Job Platform</p>
                         </div>
 
                         <button
@@ -252,12 +389,12 @@ function JobCard({
                             }}
                             className="flex-shrink-0 rounded-full p-2 transition-colors hover:bg-red-50 disabled:opacity-60"
                         >
-                            <Heart size={20} className={isFavorite ? "fill-red-500 text-red-500" : "text-gray-300"} />
+                            <Heart size={20} className={isFavorite ? "fill-red-500 text-red-500" : "text-muted-foreground"} />
                         </button>
                     </div>
 
                     <div className="mb-3 flex flex-wrap gap-2">
-                        <Badge variant="secondary" className="bg-blue-50 text-[#194d8e]">
+                        <Badge variant="secondary" className="bg-primary/10 text-primary">
                             <Briefcase size={12} className="mr-1" />
                             {JobTypeLabel[job.Type as JobType] || job.Type}
                         </Badge>
@@ -265,14 +402,14 @@ function JobCard({
                             {LevelLabel[job.Level as Level] || job.Level}
                         </Badge>
                         {job.Categories.slice(0, 3).map((category) => (
-                            <Badge key={category} variant="outline" className="border-gray-200 text-gray-500">
+                            <Badge key={category} variant="outline" className="border-border text-muted-foreground">
                                 <Tag size={12} className="mr-1" />
                                 {category}
                             </Badge>
                         ))}
                     </div>
 
-                    <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500">
+                    <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
                         <span className="flex items-center gap-1.5">
                             <DollarSign size={14} className="text-green-500" />
                             {job.Salary || "Thoả thuận"}
@@ -290,7 +427,7 @@ function JobCard({
 
                 <Link
                     href={`/candidate/jobs/${job.ID}`}
-                    className="flex-shrink-0 self-center rounded-full p-2 text-gray-300 transition-all group-hover:bg-[#194d8e]/5 group-hover:text-[#194d8e]"
+                    className="flex-shrink-0 self-center rounded-full p-2 text-muted-foreground transition-all group-hover:bg-primary/5 group-hover:text-primary"
                 >
                     <ChevronRight size={20} />
                 </Link>

@@ -29,9 +29,9 @@ export function sortNotificationsByNewest(notifications: UserNotification[]) {
 export function getNotificationAppearance(type?: UserNotificationType) {
     const fallback = {
         icon: Bell,
-        accent: "border-blue-100 bg-blue-50/60",
-        iconWrap: "bg-blue-100 text-[#194d8e]",
-        badge: "border-blue-200 bg-blue-50 text-[#194d8e]",
+        accent: "border-primary/20 bg-primary/10",
+        iconWrap: "bg-primary/10 text-primary",
+        badge: "border-primary/20 bg-primary/10 text-primary",
     };
 
     switch (type) {
@@ -70,9 +70,9 @@ export function getNotificationAppearance(type?: UserNotificationType) {
         case "admin_new_job_post":
             return {
                 icon: Briefcase,
-                accent: "border-slate-200 bg-slate-50/70",
-                iconWrap: "bg-slate-100 text-slate-700",
-                badge: "border-slate-200 bg-slate-50 text-slate-700",
+                accent: "border-border bg-muted/70",
+                iconWrap: "bg-muted text-foreground",
+                badge: "border-border bg-muted text-foreground",
             };
         default:
             return fallback;

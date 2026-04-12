@@ -102,16 +102,16 @@ export default function PostJobPage() {
 
     return (
         <div className="mx-auto max-w-[800px]">
-            <Link href="/recruiter/manage-jobs" className="mb-6 inline-flex items-center gap-2 text-sm text-gray-500 hover:text-gray-700">
+            <Link href="/recruiter/manage-jobs" className="mb-6 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
                 <ArrowLeft size={16} /> Quay lại
             </Link>
 
             <form onSubmit={handleSubmit} className="space-y-6">
                 {/* Basic Info */}
-                <Card className="border-gray-100 shadow-sm">
+                <Card className="border-border shadow-sm">
                     <CardHeader className="pb-3">
                         <CardTitle className="flex items-center gap-2 text-base">
-                            <Briefcase size={18} className="text-[#194d8e]" /> Thông tin cơ bản
+                            <Briefcase size={18} className="text-primary" /> Thông tin cơ bản
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
@@ -125,7 +125,7 @@ export default function PostJobPage() {
                             <Textarea value={form.Description} onChange={(e) => setForm({ ...form, Description: e.target.value })} placeholder="Mô tả ngắn gọn về vị trí tuyển dụng..." rows={3} />
                         </div>
 
-                        <div className="grid grid-cols-3 gap-4">
+                        <div className="grid gap-4 md:grid-cols-[180px_minmax(0,1fr)_minmax(0,1fr)]">
                             <div className="space-y-2">
                                 <Label>Số lượng</Label>
                                 <Input type="number" min={1} value={form.Vacancies} onChange={(e) => setForm({ ...form, Vacancies: parseInt(e.target.value) || 1 })} className="h-11" />
@@ -133,7 +133,7 @@ export default function PostJobPage() {
                             <div className="space-y-2">
                                 <Label>Hình thức *</Label>
                                 <Select value={form.Type} onValueChange={(val) => setForm({ ...form, Type: val })}>
-                                    <SelectTrigger className="h-11"><SelectValue placeholder="Chọn" /></SelectTrigger>
+                                    <SelectTrigger className="h-11 w-full"><SelectValue placeholder="Chọn" /></SelectTrigger>
                                     <SelectContent>
                                         {Object.entries(JobTypeLabel).map(([key, label]) => (
                                             <SelectItem key={key} value={key}>{label}</SelectItem>
@@ -144,7 +144,7 @@ export default function PostJobPage() {
                             <div className="space-y-2">
                                 <Label>Cấp độ *</Label>
                                 <Select value={form.Level} onValueChange={(val) => setForm({ ...form, Level: val })}>
-                                    <SelectTrigger className="h-11"><SelectValue placeholder="Chọn" /></SelectTrigger>
+                                    <SelectTrigger className="h-11 w-full"><SelectValue placeholder="Chọn" /></SelectTrigger>
                                     <SelectContent>
                                         {Object.entries(LevelLabel).map(([key, label]) => (
                                             <SelectItem key={key} value={key}>{label}</SelectItem>
@@ -157,10 +157,10 @@ export default function PostJobPage() {
                 </Card>
 
                 {/* Detail */}
-                <Card className="border-gray-100 shadow-sm">
+                <Card className="border-border shadow-sm">
                     <CardHeader className="pb-3">
                         <CardTitle className="flex items-center gap-2 text-base">
-                            <FileText size={18} className="text-[#194d8e]" /> Chi tiết công việc
+                            <FileText size={18} className="text-primary" /> Chi tiết công việc
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
@@ -184,10 +184,10 @@ export default function PostJobPage() {
                 </Card>
 
                 {/* Salary & Location */}
-                <Card className="border-gray-100 shadow-sm">
+                <Card className="border-border shadow-sm">
                     <CardHeader className="pb-3">
                         <CardTitle className="flex items-center gap-2 text-base">
-                            <DollarSign size={18} className="text-[#194d8e]" /> Lương & Địa điểm
+                            <DollarSign size={18} className="text-primary" /> Lương & Địa điểm
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
@@ -205,7 +205,7 @@ export default function PostJobPage() {
                         </div>
 
                         {form.SalaryType !== "negotiable" && (
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid gap-4 md:grid-cols-2">
                                 {(form.SalaryType === "fixed" || form.SalaryType === "range") && (
                                     <div className="space-y-2">
                                         <Label>{form.SalaryType === "range" ? "Lương tối thiểu" : "Mức lương"}</Label>
@@ -229,7 +229,7 @@ export default function PostJobPage() {
                         <div className="space-y-2">
                             <Label>Địa điểm làm việc <span className="text-red-500">*</span></Label>
                             <div className="relative">
-                                <MapPin className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                                <MapPin className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                                 <Input value={form.Address} onChange={(e) => setForm({ ...form, Address: e.target.value })} placeholder="VD: Quận 1, TP. Hồ Chí Minh" className="h-11 pl-10" />
                             </div>
                         </div>
@@ -237,7 +237,7 @@ export default function PostJobPage() {
                         <div className="space-y-2">
                             <Label>Hạn nộp đơn <span className="text-red-500">*</span></Label>
                             <div className="relative">
-                                <Calendar className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                                <Calendar className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                                 <Input type="date" value={form.ExpiredAt} onChange={(e) => setForm({ ...form, ExpiredAt: e.target.value })} className="h-11 pl-10" />
                             </div>
                         </div>
@@ -248,7 +248,7 @@ export default function PostJobPage() {
 
                 <div className="flex gap-3">
                     <Button type="button" variant="outline" className="flex-1" onClick={() => router.back()}>Huỷ</Button>
-                    <Button type="submit" disabled={createMutation.isPending} className="flex-1 bg-[#194d8e] hover:bg-[#194d8e]/90">
+                    <Button type="submit" disabled={createMutation.isPending} className="flex-1 bg-primary hover:bg-primary/90">
                         {createMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send size={16} className="mr-2" />}
                         Đăng tin tuyển dụng
                     </Button>

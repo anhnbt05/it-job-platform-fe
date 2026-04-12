@@ -2,35 +2,41 @@ import { api } from "@/lib/axios";
 import { jobService } from "@/services/job.service";
 import { mapApplication, mapApplicationRecruiter, unwrapData } from "@/services/mappers";
 
+async function enrichApplication(application: Record<string, unknown>) {
+    const jobId = typeof application.jobId === "string" ? application.jobId : "";
+
+    if (!jobId) {
+        return mapApplication(application, null);
+    }
+
+    try {
+        const job = await jobService.getJobById(jobId);
+        return mapApplication(application, {
+            ...job,
+            ID: job.ID,
+            Title: job.Title,
+        });
+    } catch {
+        return mapApplication(application, {
+            ID: jobId,
+            Title: typeof application.jobTitle === "string" ? application.jobTitle : "Công việc đã ứng tuyển",
+        });
+    }
+}
+
 export const applicationService = {
     // Candidate side
     async getAppliedJobs() {
         const response = await api.get("/applications");
         const applications = unwrapData<Record<string, unknown>[]>(response);
 
-        return Promise.all(
-            applications.map(async (application) => {
-                const jobId = typeof application.jobId === "string" ? application.jobId : "";
+        return Promise.all(applications.map((application) => enrichApplication(application)));
+    },
 
-                if (!jobId) {
-                    return mapApplication(application, null);
-                }
-
-                try {
-                    const job = await jobService.getJobById(jobId);
-                    return mapApplication(application, {
-                        ...job,
-                        ID: job.ID,
-                        Title: job.Title,
-                    });
-                } catch {
-                    return mapApplication(application, {
-                        ID: jobId,
-                        Title: typeof application.jobTitle === "string" ? application.jobTitle : "Công việc đã ứng tuyển",
-                    });
-                }
-            }),
-        );
+    async getApplicationById(applicationId: string) {
+        const response = await api.get(`/applications/${applicationId}`);
+        const application = unwrapData<Record<string, unknown>>(response);
+        return enrichApplication(application);
     },
 
     applyForJob: (data: {

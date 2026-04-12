@@ -1,39 +1,97 @@
 "use client";
 
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/useAuthStore";
 import Sidebar from "@/components/layouts/Sidebar";
 import Header from "@/components/layouts/Header";
+import { cn } from "@/lib/utils";
+
+const SIDEBAR_EXPANDED_WIDTH = 240;
+const SIDEBAR_COLLAPSED_WIDTH = 88;
 
 export default function MainLayout({
     children,
 }: {
     children: React.ReactNode;
 }) {
-    const { isLoggedIn } = useAuthStore();
+    const { isLoggedIn, role } = useAuthStore();
     const router = useRouter();
+    const pathname = usePathname();
+    const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+    const [desktopSidebarCollapsed, setDesktopSidebarCollapsed] = useState(false);
+
+    const defaultRoute = role === "recruiter"
+        ? "/recruiter/manage-jobs"
+        : role === "admin"
+            ? "/admin/dashboard"
+            : "/candidate/find-jobs";
 
     useEffect(() => {
         if (!isLoggedIn) {
             router.replace("/login");
+            return;
         }
-    }, [isLoggedIn, router]);
+
+        if (!role) {
+            return;
+        }
+
+        if (pathname.startsWith("/candidate") && role !== "candidate") {
+            router.replace(defaultRoute);
+        }
+
+        if (pathname.startsWith("/recruiter") && role !== "recruiter") {
+            router.replace(defaultRoute);
+        }
+
+        if (pathname.startsWith("/admin") && role !== "admin") {
+            router.replace(defaultRoute);
+        }
+    }, [defaultRoute, isLoggedIn, pathname, role, router]);
+
+    useEffect(() => {
+        setMobileSidebarOpen(false);
+    }, [pathname]);
+
+    useEffect(() => {
+        const stored = window.localStorage.getItem("main-sidebar-collapsed");
+        if (stored) {
+            setDesktopSidebarCollapsed(stored === "true");
+        }
+    }, []);
+
+    useEffect(() => {
+        window.localStorage.setItem("main-sidebar-collapsed", String(desktopSidebarCollapsed));
+    }, [desktopSidebarCollapsed]);
 
     if (!isLoggedIn) {
         return (
             <div className="flex h-screen items-center justify-center">
-                <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#194d8e] border-t-transparent" />
+                <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
             </div>
         );
     }
 
     return (
-        <div className="flex min-h-screen bg-[#F9FAFB]">
-            <Sidebar />
-            <div className="ml-[240px] flex flex-1 flex-col">
-                <Header />
-                <main className="flex-1 p-8">{children}</main>
+        <div className="flex min-h-screen bg-background text-foreground">
+            <Sidebar
+                mobileOpen={mobileSidebarOpen}
+                onMobileOpenChange={setMobileSidebarOpen}
+                collapsed={desktopSidebarCollapsed}
+            />
+            <div
+                className={cn(
+                    "flex flex-1 flex-col transition-[margin-left] duration-300 ease-in-out",
+                    desktopSidebarCollapsed ? "lg:ml-[88px]" : "lg:ml-[240px]",
+                )}
+            >
+                <Header
+                    onOpenSidebar={() => setMobileSidebarOpen(true)}
+                    desktopSidebarCollapsed={desktopSidebarCollapsed}
+                    onToggleDesktopSidebar={() => setDesktopSidebarCollapsed((current) => !current)}
+                />
+                <main className="flex-1 p-4 sm:p-6 lg:p-8">{children}</main>
             </div>
         </div>
     );

@@ -5,3 +5,6 @@ export * from "./candidate";
 export * from "./recruiter";
 export * from "./company";
 export * from "./notification";
+export * from "./admin";
+export * from "./account";
+export * from "./upload";

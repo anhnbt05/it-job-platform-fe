@@ -243,13 +243,13 @@ export default function RecruiterRegisterPage() {
             {[1, 2, 3].map((s) => (
               <div key={s} className="flex items-center gap-2">
                 <div
-                  className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold transition-all ${step > s ? "bg-white text-green-700" : step === s ? "bg-white text-green-700" : "bg-white/20 text-white/60"}`}
+                  className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold transition-all ${step > s ? "bg-card text-green-700" : step === s ? "bg-card text-green-700" : "bg-white/20 text-white/60"}`}
                 >
                   {step > s ? <Check size={14} /> : s}
                 </div>
                 {s < 3 && (
                   <div
-                    className={`h-0.5 w-6 rounded transition-all ${step > s ? "bg-white" : "bg-white/25"}`}
+                    className={`h-0.5 w-6 rounded transition-all ${step > s ? "bg-card" : "bg-white/25"}`}
                   />
                 )}
               </div>
@@ -268,7 +268,7 @@ export default function RecruiterRegisterPage() {
       </div>
 
       {/* Right panel */}
-      <div className="flex w-full lg:w-1/2 flex-col items-center bg-gray-50 px-6 py-12 overflow-y-auto">
+      <div className="flex w-full lg:w-1/2 flex-col items-center bg-muted/40 px-6 py-12 overflow-y-auto">
         <div className="w-full max-w-md">
           {/* Mobile progress */}
           <div className="mb-6 flex items-center gap-2 lg:hidden">
@@ -285,7 +285,7 @@ export default function RecruiterRegisterPage() {
             <>
               <Link
                 href="/register"
-                className="mb-8 inline-flex items-center gap-2 text-sm text-gray-500 hover:text-gray-700 transition-colors"
+                className="mb-8 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
               >
                 <ArrowLeft size={16} /> Quay lại
               </Link>
@@ -294,10 +294,10 @@ export default function RecruiterRegisterPage() {
                 <p className="text-xs font-medium text-green-700 uppercase tracking-wider mb-1">
                   Bước 1 / 3
                 </p>
-                <h1 className="text-2xl font-bold text-gray-900">
+                <h1 className="text-2xl font-bold text-foreground">
                   Đăng ký Nhà tuyển dụng
                 </h1>
-                <p className="mt-1 text-sm text-gray-500">
+                <p className="mt-1 text-sm text-muted-foreground">
                   Tạo tài khoản để đăng tin tuyển dụng
                 </p>
               </div>
@@ -308,13 +308,13 @@ export default function RecruiterRegisterPage() {
                     Họ và tên <span className="text-red-500">*</span>
                   </Label>
                   <div className="relative">
-                    <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                    <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                     <Input
                       id="fullName"
                       placeholder="Nguyễn Văn A"
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
-                      className="h-11 pl-10 bg-white border-gray-200"
+                      className="h-11 pl-10 bg-card border-border"
                     />
                   </div>
                 </div>
@@ -324,14 +324,14 @@ export default function RecruiterRegisterPage() {
                     Email <span className="text-red-500">*</span>
                   </Label>
                   <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                    <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                     <Input
                       id="email"
                       type="email"
                       placeholder="email@company.com"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="h-11 pl-10 bg-white border-gray-200"
+                      className="h-11 pl-10 bg-card border-border"
                     />
                   </div>
                 </div>
@@ -341,13 +341,13 @@ export default function RecruiterRegisterPage() {
                     Số điện thoại <span className="text-red-500">*</span>
                   </Label>
                   <div className="relative">
-                    <Phone className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                    <Phone className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                     <Input
                       id="phone"
                       placeholder="0123 456 789"
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
-                      className="h-11 pl-10 bg-white border-gray-200"
+                      className="h-11 pl-10 bg-card border-border"
                     />
                   </div>
                 </div>
@@ -355,13 +355,13 @@ export default function RecruiterRegisterPage() {
                 <div className="space-y-2">
                   <Label htmlFor="department">Phòng ban</Label>
                   <div className="relative">
-                    <Building2 className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                    <Building2 className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                     <Input
                       id="department"
                       placeholder="HR, Talent Acquisition..."
                       value={department}
                       onChange={(e) => setDepartment(e.target.value)}
-                      className="h-11 pl-10 bg-white border-gray-200"
+                      className="h-11 pl-10 bg-card border-border"
                     />
                   </div>
                 </div>
@@ -371,19 +371,19 @@ export default function RecruiterRegisterPage() {
                     Mật khẩu <span className="text-red-500">*</span>
                   </Label>
                   <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                    <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                     <Input
                       id="password"
                       type={showPassword ? "text" : "password"}
                       placeholder="Nhập mật khẩu"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="h-11 pl-10 pr-10 bg-white border-gray-200"
+                      className="h-11 pl-10 pr-10 bg-card border-border"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-muted-foreground"
                     >
                       {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                     </button>
@@ -398,7 +398,7 @@ export default function RecruiterRegisterPage() {
                 </Button>
               </form>
 
-              <p className="mt-6 text-center text-sm text-gray-500">
+              <p className="mt-6 text-center text-sm text-muted-foreground">
                 Đã có tài khoản?{" "}
                 <Link
                   href="/login"
@@ -415,7 +415,7 @@ export default function RecruiterRegisterPage() {
             <>
               <button
                 onClick={() => setStep(1)}
-                className="mb-8 inline-flex items-center gap-2 text-sm text-gray-500 hover:text-gray-700 transition-colors"
+                className="mb-8 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
               >
                 <ArrowLeft size={16} /> Quay lại
               </button>
@@ -424,10 +424,10 @@ export default function RecruiterRegisterPage() {
                 <p className="text-xs font-medium text-green-700 uppercase tracking-wider mb-1">
                   Bước 2 / 3
                 </p>
-                <h1 className="text-2xl font-bold text-gray-900">
+                <h1 className="text-2xl font-bold text-foreground">
                   Chọn công ty
                 </h1>
-                <p className="mt-1 text-sm text-gray-500">
+                <p className="mt-1 text-sm text-muted-foreground">
                   Chọn công ty bạn đang làm việc hoặc tạo mới
                 </p>
               </div>
@@ -436,24 +436,24 @@ export default function RecruiterRegisterPage() {
                 <>
                   {/* Search */}
                   <div className="relative mb-3">
-                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                     <Input
                       placeholder="Tìm kiếm công ty..."
                       value={companySearch}
                       onChange={(e) => setCompanySearch(e.target.value)}
-                      className="h-10 pl-10 bg-white border-gray-200"
+                      className="h-10 pl-10 bg-card border-border"
                     />
                   </div>
 
                   {/* Company list */}
                   <div className="max-h-72 overflow-y-auto space-y-2 mb-4 pr-1">
                     {companiesLoading ? (
-                      <div className="flex items-center justify-center py-10 text-gray-400">
+                      <div className="flex items-center justify-center py-10 text-muted-foreground">
                         <Loader2 size={20} className="animate-spin mr-2" /> Đang
                         tải...
                       </div>
                     ) : filteredCompanies.length === 0 ? (
-                      <p className="py-8 text-center text-sm text-gray-400">
+                      <p className="py-8 text-center text-sm text-muted-foreground">
                         Không tìm thấy công ty
                       </p>
                     ) : (
@@ -462,9 +462,9 @@ export default function RecruiterRegisterPage() {
                           key={company.ID}
                           type="button"
                           onClick={() => setSelectedCompany(company)}
-                          className={`w-full flex items-center gap-3 rounded-lg border p-3 text-left transition-all ${selectedCompany?.ID === company.ID ? "border-green-600 bg-green-50 ring-1 ring-green-600" : "border-gray-200 bg-white hover:border-green-300 hover:bg-green-50/30"}`}
+                          className={`w-full flex items-center gap-3 rounded-lg border p-3 text-left transition-all ${selectedCompany?.ID === company.ID ? "border-green-600 bg-green-50 ring-1 ring-green-600" : "border-border bg-card hover:border-green-300 hover:bg-green-50/30"}`}
                         >
-                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-gray-100 overflow-hidden">
+                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-muted overflow-hidden">
                             {company.LogoUrl ? (
                               <Image
                                 src={company.LogoUrl!}
@@ -474,15 +474,15 @@ export default function RecruiterRegisterPage() {
                                 className="h-full w-full object-contain"
                               />
                             ) : (
-                              <Building2 size={18} className="text-gray-400" />
+                              <Building2 size={18} className="text-muted-foreground" />
                             )}
                           </div>
                           <div className="min-w-0 flex-1">
-                            <p className="truncate text-sm font-medium text-gray-900">
+                            <p className="truncate text-sm font-medium text-foreground">
                               {company.Name}
                             </p>
                             {company.WebsiteUrl && (
-                              <p className="truncate text-xs text-gray-400">
+                              <p className="truncate text-xs text-muted-foreground">
                                 {company.WebsiteUrl}
                               </p>
                             )}
@@ -500,10 +500,10 @@ export default function RecruiterRegisterPage() {
 
                   <div className="relative mb-4">
                     <div className="absolute inset-0 flex items-center">
-                      <div className="w-full border-t border-gray-200" />
+                      <div className="w-full border-t border-border" />
                     </div>
-                    <div className="relative flex justify-center text-xs text-gray-400">
-                      <span className="bg-gray-50 px-2">hoặc</span>
+                    <div className="relative flex justify-center text-xs text-muted-foreground">
+                      <span className="bg-muted/40 px-2">hoặc</span>
                     </div>
                   </div>
 
@@ -513,7 +513,7 @@ export default function RecruiterRegisterPage() {
                       setCompanyMode("create");
                       setSelectedCompany(null);
                     }}
-                    className="flex w-full items-center justify-center gap-2 rounded-lg border border-dashed border-gray-300 bg-white py-3 text-sm font-medium text-gray-600 hover:border-green-500 hover:text-green-700 transition-colors"
+                    className="flex w-full items-center justify-center gap-2 rounded-lg border border-dashed border-border bg-card py-3 text-sm font-medium text-muted-foreground hover:border-green-500 hover:text-green-700 transition-colors"
                   >
                     <Plus size={16} /> Tạo công ty mới
                   </button>
@@ -534,7 +534,7 @@ export default function RecruiterRegisterPage() {
                         Tên công ty <span className="text-red-500">*</span>
                       </Label>
                       <div className="relative">
-                        <Building2 className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                        <Building2 className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                         <Input
                           placeholder="Công ty TNHH ABC"
                           value={newCompany.name}
@@ -544,7 +544,7 @@ export default function RecruiterRegisterPage() {
                               name: e.target.value,
                             })
                           }
-                          className="h-11 pl-10 bg-white border-gray-200"
+                          className="h-11 pl-10 bg-card border-border"
                         />
                       </div>
                     </div>
@@ -556,7 +556,7 @@ export default function RecruiterRegisterPage() {
                         onChange={(e) =>
                           setNewCompany({ ...newCompany, size: e.target.value })
                         }
-                        className="h-11 w-full rounded-md border border-gray-200 bg-white px-3 text-sm text-gray-900 focus:border-green-700 focus:outline-none focus:ring-2 focus:ring-green-700/20"
+                        className="h-11 w-full rounded-md border border-border bg-card px-3 text-sm text-foreground focus:border-green-700 focus:outline-none focus:ring-2 focus:ring-green-700/20"
                       >
                         <option value="">-- Chọn quy mô --</option>
                         {COMPANY_SIZES.map((s) => (
@@ -570,7 +570,7 @@ export default function RecruiterRegisterPage() {
                     <div className="space-y-2">
                       <Label>Website</Label>
                       <div className="relative">
-                        <Globe className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                        <Globe className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                         <Input
                           placeholder="https://company.com"
                           value={newCompany.website}
@@ -580,7 +580,7 @@ export default function RecruiterRegisterPage() {
                               website: e.target.value,
                             })
                           }
-                          className="h-11 pl-10 bg-white border-gray-200"
+                          className="h-11 pl-10 bg-card border-border"
                         />
                       </div>
                     </div>
@@ -588,7 +588,7 @@ export default function RecruiterRegisterPage() {
                     <div className="space-y-2">
                       <Label>Địa điểm</Label>
                       <div className="relative">
-                        <MapPin className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                        <MapPin className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                         <Input
                           placeholder="Hà Nội, TP.HCM..."
                           value={newCompany.location}
@@ -598,7 +598,7 @@ export default function RecruiterRegisterPage() {
                               location: e.target.value,
                             })
                           }
-                          className="h-11 pl-10 bg-white border-gray-200"
+                          className="h-11 pl-10 bg-card border-border"
                         />
                       </div>
                     </div>
@@ -621,7 +621,7 @@ export default function RecruiterRegisterPage() {
             <>
               <button
                 onClick={() => setStep(2)}
-                className="mb-8 inline-flex items-center gap-2 text-sm text-gray-500 hover:text-gray-700 transition-colors"
+                className="mb-8 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
               >
                 <ArrowLeft size={16} /> Quay lại
               </button>
@@ -630,10 +630,10 @@ export default function RecruiterRegisterPage() {
                 <p className="text-xs font-medium text-green-700 uppercase tracking-wider mb-1">
                   Bước 3 / 3
                 </p>
-                <h1 className="text-2xl font-bold text-gray-900">
+                <h1 className="text-2xl font-bold text-foreground">
                   Chọn chi nhánh
                 </h1>
-                <p className="mt-1 text-sm text-gray-500">
+                <p className="mt-1 text-sm text-muted-foreground">
                   {companyMode === "create"
                     ? `Tạo chi nhánh cho ${newCompany.name || "công ty mới"}`
                     : `Chi nhánh của ${selectedCompany?.Name}`}
@@ -647,7 +647,7 @@ export default function RecruiterRegisterPage() {
                   mới cùng lúc với tài khoản.
                 </div>
 
-                <div className="space-y-3 rounded-lg border border-gray-200 bg-white p-4">
+                <div className="space-y-3 rounded-lg border border-border bg-card p-4">
                   <div className="space-y-1.5">
                     <Label className="text-xs">Tên chi nhánh</Label>
                     <Input
@@ -656,7 +656,7 @@ export default function RecruiterRegisterPage() {
                       onChange={(e) =>
                         setNewBranch({ ...newBranch, name: e.target.value })
                       }
-                      className="h-9 text-sm bg-gray-50 border-gray-200"
+                      className="h-9 text-sm bg-muted/40 border-border"
                     />
                   </div>
                   <div className="space-y-1.5">
@@ -670,10 +670,10 @@ export default function RecruiterRegisterPage() {
                           address: e.target.value,
                         })
                       }
-                      className="h-9 text-sm bg-gray-50 border-gray-200"
+                      className="h-9 text-sm bg-muted/40 border-border"
                     />
                   </div>
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid gap-2 sm:grid-cols-2">
                     <div className="space-y-1.5">
                       <Label className="text-xs">
                         Thành phố <span className="text-red-500">*</span>
@@ -687,7 +687,7 @@ export default function RecruiterRegisterPage() {
                             city: e.target.value,
                           })
                         }
-                        className="h-9 text-sm bg-gray-50 border-gray-200"
+                        className="h-9 text-sm bg-muted/40 border-border"
                       />
                     </div>
                     <div className="space-y-1.5">
@@ -701,7 +701,7 @@ export default function RecruiterRegisterPage() {
                             country: e.target.value,
                           })
                         }
-                        className="h-9 text-sm bg-gray-50 border-gray-200"
+                        className="h-9 text-sm bg-muted/40 border-border"
                       />
                     </div>
                   </div>

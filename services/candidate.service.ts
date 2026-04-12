@@ -1,18 +1,21 @@
 import { api } from "@/lib/axios";
 import { Candidate } from "@/types";
-import { mapCandidate, mapWorkExperience } from "@/services/mappers";
+import { mapCandidate, mapWorkExperience, unwrapData } from "@/services/mappers";
 
 export const candidateService = {
     async getProfile() {
         const profileResponse = await api.get("/identity/users/me");
-        const profile = profileResponse as Record<string, unknown>;
+        const profile = unwrapData<Record<string, unknown>>(profileResponse);
         const profileId = typeof profile.id === "string" ? profile.id : "";
 
         let workExperiences: ReturnType<typeof mapWorkExperience>[] = [];
         if (profileId) {
-            const workExperienceResponse = await api.get(`/identity/users/${profileId}/work-experiences`);
-            workExperiences = (workExperienceResponse as Record<string, unknown>[])
-                .map((item) => mapWorkExperience(item));
+            const workExperienceResponse = await api.get(
+                `/identity/users/${profileId}/work-experiences`,
+            );
+            workExperiences = unwrapData<Record<string, unknown>[]>(
+                workExperienceResponse,
+            ).map((item) => mapWorkExperience(item));
         }
 
         return mapCandidate(profile, workExperiences);
@@ -53,6 +56,8 @@ export const candidateService = {
             headers: { "Content-Type": "multipart/form-data" },
         });
     },
+
+    deleteAccount: () => api.delete("/identity/users"),
 
     // Work Experiences
     addWorkExperience: (data: Record<string, unknown>) =>

@@ -52,12 +52,16 @@ export default function NotificationBell() {
 
     const unreadNotifications = sortedNotifications.filter((notification) => !notification.IsRead);
     const previewNotifications = sortedNotifications.slice(0, 5);
-    const notificationsPage = role === "recruiter" ? "/recruiter/notifications" : "/candidate/notifications";
+    const notificationsPage = role === "recruiter"
+        ? "/recruiter/notifications"
+        : role === "admin"
+            ? "/admin/notifications"
+            : "/candidate/notifications";
 
     return (
         <Popover open={open} onOpenChange={setOpen}>
             <PopoverTrigger asChild>
-                <button className="relative rounded-full p-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700">
+                <button className="relative rounded-full p-2 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground">
                     <Bell size={20} />
                     {unreadNotifications.length > 0 && (
                         <span className="absolute -right-0.5 -top-0.5 flex min-h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-semibold text-white">
@@ -67,12 +71,12 @@ export default function NotificationBell() {
                 </button>
             </PopoverTrigger>
 
-            <PopoverContent align="end" className="w-[380px] p-0">
-                <PopoverHeader className="border-b border-gray-100 p-4">
+            <PopoverContent align="end" className="w-[calc(100vw-1rem)] max-w-[380px] p-0 sm:w-[380px]">
+                <PopoverHeader className="border-b border-border p-4">
                     <div className="flex items-start justify-between gap-3">
                         <div>
-                            <PopoverTitle className="text-base text-gray-900">Thông báo</PopoverTitle>
-                            <PopoverDescription className="mt-1 text-xs text-gray-500">
+                            <PopoverTitle className="text-base text-foreground">Thông báo</PopoverTitle>
+                            <PopoverDescription className="mt-1 text-xs text-muted-foreground">
                                 {unreadNotifications.length > 0
                                     ? `Bạn có ${unreadNotifications.length} thông báo chưa đọc`
                                     : "Bạn đã đọc hết các thông báo mới"}
@@ -82,7 +86,7 @@ export default function NotificationBell() {
                             type="button"
                             variant="ghost"
                             size="sm"
-                            className="text-[#194d8e]"
+                            className="text-primary"
                             disabled={unreadNotifications.length === 0 || markAsReadMutation.isPending}
                             onClick={() => markAsReadMutation.mutate(unreadNotifications.map((notification) => notification.ID))}
                         >
@@ -96,15 +100,15 @@ export default function NotificationBell() {
                     {isLoading ? (
                         <div className="space-y-2 p-2">
                             {[...Array(4)].map((_, index) => (
-                                <div key={index} className="h-20 animate-pulse rounded-xl bg-gray-100" />
+                                <div key={index} className="h-20 animate-pulse rounded-xl bg-muted" />
                             ))}
                         </div>
                     ) : previewNotifications.length === 0 ? (
                         <div className="flex flex-col items-center justify-center px-6 py-10 text-center">
-                            <div className="rounded-full bg-gray-100 p-3">
-                                <Bell size={20} className="text-gray-400" />
+                            <div className="rounded-full bg-muted p-3">
+                                <Bell size={20} className="text-muted-foreground" />
                             </div>
-                            <p className="mt-3 text-sm font-medium text-gray-500">Chưa có thông báo nào</p>
+                            <p className="mt-3 text-sm font-medium text-muted-foreground">Chưa có thông báo nào</p>
                         </div>
                     ) : (
                         previewNotifications.map((notification) => {
@@ -116,8 +120,8 @@ export default function NotificationBell() {
                                     key={notification.ID}
                                     type="button"
                                     className={cn(
-                                        "flex w-full items-start gap-3 rounded-xl p-3 text-left transition-colors hover:bg-gray-50",
-                                        !notification.IsRead && "bg-blue-50/50",
+                                        "flex w-full items-start gap-3 rounded-xl p-3 text-left transition-colors hover:bg-accent/60",
+                                        !notification.IsRead && "bg-primary/10",
                                     )}
                                     onClick={async () => {
                                         if (!notification.IsRead) {
@@ -138,15 +142,15 @@ export default function NotificationBell() {
                                     </div>
                                     <div className="min-w-0 flex-1">
                                         <div className="flex items-center gap-2">
-                                            <p className={cn("line-clamp-1 text-sm", notification.IsRead ? "text-gray-700" : "font-semibold text-gray-900")}>
+                                            <p className={cn("line-clamp-1 text-sm", notification.IsRead ? "text-foreground" : "font-semibold text-foreground")}>
                                                 {notification.Notification?.Title || "Thông báo"}
                                             </p>
-                                            {!notification.IsRead && <span className="h-2 w-2 rounded-full bg-[#194d8e]" />}
+                                            {!notification.IsRead && <span className="h-2 w-2 rounded-full bg-primary" />}
                                         </div>
-                                        <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-gray-500">
+                                        <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-muted-foreground">
                                             {getNotificationPreview(notification)}
                                         </p>
-                                        <p className="mt-2 text-[11px] text-gray-400">
+                                        <p className="mt-2 text-[11px] text-muted-foreground">
                                             {formatNotificationDate(notification.CreatedAt)}
                                         </p>
                                     </div>
@@ -156,10 +160,10 @@ export default function NotificationBell() {
                     )}
                 </div>
 
-                <div className="border-t border-gray-100 p-3">
+                <div className="border-t border-border p-3">
                     <Link
                         href={notificationsPage}
-                        className="block rounded-lg bg-[#194d8e] px-4 py-2 text-center text-sm font-medium text-white transition-colors hover:bg-[#194d8e]/90"
+                        className="block rounded-lg bg-primary px-4 py-2 text-center text-sm font-medium text-white transition-colors hover:bg-primary/90"
                         onClick={() => setOpen(false)}
                     >
                         Xem tất cả thông báo

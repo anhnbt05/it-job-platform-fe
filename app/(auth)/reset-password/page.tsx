@@ -57,20 +57,20 @@ function ResetPasswordContent() {
     };
 
     return (
-        <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
+        <div className="flex min-h-screen items-center justify-center bg-muted/40 px-4">
             <Card className="w-full max-w-md border-0 shadow-xl">
                 <CardContent className="p-8">
-                    <Link href={email ? `/verify-otp?email=${encodeURIComponent(email)}` : "/forgot-password"} className="mb-6 inline-flex items-center gap-2 text-sm text-gray-500 hover:text-gray-700">
+                    <Link href={email ? `/verify-otp?email=${encodeURIComponent(email)}` : "/forgot-password"} className="mb-6 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
                         <ArrowLeft size={16} />
                         Quay lại
                     </Link>
 
                     <div className="mb-6">
-                        <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-full bg-[#194d8e]/10">
-                            <KeyRound size={24} className="text-[#194d8e]" />
+                        <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+                            <KeyRound size={24} className="text-primary" />
                         </div>
-                        <h2 className="text-2xl font-bold text-gray-900">Đặt lại mật khẩu</h2>
-                        <p className="mt-1 text-sm text-gray-500">
+                        <h2 className="text-2xl font-bold text-foreground">Đặt lại mật khẩu</h2>
+                        <p className="mt-1 text-sm text-muted-foreground">
                             Tạo mật khẩu mới cho tài khoản {email ? <strong>{email}</strong> : "của bạn"}
                         </p>
                     </div>
@@ -79,19 +79,19 @@ function ResetPasswordContent() {
                         <div className="space-y-2">
                             <Label htmlFor="password">Mật khẩu mới</Label>
                             <div className="relative">
-                                <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                                <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                                 <Input
                                     id="password"
                                     type={showPassword ? "text" : "password"}
                                     placeholder="Nhập mật khẩu mới"
                                     value={password}
                                     onChange={(event) => setPassword(event.target.value)}
-                                    className="h-11 bg-gray-50 pl-10 pr-10"
+                                    className="h-11 bg-muted/40 pl-10 pr-10"
                                 />
                                 <button
                                     type="button"
                                     onClick={() => setShowPassword((current) => !current)}
-                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
                                 >
                                     {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                                 </button>
@@ -101,19 +101,19 @@ function ResetPasswordContent() {
                         <div className="space-y-2">
                             <Label htmlFor="confirmPassword">Xác nhận mật khẩu</Label>
                             <div className="relative">
-                                <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                                <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                                 <Input
                                     id="confirmPassword"
                                     type={showPassword ? "text" : "password"}
                                     placeholder="Nhập lại mật khẩu"
                                     value={confirmPassword}
                                     onChange={(event) => setConfirmPassword(event.target.value)}
-                                    className="h-11 bg-gray-50 pl-10"
+                                    className="h-11 bg-muted/40 pl-10"
                                 />
                             </div>
                         </div>
 
-                        <Button type="submit" disabled={isLoading} className="h-11 w-full bg-[#194d8e] font-semibold hover:bg-[#194d8e]/90">
+                        <Button type="submit" disabled={isLoading} className="h-11 w-full bg-primary font-semibold hover:bg-primary/90">
                             {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                             ĐỔI MẬT KHẨU
                         </Button>
@@ -126,7 +126,7 @@ function ResetPasswordContent() {
 
 export default function ResetPasswordPage() {
     return (
-        <Suspense fallback={<div className="flex h-screen items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-[#194d8e]" /></div>}>
+        <Suspense fallback={<div className="flex h-screen items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>}>
             <ResetPasswordContent />
         </Suspense>
     );

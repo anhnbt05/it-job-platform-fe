@@ -55,6 +55,8 @@ export default function LoginPage() {
 
             if (role === "recruiter") {
                 router.push("/recruiter/manage-jobs");
+            } else if (role === "admin") {
+                router.push("/admin/dashboard");
             } else {
                 router.push("/candidate/find-jobs");
             }
@@ -67,9 +69,13 @@ export default function LoginPage() {
 
     const handleDevLogin = (role: UserRole) => {
         setAuth("dev-token", null, role, "dev-user-id");
-        toast.info(`Đã đăng nhập với quyền ${role === "recruiter" ? "Nhà tuyển dụng" : "Ứng viên"}`);
+        toast.info(
+            `Đã đăng nhập với quyền ${role === "recruiter" ? "Nhà tuyển dụng" : role === "admin" ? "Quản trị viên" : "Ứng viên"}`,
+        );
         if (role === "recruiter") {
             router.push("/recruiter/manage-jobs");
+        } else if (role === "admin") {
+            router.push("/admin/dashboard");
         } else {
             router.push("/candidate/find-jobs");
         }
@@ -107,66 +113,66 @@ export default function LoginPage() {
                     </div>
                 </div>
                 {/* Decorative circles */}
-                <div className="absolute -bottom-20 -left-20 h-64 w-64 rounded-full bg-[#194d8e]/20" />
-                <div className="absolute -right-10 -top-10 h-48 w-48 rounded-full bg-[#194d8e]/10" />
+                <div className="absolute -bottom-20 -left-20 h-64 w-64 rounded-full bg-primary/20" />
+                <div className="absolute -right-10 -top-10 h-48 w-48 rounded-full bg-primary/10" />
             </div>
 
             {/* Right Panel - Login Form */}
-            <div className="flex w-full items-center justify-center bg-gray-50 px-8 lg:w-1/2">
+            <div className="flex w-full items-center justify-center bg-muted/40 px-4 sm:px-8 lg:w-1/2">
                 <Card className="w-full max-w-md border-0 bg-transparent shadow-none">
                     <CardContent className="p-0">
                         {/* Mobile Logo */}
                         <div className="mb-8 flex items-center gap-3 lg:hidden">
-                            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#194d8e]">
+                            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary">
                                 <Briefcase size={22} className="text-white" />
                             </div>
-                            <h1 className="text-xl font-bold text-gray-900">IT Job Platform</h1>
+                            <h1 className="text-xl font-bold text-foreground">IT Job Platform</h1>
                         </div>
 
                         <div className="mb-2">
                             <div className="mb-6 inline-flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-[#194d8e] to-[#194d8e]/80">
                                 <Lock size={28} className="text-white" />
                             </div>
-                            <h2 className="text-3xl font-bold text-gray-900">Xin chào</h2>
-                            <p className="mt-1 text-gray-500">Chào mừng bạn trở lại</p>
+                            <h2 className="text-3xl font-bold text-foreground">Xin chào</h2>
+                            <p className="mt-1 text-muted-foreground">Chào mừng bạn trở lại</p>
                         </div>
 
                         <form onSubmit={handleLogin} className="mt-8 space-y-5">
                             <div className="space-y-2">
-                                <Label htmlFor="email" className="text-xs font-semibold uppercase tracking-wider text-gray-500">
+                                <Label htmlFor="email" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                                     Email
                                 </Label>
                                 <div className="relative">
-                                    <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                                    <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                                     <Input
                                         id="email"
                                         type="email"
                                         placeholder="Nhập email của bạn"
                                         value={email}
                                         onChange={(e) => setEmail(e.target.value)}
-                                        className="h-12 bg-gray-100 pl-10 border-0 focus-visible:ring-[#194d8e]"
+                                        className="h-12 bg-muted pl-10 border-0 focus-visible:ring-primary"
                                     />
                                 </div>
                             </div>
 
                             <div className="space-y-2">
-                                <Label htmlFor="password" className="text-xs font-semibold uppercase tracking-wider text-gray-500">
+                                <Label htmlFor="password" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                                     Mật khẩu
                                 </Label>
                                 <div className="relative">
-                                    <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                                    <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                                     <Input
                                         id="password"
                                         type={showPassword ? "text" : "password"}
                                         placeholder="Nhập mật khẩu"
                                         value={password}
                                         onChange={(e) => setPassword(e.target.value)}
-                                        className="h-12 bg-gray-100 pl-10 pr-10 border-0 focus-visible:ring-[#194d8e]"
+                                        className="h-12 bg-muted pl-10 pr-10 border-0 focus-visible:ring-primary"
                                     />
                                     <button
                                         type="button"
                                         onClick={() => setShowPassword(!showPassword)}
-                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-muted-foreground"
                                     >
                                         {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                                     </button>
@@ -176,7 +182,7 @@ export default function LoginPage() {
                             <Button
                                 type="submit"
                                 disabled={isLoading}
-                                className="h-12 w-full bg-[#194d8e] text-base font-semibold hover:bg-[#194d8e]/90"
+                                className="h-12 w-full bg-primary text-base font-semibold hover:bg-primary/90"
                             >
                                 {isLoading ? (
                                     <Loader2 className="mr-2 h-5 w-5 animate-spin" />
@@ -187,13 +193,13 @@ export default function LoginPage() {
                             <div className="flex items-center justify-between pt-2">
                                 <Link
                                     href="/register"
-                                    className="text-sm text-gray-500 transition-colors hover:text-gray-700"
+                                    className="text-sm text-muted-foreground transition-colors hover:text-foreground"
                                 >
                                     ĐĂNG KÝ TÀI KHOẢN
                                 </Link>
                                 <Link
                                     href="/forgot-password"
-                                    className="text-sm font-medium text-[#194d8e] transition-colors hover:text-[#194d8e]/80"
+                                    className="text-sm font-medium text-primary transition-colors hover:text-primary/80"
                                 >
                                     QUÊN MẬT KHẨU
                                 </Link>
@@ -202,18 +208,18 @@ export default function LoginPage() {
                             <div className="mt-8">
                                 <div className="relative mb-6">
                                     <div className="absolute inset-0 flex items-center">
-                                        <span className="w-full border-t border-gray-200" />
+                                        <span className="w-full border-t border-border" />
                                     </div>
                                     <div className="relative flex justify-center text-xs uppercase">
-                                        <span className="bg-gray-50 px-2 text-gray-400 font-medium tracking-wider">Xem nhanh UI (Dev mode)</span>
+                                        <span className="bg-muted/40 px-2 text-muted-foreground font-medium tracking-wider">Xem nhanh UI (Dev mode)</span>
                                     </div>
                                 </div>
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                                     <Button
                                         type="button"
                                         variant="outline"
                                         onClick={() => handleDevLogin("candidate")}
-                                        className="border-blue-200 text-[#194d8e] hover:bg-blue-50"
+                                        className="border-primary/20 text-primary hover:bg-primary/10"
                                     >
                                         Vào Candidate UI
                                     </Button>
@@ -221,9 +227,17 @@ export default function LoginPage() {
                                         type="button"
                                         variant="outline"
                                         onClick={() => handleDevLogin("recruiter")}
-                                        className="border-blue-200 text-[#194d8e] hover:bg-blue-50"
+                                        className="border-primary/20 text-primary hover:bg-primary/10"
                                     >
                                         Vào Recruiter UI
+                                    </Button>
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        onClick={() => handleDevLogin("admin")}
+                                        className="border-primary/20 text-primary hover:bg-primary/10"
+                                    >
+                                        Vào Admin UI
                                     </Button>
                                 </div>
                             </div>

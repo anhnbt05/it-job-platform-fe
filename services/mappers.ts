@@ -2,6 +2,7 @@ import {
     Application,
     ApplicationRecruiter,
     Candidate,
+    CompanyBranch,
     Company,
     CompanyLocation,
     JobDetail,
@@ -86,13 +87,22 @@ export function mapCompanyLocation(raw: AnyRecord): CompanyLocation | null {
         return null;
     }
 
+    return mapBranch(raw);
+}
+
+export function mapBranch(raw: AnyRecord): CompanyBranch {
+    const company = asRecord(raw.company);
+
     return {
-        ID: asString(raw.id) || undefined,
+        ID: asString(raw.id),
         BranchName: asNullableString(raw.name),
         Address: asNullableString(raw.address),
         Province: asNullableString(raw.city),
         City: asNullableString(raw.city),
         Country: asNullableString(raw.country),
+        CompanyId: asNullableString(raw.company_id) ?? asNullableString(company.id),
+        CreatedAt: asNullableString(raw.createdAt),
+        UpdatedAt: asNullableString(raw.updatedAt),
     };
 }
 

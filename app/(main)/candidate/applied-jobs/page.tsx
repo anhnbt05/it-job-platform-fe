@@ -70,17 +70,17 @@ export default function AppliedJobsPage() {
         <div className="mx-auto max-w-[1100px]">
             <div className="mb-6 flex flex-col gap-4 lg:flex-row">
                 <div className="relative flex-1">
-                    <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+                    <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
                     <Input
                         placeholder="Tìm theo tên công việc hoặc địa điểm"
                         value={searchQuery}
                         onChange={(event) => setSearchQuery(event.target.value)}
-                        className="h-12 border-gray-200 bg-white pl-12 shadow-sm"
+                        className="h-12 border-border bg-card pl-12 shadow-sm"
                     />
                 </div>
 
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
-                    <SelectTrigger className="h-12 w-full border-gray-200 bg-white shadow-sm lg:w-[220px]">
+                    <SelectTrigger className="h-12 w-full border-border bg-card shadow-sm sm:w-[220px]">
                         <SelectValue placeholder="Lọc trạng thái" />
                     </SelectTrigger>
                     <SelectContent>
@@ -94,15 +94,15 @@ export default function AppliedJobsPage() {
                 </Select>
             </div>
 
-            <div className="mb-6 grid gap-4 md:grid-cols-4">
+            <div className="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
                 {[
                     { label: "Tổng cộng", count: applications.length, className: "text-blue-700" },
                     { label: "Đang chờ", count: applications.filter((item) => item.Status === "pending").length, className: "text-amber-700" },
                     { label: "Đã duyệt", count: applications.filter((item) => item.Status === "accepted").length, className: "text-green-700" },
                     { label: "Từ chối", count: applications.filter((item) => item.Status === "rejected").length, className: "text-red-700" },
                 ].map((stat) => (
-                    <Card key={stat.label} className="border-gray-100 p-4 shadow-sm">
-                        <p className="text-sm text-gray-500">{stat.label}</p>
+                    <Card key={stat.label} className="border-border p-4 shadow-sm">
+                        <p className="text-sm text-muted-foreground">{stat.label}</p>
                         <p className={`mt-1 text-2xl font-bold ${stat.className}`}>{stat.count}</p>
                     </Card>
                 ))}
@@ -126,9 +126,9 @@ export default function AppliedJobsPage() {
 
                     {filteredApplications.length === 0 && (
                         <div className="flex flex-col items-center justify-center py-20">
-                            <FileText size={48} className="mb-4 text-gray-300" />
-                            <p className="text-lg font-medium text-gray-500">Chưa có đơn ứng tuyển phù hợp bộ lọc</p>
-                            <Link href="/candidate/find-jobs" className="mt-2 text-sm text-[#194d8e] hover:underline">
+                            <FileText size={48} className="mb-4 text-muted-foreground" />
+                            <p className="text-lg font-medium text-muted-foreground">Chưa có đơn ứng tuyển phù hợp bộ lọc</p>
+                            <Link href="/candidate/find-jobs" className="mt-2 text-sm text-primary hover:underline">
                                 Tìm công việc để ứng tuyển
                             </Link>
                         </div>
@@ -175,7 +175,7 @@ function ApplicationCard({
     const address = application.Job?.Address || "Địa điểm sẽ được cập nhật sau";
 
     return (
-        <Card className="group border-gray-100 p-0 shadow-sm transition-all hover:shadow-md">
+        <Card className="group border-border p-0 shadow-sm transition-all hover:shadow-md">
             <div className="flex items-start gap-4 p-5">
                 <div className={`mt-1 h-10 w-1 rounded-full ${getStatusStripe(application.Status)}`} />
 
@@ -184,8 +184,8 @@ function ApplicationCard({
                         <div className="space-y-2">
                             <div className="flex flex-wrap items-center gap-2">
                                 <Link
-                                    href={`/candidate/jobs/${application.JobId}`}
-                                    className="text-base font-semibold text-gray-900 hover:text-[#194d8e]"
+                                    href={`/candidate/applied-jobs/${application.ID}`}
+                                    className="text-base font-semibold text-foreground hover:text-primary"
                                 >
                                     {title}
                                 </Link>
@@ -194,7 +194,7 @@ function ApplicationCard({
                                 </Badge>
                             </div>
 
-                            <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500">
+                            <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
                                 <span className="flex items-center gap-1.5">
                                     <Calendar size={14} />
                                     Ứng tuyển ngày {formatDate(application.AppliedAt)}
@@ -210,7 +210,7 @@ function ApplicationCard({
                                     href={application.ResumeUrl}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="inline-flex items-center gap-1 text-sm text-[#194d8e] hover:underline"
+                                    className="inline-flex items-center gap-1 text-sm text-primary hover:underline"
                                 >
                                     <FileText size={14} />
                                     Xem CV đã nộp
@@ -230,8 +230,8 @@ function ApplicationCard({
                                     Hủy đơn
                                 </Button>
                             )}
-                            <Link href={`/candidate/jobs/${application.JobId}`}>
-                                <Button variant="ghost" size="icon" className="text-gray-400 group-hover:text-[#194d8e]">
+                            <Link href={`/candidate/applied-jobs/${application.ID}`}>
+                                <Button variant="ghost" size="icon" className="text-muted-foreground group-hover:text-primary">
                                     <ChevronRight size={18} />
                                 </Button>
                             </Link>

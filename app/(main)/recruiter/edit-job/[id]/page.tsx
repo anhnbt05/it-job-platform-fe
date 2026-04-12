@@ -54,8 +54,8 @@ export default function EditJobPage() {
     if (!job) {
         return (
             <div className="flex flex-col items-center justify-center py-20">
-                <Briefcase size={48} className="mb-4 text-gray-300" />
-                <p className="text-lg font-medium text-gray-500">Không tìm thấy tin tuyển dụng</p>
+                <Briefcase size={48} className="mb-4 text-muted-foreground" />
+                <p className="text-lg font-medium text-muted-foreground">Không tìm thấy tin tuyển dụng</p>
             </div>
         );
     }
@@ -137,16 +137,16 @@ function EditJobForm({ job, jobId }: { job: JobDetail; jobId: string }) {
 
     return (
         <div className="mx-auto max-w-[800px]">
-            <Link href="/recruiter/manage-jobs" className="mb-6 inline-flex items-center gap-2 text-sm text-gray-500 hover:text-gray-700">
+            <Link href="/recruiter/manage-jobs" className="mb-6 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
                 <ArrowLeft size={16} />
                 Quay lại
             </Link>
 
             <form onSubmit={handleSubmit} className="space-y-6">
-                <Card className="border-gray-100 shadow-sm">
+                <Card className="border-border shadow-sm">
                     <CardHeader className="pb-3">
                         <CardTitle className="flex items-center gap-2 text-base">
-                            <Briefcase size={18} className="text-[#194d8e]" />
+                            <Briefcase size={18} className="text-primary" />
                             Thông tin cơ bản
                         </CardTitle>
                     </CardHeader>
@@ -159,7 +159,7 @@ function EditJobForm({ job, jobId }: { job: JobDetail; jobId: string }) {
                             <Label>Mô tả chung</Label>
                             <Textarea value={form.Description} onChange={(event) => setForm((current) => ({ ...current, Description: event.target.value }))} rows={3} />
                         </div>
-                        <div className="grid grid-cols-3 gap-4">
+                        <div className="grid gap-4 md:grid-cols-[180px_minmax(0,1fr)_minmax(0,1fr)]">
                             <div className="space-y-2">
                                 <Label>Số lượng</Label>
                                 <Input type="number" min={1} value={form.Vacancies} onChange={(event) => setForm((current) => ({ ...current, Vacancies: parseInt(event.target.value, 10) || 1 }))} className="h-11" />
@@ -167,7 +167,7 @@ function EditJobForm({ job, jobId }: { job: JobDetail; jobId: string }) {
                             <div className="space-y-2">
                                 <Label>Hình thức</Label>
                                 <Select value={form.Type} onValueChange={(value) => setForm((current) => ({ ...current, Type: value }))}>
-                                    <SelectTrigger className="h-11">
+                                    <SelectTrigger className="h-11 w-full">
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -180,7 +180,7 @@ function EditJobForm({ job, jobId }: { job: JobDetail; jobId: string }) {
                             <div className="space-y-2">
                                 <Label>Cấp độ</Label>
                                 <Select value={form.Level} onValueChange={(value) => setForm((current) => ({ ...current, Level: value }))}>
-                                    <SelectTrigger className="h-11">
+                                    <SelectTrigger className="h-11 w-full">
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -194,10 +194,10 @@ function EditJobForm({ job, jobId }: { job: JobDetail; jobId: string }) {
                     </CardContent>
                 </Card>
 
-                <Card className="border-gray-100 shadow-sm">
+                <Card className="border-border shadow-sm">
                     <CardHeader className="pb-3">
                         <CardTitle className="flex items-center gap-2 text-base">
-                            <FileText size={18} className="text-[#194d8e]" />
+                            <FileText size={18} className="text-primary" />
                             Chi tiết
                         </CardTitle>
                     </CardHeader>
@@ -221,10 +221,10 @@ function EditJobForm({ job, jobId }: { job: JobDetail; jobId: string }) {
                     </CardContent>
                 </Card>
 
-                <Card className="border-gray-100 shadow-sm">
+                <Card className="border-border shadow-sm">
                     <CardHeader className="pb-3">
                         <CardTitle className="flex items-center gap-2 text-base">
-                            <DollarSign size={18} className="text-[#194d8e]" />
+                            <DollarSign size={18} className="text-primary" />
                             Lương & Địa điểm
                         </CardTitle>
                     </CardHeader>
@@ -240,14 +240,14 @@ function EditJobForm({ job, jobId }: { job: JobDetail; jobId: string }) {
                         <div className="space-y-2">
                             <Label>Địa điểm</Label>
                             <div className="relative">
-                                <MapPin className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                                <MapPin className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                                 <Input value={form.Address} onChange={(event) => setForm((current) => ({ ...current, Address: event.target.value }))} className="h-11 pl-10" />
                             </div>
                         </div>
                         <div className="space-y-2">
                             <Label>Hạn nộp</Label>
                             <div className="relative">
-                                <Calendar className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                                <Calendar className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                                 <Input type="date" value={form.ExpiredAt} onChange={(event) => setForm((current) => ({ ...current, ExpiredAt: event.target.value }))} className="h-11 pl-10" />
                             </div>
                         </div>
@@ -260,7 +260,7 @@ function EditJobForm({ job, jobId }: { job: JobDetail; jobId: string }) {
                     <Button type="button" variant="outline" className="flex-1" onClick={() => router.back()}>
                         Hủy
                     </Button>
-                    <Button type="submit" disabled={updateMutation.isPending} className="flex-1 bg-[#194d8e] hover:bg-[#194d8e]/90">
+                    <Button type="submit" disabled={updateMutation.isPending} className="flex-1 bg-primary hover:bg-primary/90">
                         {updateMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save size={16} className="mr-2" />}
                         Lưu thay đổi
                     </Button>

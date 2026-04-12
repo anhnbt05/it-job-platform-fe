@@ -37,6 +37,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { useAuthStore } from "@/store/useAuthStore";
 
 type ProfileFormState = {
   FullName: string;
@@ -73,6 +74,8 @@ export default function EditProfilePage() {
   const queryClient = useQueryClient();
   const [form, setForm] = useState<Partial<ProfileFormState>>({});
   const [experienceDialogOpen, setExperienceDialogOpen] = useState(false);
+  const [deleteAccountDialogOpen, setDeleteAccountDialogOpen] =
+    useState(false);
   const [experienceForm, setExperienceForm] = useState<WorkExperienceFormState>(
     initialExperienceState,
   );
@@ -148,6 +151,23 @@ export default function EditProfilePage() {
     onError: () => toast.error("Không thể xóa kinh nghiệm làm việc"),
   });
 
+  const deleteAccountMutation = useMutation({
+    mutationFn: () => candidateService.deleteAccount(),
+    onSuccess: () => {
+      setDeleteAccountDialogOpen(false);
+      queryClient.clear();
+      useAuthStore.getState().logout();
+      toast.success("Tài khoản đã được xóa. Đang chuyển về trang đăng nhập...");
+
+      if (typeof window !== "undefined") {
+        window.setTimeout(() => {
+          window.location.href = "/login";
+        }, 1200);
+      }
+    },
+    onError: () => toast.error("Không thể xóa tài khoản"),
+  });
+
   const summaryText = form.SummaryText ?? candidate?.Summary.join("\n") ?? "";
   const summaryLines = useMemo(() => splitLines(summaryText), [summaryText]);
 
@@ -168,17 +188,17 @@ export default function EditProfilePage() {
     <div className="mx-auto max-w-[960px]">
       <Link
         href="/candidate/profile"
-        className="mb-6 inline-flex items-center gap-2 text-sm text-gray-500 hover:text-gray-700"
+        className="mb-6 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
       >
         <ArrowLeft size={16} />
         Quay lại hồ sơ
       </Link>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        <Card className="border-gray-100 shadow-sm">
+        <Card className="border-border shadow-sm">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg">
-              <User size={20} className="text-[#194d8e]" />
+              <User size={20} className="text-primary" />
               Chỉnh sửa hồ sơ ứng viên
             </CardTitle>
           </CardHeader>
@@ -278,7 +298,7 @@ export default function EditProfilePage() {
         </Card>
 
         <div className="grid gap-6 lg:grid-cols-[1fr_1.2fr]">
-          <Card className="border-gray-100 shadow-sm">
+          <Card className="border-border shadow-sm">
             <CardHeader>
               <CardTitle className="text-base font-semibold">
                 Tệp hồ sơ
@@ -321,14 +341,14 @@ export default function EditProfilePage() {
                         href={resumeUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center justify-between rounded-xl border border-gray-100 px-3 py-2 text-sm text-gray-700 hover:border-[#194d8e]/30 hover:bg-[#194d8e]/5"
+                        className="flex items-center justify-between rounded-xl border border-border px-3 py-2 text-sm text-foreground hover:border-primary/30 hover:bg-primary/5"
                       >
                         <span>CV #{index + 1}</span>
-                        <Upload size={14} className="text-[#194d8e]" />
+                        <Upload size={14} className="text-primary" />
                       </a>
                     ))
                   ) : (
-                    <p className="text-sm text-gray-400">
+                    <p className="text-sm text-muted-foreground">
                       Chưa có CV nào trong hồ sơ.
                     </p>
                   )}
@@ -337,7 +357,7 @@ export default function EditProfilePage() {
             </CardContent>
           </Card>
 
-          <Card className="border-gray-100 shadow-sm">
+          <Card className="border-border shadow-sm">
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="text-base font-semibold">
                 Kinh nghiệm làm việc
@@ -345,7 +365,7 @@ export default function EditProfilePage() {
               <Button
                 type="button"
                 size="sm"
-                className="bg-[#194d8e] hover:bg-[#194d8e]/90"
+                className="bg-primary hover:bg-primary/90"
                 onClick={() => {
                   setExperienceForm(initialExperienceState);
                   setExperienceDialogOpen(true);
@@ -360,17 +380,17 @@ export default function EditProfilePage() {
                 candidate.WorkExperiences.map((experience) => (
                   <div
                     key={experience.ID}
-                    className="rounded-xl border border-gray-100 p-4"
+                    className="rounded-xl border border-border p-4"
                   >
                     <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                       <div>
-                        <p className="font-semibold text-gray-900">
+                        <p className="font-semibold text-foreground">
                           {experience.Position}
                         </p>
-                        <p className="text-sm text-gray-500">
+                        <p className="text-sm text-muted-foreground">
                           {experience.CompanyName}
                         </p>
-                        <p className="mt-1 text-xs text-gray-400">
+                        <p className="mt-1 text-xs text-muted-foreground">
                           {formatDateInput(experience.StartDate)} -{" "}
                           {formatDateInput(experience.EndDate)}
                         </p>
@@ -417,7 +437,7 @@ export default function EditProfilePage() {
                   </div>
                 ))
               ) : (
-                <p className="text-sm text-gray-400">
+                <p className="text-sm text-muted-foreground">
                   Bạn chưa thêm kinh nghiệm làm việc nào.
                 </p>
               )}
@@ -425,19 +445,49 @@ export default function EditProfilePage() {
           </Card>
         </div>
 
+        <Card className="border-red-100 bg-red-50/40 shadow-sm">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base text-red-700">
+              <Trash2 size={18} />
+              Vùng nguy hiểm
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div className="space-y-1">
+              <p className="font-medium text-foreground">Xóa vĩnh viễn tài khoản</p>
+              <p className="text-sm text-muted-foreground">
+                Thao tác này sẽ xóa tài khoản hiện tại và bạn sẽ phải đăng nhập
+                lại nếu tạo tài khoản mới.
+              </p>
+            </div>
+            <Button
+              type="button"
+              variant="destructive"
+              onClick={() => setDeleteAccountDialogOpen(true)}
+              disabled={deleteAccountMutation.isPending}
+            >
+              <Trash2 size={16} className="mr-2" />
+              Xóa tài khoản
+            </Button>
+          </CardContent>
+        </Card>
+
         <div className="flex gap-3">
           <Button
             type="button"
             variant="outline"
             className="flex-1"
             onClick={() => router.back()}
+            disabled={deleteAccountMutation.isPending}
           >
             Hủy
           </Button>
           <Button
             type="submit"
-            className="flex-1 bg-[#194d8e] hover:bg-[#194d8e]/90"
-            disabled={updateProfileMutation.isPending}
+            className="flex-1 bg-primary hover:bg-primary/90"
+            disabled={
+              updateProfileMutation.isPending || deleteAccountMutation.isPending
+            }
           >
             {updateProfileMutation.isPending ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -581,12 +631,53 @@ export default function EditProfilePage() {
               type="button"
               onClick={() => saveExperienceMutation.mutate(experienceForm)}
               disabled={saveExperienceMutation.isPending}
-              className="bg-[#194d8e] hover:bg-[#194d8e]/90"
+              className="bg-primary hover:bg-primary/90"
             >
               {saveExperienceMutation.isPending && (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               )}
               Lưu kinh nghiệm
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={deleteAccountDialogOpen}
+        onOpenChange={(open) => {
+          if (!deleteAccountMutation.isPending) {
+            setDeleteAccountDialogOpen(open);
+          }
+        }}
+      >
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Xóa tài khoản ứng viên?</DialogTitle>
+            <DialogDescription>
+              Sau khi xác nhận, tài khoản của bạn sẽ bị xóa vĩnh viễn và không
+              thể khôi phục.
+            </DialogDescription>
+          </DialogHeader>
+
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setDeleteAccountDialogOpen(false)}
+              disabled={deleteAccountMutation.isPending}
+            >
+              Hủy
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              onClick={() => deleteAccountMutation.mutate()}
+              disabled={deleteAccountMutation.isPending}
+            >
+              {deleteAccountMutation.isPending && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              )}
+              Xóa vĩnh viễn
             </Button>
           </DialogFooter>
         </DialogContent>

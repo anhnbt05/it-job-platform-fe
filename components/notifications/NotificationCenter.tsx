@@ -128,15 +128,16 @@ export default function NotificationCenter() {
         <div className="mx-auto max-w-[980px] space-y-6">
             <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
                 <div>
-                    <h1 className="text-xl font-bold text-gray-900">Thông báo của bạn</h1>
-                    <p className="text-sm text-gray-500">
+                    <h1 className="text-xl font-bold text-foreground">Thông báo của bạn</h1>
+                    <p className="text-sm text-muted-foreground">
                         Theo dõi trạng thái bài đăng, ứng tuyển và các cập nhật quan trọng từ hệ thống.
                     </p>
                 </div>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
                     <Button
                         type="button"
                         variant="outline"
+                        className="w-full sm:w-auto"
                         disabled={visibleUnreadIds.length === 0 || markAsReadMutation.isPending}
                         onClick={() => markAsReadMutation.mutate(visibleUnreadIds)}
                     >
@@ -146,8 +147,8 @@ export default function NotificationCenter() {
                     <Button
                         type="button"
                         variant="outline"
+                        className="w-full sm:w-auto border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 dark:border-red-500/30 dark:text-red-300"
                         disabled={selectedIds.length === 0 || deleteNotificationsMutation.isPending}
-                        className="border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
                         onClick={() => deleteNotificationsMutation.mutate(selectedIds)}
                     >
                         {deleteNotificationsMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Trash2 size={16} className="mr-2" />}
@@ -162,10 +163,10 @@ export default function NotificationCenter() {
                 <StatCard label="Đã đọc" value={stats.read} tone="green" />
             </div>
 
-            <Card className="border-gray-100 p-4 shadow-sm">
+            <Card className="border-border p-4 shadow-sm">
                 <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-                    <Tabs value={statusFilter} onValueChange={(value) => setStatusFilter(value as NotificationStatusFilter)}>
-                        <TabsList className="bg-gray-100">
+                    <Tabs value={statusFilter} onValueChange={(value) => setStatusFilter(value as NotificationStatusFilter)} className="w-full lg:w-auto">
+                        <TabsList className="h-auto w-full flex-wrap justify-start bg-muted">
                             <TabsTrigger value="all">Tất cả</TabsTrigger>
                             <TabsTrigger value="unread">Chưa đọc</TabsTrigger>
                             <TabsTrigger value="read">Đã đọc</TabsTrigger>
@@ -177,7 +178,7 @@ export default function NotificationCenter() {
                             value={typeFilter}
                             onValueChange={(value) => setTypeFilter(value as UserNotificationType | "all")}
                         >
-                            <SelectTrigger className="w-full min-w-[220px] bg-white sm:w-[240px]">
+                            <SelectTrigger className="w-full bg-card sm:w-[240px]">
                                 <SelectValue placeholder="Lọc theo loại" />
                             </SelectTrigger>
                             <SelectContent>
@@ -193,7 +194,7 @@ export default function NotificationCenter() {
                         <Button
                             type="button"
                             variant="ghost"
-                            className="justify-start text-gray-500 sm:justify-center"
+                            className="justify-start text-muted-foreground sm:justify-center"
                             onClick={toggleSelectAllVisible}
                             disabled={notifications.length === 0}
                         >
@@ -210,12 +211,12 @@ export default function NotificationCenter() {
                     ))}
                 </div>
             ) : notifications.length === 0 ? (
-                <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-gray-200 bg-white py-20 text-center">
-                    <div className="rounded-full bg-gray-100 p-4">
-                        <Clock3 size={28} className="text-gray-400" />
+                <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-card py-20 text-center">
+                    <div className="rounded-full bg-muted p-4">
+                        <Clock3 size={28} className="text-muted-foreground" />
                     </div>
-                    <p className="mt-4 text-lg font-medium text-gray-500">Không có thông báo phù hợp</p>
-                    <p className="mt-1 max-w-md text-sm text-gray-400">
+                    <p className="mt-4 text-lg font-medium text-muted-foreground">Không có thông báo phù hợp</p>
+                    <p className="mt-1 max-w-md text-sm text-muted-foreground">
                         Thử đổi bộ lọc hoặc quay lại sau khi hệ thống phát sinh cập nhật mới cho tài khoản của bạn.
                     </p>
                 </div>
@@ -231,7 +232,7 @@ export default function NotificationCenter() {
                                 key={notification.ID}
                                 className={cn(
                                     "cursor-pointer border p-0 shadow-sm transition-all hover:shadow-md",
-                                    notification.IsRead ? "border-gray-100 bg-white" : appearance.accent,
+                                    notification.IsRead ? "border-border bg-card" : appearance.accent,
                                 )}
                                 onClick={() => handleOpenNotification(notification)}
                             >
@@ -242,8 +243,8 @@ export default function NotificationCenter() {
                                         className={cn(
                                             "mt-1 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full border transition-colors",
                                             isSelected
-                                                ? "border-[#194d8e] bg-[#194d8e] text-white"
-                                                : "border-gray-300 bg-white text-transparent hover:border-[#194d8e]",
+                                                ? "border-primary bg-primary text-white"
+                                                : "border-border bg-card text-transparent hover:border-primary",
                                         )}
                                         onClick={(event) => {
                                             event.stopPropagation();
@@ -261,20 +262,20 @@ export default function NotificationCenter() {
                                         <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
                                             <div className="min-w-0">
                                                 <div className="flex flex-wrap items-center gap-2">
-                                                    <p className={cn("line-clamp-1 text-sm", notification.IsRead ? "text-gray-700" : "font-semibold text-gray-900")}>
+                                                    <p className={cn("line-clamp-1 text-sm", notification.IsRead ? "text-foreground" : "font-semibold text-foreground")}>
                                                         {notification.Notification?.Title || "Thông báo"}
                                                     </p>
                                                     <Badge variant="outline" className={appearance.badge}>
                                                         {getNotificationTypeLabel(notification.Notification?.Type)}
                                                     </Badge>
                                                 </div>
-                                                <p className="mt-1 line-clamp-2 text-sm text-gray-500">
+                                                <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
                                                     {getNotificationPreview(notification)}
                                                 </p>
                                             </div>
-                                            <div className="flex flex-shrink-0 items-center gap-3 text-xs text-gray-400">
+                                            <div className="flex flex-shrink-0 items-center gap-3 text-xs text-muted-foreground">
                                                 {!notification.IsRead && (
-                                                    <span className="h-2.5 w-2.5 rounded-full bg-[#194d8e]" />
+                                                    <span className="h-2.5 w-2.5 rounded-full bg-primary" />
                                                 )}
                                                 <span>{formatNotificationDate(notification.CreatedAt)}</span>
                                             </div>
@@ -299,7 +300,7 @@ export default function NotificationCenter() {
                                                 type="button"
                                                 size="sm"
                                                 variant="ghost"
-                                                className="text-gray-500"
+                                                className="text-muted-foreground"
                                                 onClick={(event) => {
                                                     event.stopPropagation();
                                                     handleOpenNotification(notification);
@@ -312,7 +313,7 @@ export default function NotificationCenter() {
                                                 type="button"
                                                 size="sm"
                                                 variant="ghost"
-                                                className="text-red-500 hover:bg-red-50 hover:text-red-600"
+                                                className="text-red-500 hover:bg-red-50 hover:text-red-600 dark:text-red-300"
                                                 onClick={(event) => {
                                                     event.stopPropagation();
                                                     deleteNotificationsMutation.mutate([notification.ID]);
@@ -361,16 +362,16 @@ export default function NotificationCenter() {
                                 )}
 
                                 {notificationDetailQuery.data?.Content.map((line, index) => (
-                                    <div key={`${line}-${index}`} className="rounded-xl bg-gray-50 p-4 text-sm leading-relaxed text-gray-700">
+                                    <div key={`${line}-${index}`} className="rounded-xl bg-muted/40 p-4 text-sm leading-relaxed text-foreground">
                                         {line}
                                     </div>
                                 ))}
 
                                 {!notificationDetailQuery.data?.Content.length && (
-                                    <p className="text-sm text-gray-400">Thông báo này chưa có nội dung chi tiết.</p>
+                                    <p className="text-sm text-muted-foreground">Thông báo này chưa có nội dung chi tiết.</p>
                                 )}
 
-                                <div className="rounded-xl border border-gray-100 bg-white p-4 text-xs text-gray-500">
+                                <div className="rounded-xl border border-border bg-card p-4 text-xs text-muted-foreground">
                                     Trạng thái: {notificationDetailQuery.data?.IsRead ? "Đã đọc" : "Chưa đọc"}
                                     {notificationDetailQuery.data?.ReadAt && ` • Đọc lúc ${formatNotificationDate(notificationDetailQuery.data.ReadAt)}`}
                                 </div>
@@ -393,14 +394,14 @@ function StatCard({
     tone: "blue" | "amber" | "green";
 }) {
     const toneClass = {
-        blue: "bg-[#194d8e]/5 text-[#194d8e]",
-        amber: "bg-amber-50 text-amber-700",
-        green: "bg-green-50 text-green-700",
+        blue: "bg-primary/5 text-primary",
+        amber: "bg-amber-500/15 text-amber-300",
+        green: "bg-emerald-500/15 text-emerald-300",
     };
 
     return (
-        <Card className="border-gray-100 p-4 shadow-sm">
-            <p className="text-sm text-gray-500">{label}</p>
+        <Card className="border-border p-4 shadow-sm">
+            <p className="text-sm text-muted-foreground">{label}</p>
             <p className={cn("mt-2 text-2xl font-bold", toneClass[tone])}>{value}</p>
         </Card>
     );

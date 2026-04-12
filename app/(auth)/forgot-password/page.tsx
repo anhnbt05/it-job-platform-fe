@@ -36,10 +36,10 @@ export default function ForgotPasswordPage() {
     };
 
     return (
-        <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
+        <div className="flex min-h-screen items-center justify-center bg-muted/40 px-4">
             <Card className="w-full max-w-md border-0 shadow-xl">
                 <CardContent className="p-8">
-                    <Link href="/login" className="mb-6 inline-flex items-center gap-2 text-sm text-gray-500 hover:text-gray-700">
+                    <Link href="/login" className="mb-6 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
                         <ArrowLeft size={16} /> Quay lại đăng nhập
                     </Link>
 
@@ -47,20 +47,20 @@ export default function ForgotPasswordPage() {
                         <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-full bg-amber-50">
                             <KeyRound size={24} className="text-amber-600" />
                         </div>
-                        <h2 className="text-2xl font-bold text-gray-900">Quên mật khẩu</h2>
-                        <p className="mt-1 text-sm text-gray-500">Nhập email để nhận mã xác thực</p>
+                        <h2 className="text-2xl font-bold text-foreground">Quên mật khẩu</h2>
+                        <p className="mt-1 text-sm text-muted-foreground">Nhập email để nhận mã xác thực</p>
                     </div>
 
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <div className="space-y-2">
                             <Label htmlFor="email">Email</Label>
                             <div className="relative">
-                                <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-                                <Input id="email" type="email" placeholder="email@example.com" value={email} onChange={(e) => setEmail(e.target.value)} className="h-11 pl-10 bg-gray-50 border-gray-200" />
+                                <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                                <Input id="email" type="email" placeholder="email@example.com" value={email} onChange={(e) => setEmail(e.target.value)} className="h-11 pl-10 bg-muted/40 border-border" />
                             </div>
                         </div>
 
-                        <Button type="submit" disabled={isLoading} className="h-11 w-full bg-[#194d8e] font-semibold hover:bg-[#194d8e]/90">
+                        <Button type="submit" disabled={isLoading} className="h-11 w-full bg-primary font-semibold hover:bg-primary/90">
                             {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                             GỬI MÃ XÁC THỰC
                         </Button>

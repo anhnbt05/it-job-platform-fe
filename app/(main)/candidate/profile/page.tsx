@@ -41,20 +41,20 @@ export default function CandidateProfilePage() {
     if (!candidate) {
         return (
             <div className="flex flex-col items-center justify-center py-20">
-                <User size={48} className="mb-4 text-gray-300" />
-                <p className="text-lg font-medium text-gray-500">Không tìm thấy hồ sơ ứng viên</p>
+                <User size={48} className="mb-4 text-muted-foreground" />
+                <p className="text-lg font-medium text-muted-foreground">Không tìm thấy hồ sơ ứng viên</p>
             </div>
         );
     }
 
     return (
         <div className="mx-auto max-w-[960px] space-y-6">
-            <Card className="border-gray-100 shadow-sm">
+            <Card className="border-border shadow-sm">
                 <CardContent className="p-6">
                     <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
                         <Avatar className="h-24 w-24 border-4 border-white shadow-lg">
                             <AvatarImage src={candidate.AvatarUrl || undefined} />
-                            <AvatarFallback className="bg-[#194d8e] text-2xl text-white">
+                            <AvatarFallback className="bg-primary text-2xl text-white">
                                 {candidate.FullName?.charAt(0) || "U"}
                             </AvatarFallback>
                         </Avatar>
@@ -62,9 +62,9 @@ export default function CandidateProfilePage() {
                         <div className="flex-1">
                             <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                                 <div>
-                                    <h1 className="text-2xl font-bold text-gray-900">{candidate.FullName || "Ứng viên"}</h1>
+                                    <h1 className="text-2xl font-bold text-foreground">{candidate.FullName || "Ứng viên"}</h1>
                                     {candidate.Headline && (
-                                        <p className="mt-1 text-sm font-medium text-[#194d8e]">{candidate.Headline}</p>
+                                        <p className="mt-1 text-sm font-medium text-primary">{candidate.Headline}</p>
                                     )}
                                     {candidate.Level && (
                                         <Badge className="mt-3 bg-purple-50 text-purple-700">
@@ -90,7 +90,7 @@ export default function CandidateProfilePage() {
                             </div>
 
                             {candidate.Bio && (
-                                <p className="mt-4 whitespace-pre-line text-sm leading-relaxed text-gray-600">
+                                <p className="mt-4 whitespace-pre-line text-sm leading-relaxed text-muted-foreground">
                                     {candidate.Bio}
                                 </p>
                             )}
@@ -101,10 +101,10 @@ export default function CandidateProfilePage() {
 
             <div className="grid gap-6 lg:grid-cols-[1.3fr_1fr]">
                 <div className="space-y-6">
-                    <Card className="border-gray-100 shadow-sm">
+                    <Card className="border-border shadow-sm">
                         <CardHeader className="pb-3">
                             <CardTitle className="flex items-center gap-2 text-base font-semibold">
-                                <User size={18} className="text-[#194d8e]" />
+                                <User size={18} className="text-primary" />
                                 Tóm tắt chuyên môn
                             </CardTitle>
                         </CardHeader>
@@ -112,43 +112,43 @@ export default function CandidateProfilePage() {
                             {candidate.Summary.length > 0 ? (
                                 <ul className="space-y-2">
                                     {candidate.Summary.map((summary) => (
-                                        <li key={summary} className="flex items-start gap-2 text-sm text-gray-700">
-                                            <span className="mt-2 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-[#194d8e]" />
+                                        <li key={summary} className="flex items-start gap-2 text-sm text-foreground">
+                                            <span className="mt-2 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-primary" />
                                             <span>{summary}</span>
                                         </li>
                                     ))}
                                 </ul>
                             ) : (
-                                <p className="text-sm text-gray-400">Bạn chưa cập nhật phần tóm tắt chuyên môn.</p>
+                                <p className="text-sm text-muted-foreground">Bạn chưa cập nhật phần tóm tắt chuyên môn.</p>
                             )}
                         </CardContent>
                     </Card>
 
-                    <Card className="border-gray-100 shadow-sm">
+                    <Card className="border-border shadow-sm">
                         <CardHeader className="pb-3">
                             <CardTitle className="flex items-center gap-2 text-base font-semibold">
-                                <Briefcase size={18} className="text-[#194d8e]" />
+                                <Briefcase size={18} className="text-primary" />
                                 Kinh nghiệm làm việc
                             </CardTitle>
                         </CardHeader>
                         <CardContent>
                             {candidate.WorkExperiences.length === 0 ? (
-                                <p className="py-6 text-center text-sm text-gray-400">Chưa có kinh nghiệm làm việc nào</p>
+                                <p className="py-6 text-center text-sm text-muted-foreground">Chưa có kinh nghiệm làm việc nào</p>
                             ) : (
                                 <div className="space-y-4">
                                     {candidate.WorkExperiences.map((experience) => (
-                                        <div key={experience.ID || `${experience.CompanyName}-${experience.Position}`} className="rounded-xl border border-gray-100 p-4">
+                                        <div key={experience.ID || `${experience.CompanyName}-${experience.Position}`} className="rounded-xl border border-border p-4">
                                             <div className="flex items-start justify-between gap-4">
                                                 <div>
-                                                    <p className="font-semibold text-gray-900">{experience.Position || "Vị trí chưa cập nhật"}</p>
-                                                    <p className="text-sm text-gray-500">{experience.CompanyName || "Công ty chưa cập nhật"}</p>
+                                                    <p className="font-semibold text-foreground">{experience.Position || "Vị trí chưa cập nhật"}</p>
+                                                    <p className="text-sm text-muted-foreground">{experience.CompanyName || "Công ty chưa cập nhật"}</p>
                                                 </div>
-                                                <Badge variant="outline" className="border-gray-200 text-gray-500">
+                                                <Badge variant="outline" className="border-border text-muted-foreground">
                                                     {experience.JobType}
                                                 </Badge>
                                             </div>
 
-                                            <div className="mt-2 flex flex-wrap items-center gap-4 text-xs text-gray-400">
+                                            <div className="mt-2 flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
                                                 <span>{formatMonthYear(experience.StartDate)} - {formatMonthYear(experience.EndDate)}</span>
                                                 {experience.Location && (
                                                     <span className="flex items-center gap-1">
@@ -161,7 +161,7 @@ export default function CandidateProfilePage() {
                                             {experience.Descriptions && experience.Descriptions.length > 0 && (
                                                 <ul className="mt-3 space-y-1.5">
                                                     {experience.Descriptions.map((description) => (
-                                                        <li key={description} className="flex items-start gap-2 text-sm text-gray-600">
+                                                        <li key={description} className="flex items-start gap-2 text-sm text-muted-foreground">
                                                             <span className="mt-2 h-1 w-1 flex-shrink-0 rounded-full bg-gray-400" />
                                                             <span>{description}</span>
                                                         </li>
@@ -177,10 +177,10 @@ export default function CandidateProfilePage() {
                 </div>
 
                 <div className="space-y-6">
-                    <Card className="border-gray-100 shadow-sm">
+                    <Card className="border-border shadow-sm">
                         <CardHeader className="pb-3">
                             <CardTitle className="flex items-center gap-2 text-base font-semibold">
-                                <FileText size={18} className="text-[#194d8e]" />
+                                <FileText size={18} className="text-primary" />
                                 Hồ sơ CV
                             </CardTitle>
                         </CardHeader>
@@ -192,19 +192,19 @@ export default function CandidateProfilePage() {
                                         href={resumeUrl}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="flex items-center justify-between rounded-xl border border-gray-100 p-3 text-sm text-gray-700 transition-colors hover:border-[#194d8e]/30 hover:bg-[#194d8e]/5"
+                                        className="flex items-center justify-between rounded-xl border border-border p-3 text-sm text-foreground transition-colors hover:border-primary/30 hover:bg-primary/5"
                                     >
                                         <span>CV #{index + 1}</span>
-                                        <ExternalLink size={14} className="text-[#194d8e]" />
+                                        <ExternalLink size={14} className="text-primary" />
                                     </a>
                                 ))
                             ) : (
-                                <p className="text-sm text-gray-400">Bạn chưa tải CV nào lên hệ thống.</p>
+                                <p className="text-sm text-muted-foreground">Bạn chưa tải CV nào lên hệ thống.</p>
                             )}
                         </CardContent>
                     </Card>
 
-                    <Card className="border-gray-100 shadow-sm">
+                    <Card className="border-border shadow-sm">
                         <CardHeader className="pb-3">
                             <CardTitle className="text-base font-semibold">Tóm tắt hồ sơ</CardTitle>
                         </CardHeader>
@@ -221,8 +221,8 @@ export default function CandidateProfilePage() {
 
 function InfoRow({ icon, value }: { icon: React.ReactNode; value: string }) {
     return (
-        <div className="flex items-center gap-2 text-gray-600">
-            <span className="text-gray-400">{icon}</span>
+        <div className="flex items-center gap-2 text-muted-foreground">
+            <span className="text-muted-foreground">{icon}</span>
             <span>{value}</span>
         </div>
     );
@@ -230,9 +230,9 @@ function InfoRow({ icon, value }: { icon: React.ReactNode; value: string }) {
 
 function StatCard({ label, value }: { label: string; value: string }) {
     return (
-        <div className="rounded-xl bg-[#194d8e]/5 p-4">
-            <p className="text-xs uppercase tracking-wide text-gray-500">{label}</p>
-            <p className="mt-1 text-2xl font-bold text-[#194d8e]">{value}</p>
+        <div className="rounded-xl bg-primary/5 p-4">
+            <p className="text-xs uppercase tracking-wide text-muted-foreground">{label}</p>
+            <p className="mt-1 text-2xl font-bold text-primary">{value}</p>
         </div>
     );
 }

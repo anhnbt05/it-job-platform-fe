@@ -3,6 +3,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactNode, useState } from "react";
 import { ToastContainer } from "react-toastify";
+import { ThemeProvider } from "@/providers/theme-provider";
 
 import "react-toastify/dist/ReactToastify.css";
 
@@ -25,9 +26,11 @@ export default function AppProviders({ children }: Props) {
   );
 
   return (
-    <QueryClientProvider client={queryClient}>
-      {children}
-      <ToastContainer position="top-right" autoClose={3000} theme="colored" />
-    </QueryClientProvider>
+    <ThemeProvider>
+      <QueryClientProvider client={queryClient}>
+        {children}
+        <ToastContainer position="top-right" autoClose={3000} theme="colored" />
+      </QueryClientProvider>
+    </ThemeProvider>
   );
 }

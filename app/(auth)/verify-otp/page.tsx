@@ -44,10 +44,10 @@ function VerifyOTPContent() {
     };
 
     return (
-        <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
+        <div className="flex min-h-screen items-center justify-center bg-muted/40 px-4">
             <Card className="w-full max-w-md border-0 shadow-xl">
                 <CardContent className="p-8">
-                    <Link href="/forgot-password" className="mb-6 inline-flex items-center gap-2 text-sm text-gray-500 hover:text-gray-700">
+                    <Link href="/forgot-password" className="mb-6 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
                         <ArrowLeft size={16} />
                         Quay lại
                     </Link>
@@ -56,8 +56,8 @@ function VerifyOTPContent() {
                         <div className="mx-auto mb-4 inline-flex h-16 w-16 items-center justify-center rounded-full bg-green-50">
                             <ShieldCheck size={32} className="text-green-600" />
                         </div>
-                        <h2 className="text-2xl font-bold text-gray-900">Xác thực OTP</h2>
-                        <p className="mt-1 text-sm text-gray-500">
+                        <h2 className="text-2xl font-bold text-foreground">Xác thực OTP</h2>
+                        <p className="mt-1 text-sm text-muted-foreground">
                             Nhập mã OTP đã gửi đến <strong>{email}</strong>
                         </p>
                     </div>
@@ -70,12 +70,12 @@ function VerifyOTPContent() {
                                 placeholder="Nhập mã OTP"
                                 value={otp}
                                 onChange={(event) => setOtp(event.target.value)}
-                                className="h-12 bg-gray-50 text-center text-lg tracking-widest"
+                                className="h-12 bg-muted/40 text-center text-lg tracking-widest"
                                 maxLength={6}
                             />
                         </div>
 
-                        <Button type="submit" disabled={isLoading} className="h-11 w-full bg-[#194d8e] font-semibold hover:bg-[#194d8e]/90">
+                        <Button type="submit" disabled={isLoading} className="h-11 w-full bg-primary font-semibold hover:bg-primary/90">
                             {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                             XÁC THỰC
                         </Button>
@@ -88,7 +88,7 @@ function VerifyOTPContent() {
 
 export default function VerifyOTPPage() {
     return (
-        <Suspense fallback={<div className="flex h-screen items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-[#194d8e]" /></div>}>
+        <Suspense fallback={<div className="flex h-screen items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>}>
             <VerifyOTPContent />
         </Suspense>
     );
