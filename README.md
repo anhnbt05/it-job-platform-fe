@@ -1,36 +1,73 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# IT Job Platform Frontend
 
-## Getting Started
+Frontend Next.js cho nen tang tim viec lam nganh IT tai Viet Nam.
 
-First, run the development server:
+## Muc tieu
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+Repo nay duoc chinh de phu hop voi demo local di cung backend trong `../it-job-platform`.
+
+## Dieu kien can
+
+- Node.js 20+
+- npm 10+
+- Backend + Kong da chay
+
+## 1. Tao env
+
+Copy `.env.example` thanh `.env.local`:
+
+```powershell
+Copy-Item .env.example .env.local
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Gia tri mac dinh:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```env
+NEXT_PUBLIC_API_URL=http://localhost:8000
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Frontend goi API qua Kong, khong goi truc tiep tung service.
 
-## Learn More
+## 2. Chay local
 
-To learn more about Next.js, take a look at the following resources:
+```powershell
+npm run dev
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Frontend se chay tai [http://localhost:3000](http://localhost:3000).
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 3. Build va lint
 
-## Deploy on Vercel
+```powershell
+npm run lint
+npm run build
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 4. Tai khoan demo
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Admin: `admin@example.com` / `admin123`
+- Recruiter: `recruiter@example.com` / `recruiter123`
+- Candidate: `candidate@example.com` / `candidate123`
+
+Login page da co nut dien nhanh de dien san 3 tai khoan nay. Sau do bam `DANG NHAP` de di qua auth that.
+
+## 5. Luong demo khuyen nghi
+
+- Candidate:
+  - `Tim kiem viec lam`
+  - `Viec lam yeu thich`
+  - `Ho so`
+- Recruiter:
+  - `Quan ly bai dang`
+  - `Them tin tuyen dung`
+  - `Ho so`
+- Admin:
+  - `Bang dieu khien`
+  - `Danh muc`
+  - `Cong ty`
+
+## 6. Neu frontend khong goi duoc API
+
+- Kiem tra `NEXT_PUBLIC_API_URL`
+- Kiem tra backend da chay sau Kong tai `http://localhost:8000`
+- Kiem tra da seed tai khoan demo trong backend

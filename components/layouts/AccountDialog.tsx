@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
 import { toast } from "react-toastify";
@@ -53,21 +53,6 @@ export default function AccountDialog({
         queryFn: () => accountService.getMe(),
         enabled: open,
     });
-
-    useEffect(() => {
-        if (!open) {
-            setIsEditing(false);
-            return;
-        }
-
-        if (account) {
-            setForm({
-                FullName: account.FullName ?? "",
-                PhoneNumber: account.PhoneNumber ?? "",
-                Bio: account.Bio ?? "",
-            });
-        }
-    }, [account, open]);
 
     const updateProfileMutation = useMutation({
         mutationFn: () =>
@@ -128,8 +113,39 @@ export default function AccountDialog({
     const summaryRows = useMemo(() => buildSummaryRows(account), [account]);
     const fallbackText = getInitials(account);
 
+    const handleOpenChange = (nextOpen: boolean) => {
+        if (!nextOpen) {
+            setIsEditing(false);
+        }
+
+        onOpenChange(nextOpen);
+    };
+
+    const handleToggleEditing = () => {
+        if (!account) {
+            return;
+        }
+
+        if (isEditing) {
+            setForm({
+                FullName: account.FullName ?? "",
+                PhoneNumber: account.PhoneNumber ?? "",
+                Bio: account.Bio ?? "",
+            });
+            setIsEditing(false);
+            return;
+        }
+
+        setForm({
+            FullName: account.FullName ?? "",
+            PhoneNumber: account.PhoneNumber ?? "",
+            Bio: account.Bio ?? "",
+        });
+        setIsEditing(true);
+    };
+
     return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
+        <Dialog open={open} onOpenChange={handleOpenChange}>
             <DialogContent className="max-w-2xl">
                 <DialogHeader>
                     <DialogTitle>Tài khoản của bạn</DialogTitle>
@@ -273,16 +289,7 @@ export default function AccountDialog({
                         <Button
                             type="button"
                             variant="outline"
-                            onClick={() => {
-                                setIsEditing((current) => !current);
-                                if (account && isEditing) {
-                                    setForm({
-                                        FullName: account.FullName ?? "",
-                                        PhoneNumber: account.PhoneNumber ?? "",
-                                        Bio: account.Bio ?? "",
-                                    });
-                                }
-                            }}
+                            onClick={handleToggleEditing}
                             disabled={!account || updateProfileMutation.isPending || signOutMutation.isPending}
                         >
                             {isEditing ? "Hủy chỉnh sửa" : "Chỉnh sửa nhanh"}

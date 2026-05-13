@@ -11,8 +11,29 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
-import { Briefcase, Eye, EyeOff, Mail, Lock, Loader2 } from "lucide-react";
+import { Briefcase, Eye, EyeOff, Mail, Lock, Loader2, ShieldCheck, UserRound, Users } from "lucide-react";
 import { UserRole } from "@/types/enums";
+
+const demoAccounts = [
+    {
+        roleLabel: "Admin demo",
+        email: "admin@example.com",
+        password: "admin123",
+        icon: <ShieldCheck size={16} />,
+    },
+    {
+        roleLabel: "Recruiter demo",
+        email: "recruiter@example.com",
+        password: "recruiter123",
+        icon: <Users size={16} />,
+    },
+    {
+        roleLabel: "Candidate demo",
+        email: "candidate@example.com",
+        password: "candidate123",
+        icon: <UserRound size={16} />,
+    },
+];
 
 export default function LoginPage() {
     const [email, setEmail] = useState("");
@@ -67,18 +88,10 @@ export default function LoginPage() {
         }
     };
 
-    const handleDevLogin = (role: UserRole) => {
-        setAuth("dev-token", null, role, "dev-user-id");
-        toast.info(
-            `Đã đăng nhập với quyền ${role === "recruiter" ? "Nhà tuyển dụng" : role === "admin" ? "Quản trị viên" : "Ứng viên"}`,
-        );
-        if (role === "recruiter") {
-            router.push("/recruiter/manage-jobs");
-        } else if (role === "admin") {
-            router.push("/admin/dashboard");
-        } else {
-            router.push("/candidate/find-jobs");
-        }
+    const applyDemoAccount = (email: string, password: string) => {
+        setEmail(email);
+        setPassword(password);
+        toast.info("Da dien san tai khoan demo. Bam Dang nhap de vao he thong.");
     };
 
     return (
@@ -211,34 +224,32 @@ export default function LoginPage() {
                                         <span className="w-full border-t border-border" />
                                     </div>
                                     <div className="relative flex justify-center text-xs uppercase">
-                                        <span className="bg-muted/40 px-2 text-muted-foreground font-medium tracking-wider">Xem nhanh UI (Dev mode)</span>
+                                        <span className="bg-muted/40 px-2 font-medium tracking-wider text-muted-foreground">Tai khoan demo da seed san</span>
                                     </div>
                                 </div>
-                                <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                                    <Button
-                                        type="button"
-                                        variant="outline"
-                                        onClick={() => handleDevLogin("candidate")}
-                                        className="border-primary/20 text-primary hover:bg-primary/10"
-                                    >
-                                        Vào Candidate UI
-                                    </Button>
-                                    <Button
-                                        type="button"
-                                        variant="outline"
-                                        onClick={() => handleDevLogin("recruiter")}
-                                        className="border-primary/20 text-primary hover:bg-primary/10"
-                                    >
-                                        Vào Recruiter UI
-                                    </Button>
-                                    <Button
-                                        type="button"
-                                        variant="outline"
-                                        onClick={() => handleDevLogin("admin")}
-                                        className="border-primary/20 text-primary hover:bg-primary/10"
-                                    >
-                                        Vào Admin UI
-                                    </Button>
+                                <div className="space-y-3">
+                                    {demoAccounts.map((account) => (
+                                        <button
+                                            key={account.email}
+                                            type="button"
+                                            onClick={() => applyDemoAccount(account.email, account.password)}
+                                            className="flex w-full items-center justify-between rounded-2xl border border-border bg-card px-4 py-3 text-left transition-colors hover:border-primary/30 hover:bg-primary/5"
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-primary">
+                                                    {account.icon}
+                                                </span>
+                                                <div>
+                                                    <p className="text-sm font-semibold text-foreground">{account.roleLabel}</p>
+                                                    <p className="text-xs text-muted-foreground">{account.email}</p>
+                                                </div>
+                                            </div>
+                                            <span className="text-xs font-medium text-primary">Su dung</span>
+                                        </button>
+                                    ))}
+                                    <p className="text-xs leading-relaxed text-muted-foreground">
+                                        Dang nhap that bang cac tai khoan nay se di qua auth, gateway va data seed, phu hop hon cho buoi demo.
+                                    </p>
                                 </div>
                             </div>
                         </form>

@@ -37,6 +37,7 @@ export default function AdminCategoriesPage() {
     const [deleteTarget, setDeleteTarget] = useState<AdminCategory | null>(null);
     const [searchTerm, setSearchTerm] = useState("");
     const [filter, setFilter] = useState<CategoryFilter>("all");
+    const [viewTimestamp] = useState(() => Date.now());
 
     const { data: categories = [], isLoading } = useQuery({
         queryKey: ["admin-categories"],
@@ -112,7 +113,7 @@ export default function AdminCategoriesPage() {
                 return filter === "stale_30d";
             }
 
-            const diffDays = Math.floor((Date.now() - updatedAt.getTime()) / (1000 * 60 * 60 * 24));
+            const diffDays = Math.floor((viewTimestamp - updatedAt.getTime()) / (1000 * 60 * 60 * 24));
 
             if (filter === "updated_7d") {
                 return diffDays <= 7;
@@ -120,7 +121,7 @@ export default function AdminCategoriesPage() {
 
             return diffDays >= 30;
         });
-    }, [categories, filter, searchTerm]);
+    }, [categories, filter, searchTerm, viewTimestamp]);
 
     return (
         <div className="mx-auto max-w-[1120px] space-y-6">

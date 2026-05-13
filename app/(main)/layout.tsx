@@ -7,9 +7,6 @@ import Sidebar from "@/components/layouts/Sidebar";
 import Header from "@/components/layouts/Header";
 import { cn } from "@/lib/utils";
 
-const SIDEBAR_EXPANDED_WIDTH = 240;
-const SIDEBAR_COLLAPSED_WIDTH = 88;
-
 export default function MainLayout({
     children,
 }: {
@@ -19,7 +16,11 @@ export default function MainLayout({
     const router = useRouter();
     const pathname = usePathname();
     const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
-    const [desktopSidebarCollapsed, setDesktopSidebarCollapsed] = useState(false);
+    const [desktopSidebarCollapsed, setDesktopSidebarCollapsed] = useState(
+        () =>
+            typeof window !== "undefined" &&
+            window.localStorage.getItem("main-sidebar-collapsed") === "true",
+    );
 
     const defaultRoute = role === "recruiter"
         ? "/recruiter/manage-jobs"
@@ -49,17 +50,6 @@ export default function MainLayout({
             router.replace(defaultRoute);
         }
     }, [defaultRoute, isLoggedIn, pathname, role, router]);
-
-    useEffect(() => {
-        setMobileSidebarOpen(false);
-    }, [pathname]);
-
-    useEffect(() => {
-        const stored = window.localStorage.getItem("main-sidebar-collapsed");
-        if (stored) {
-            setDesktopSidebarCollapsed(stored === "true");
-        }
-    }, []);
 
     useEffect(() => {
         window.localStorage.setItem("main-sidebar-collapsed", String(desktopSidebarCollapsed));

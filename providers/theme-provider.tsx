@@ -7,6 +7,7 @@ import {
   useEffect,
   useMemo,
   useState,
+  useSyncExternalStore,
 } from "react";
 
 type Theme = "light" | "dark";
@@ -21,35 +22,50 @@ const THEME_STORAGE_KEY = "app-theme";
 
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 
+function readTheme(): Theme {
+  if (typeof window === "undefined") {
+    return "light";
+  }
+
+  const storedTheme = window.localStorage.getItem(
+    THEME_STORAGE_KEY,
+  ) as Theme | null;
+  const systemPrefersDark = window.matchMedia(
+    "(prefers-color-scheme: dark)",
+  ).matches;
+
+  if (storedTheme === "dark" || storedTheme === "light") {
+    return storedTheme;
+  }
+
+  return systemPrefersDark ? "dark" : "light";
+}
+
+function subscribeToMountedState() {
+  return () => undefined;
+}
+
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [theme, setTheme] = useState<Theme>("light");
-  const [mounted, setMounted] = useState(false);
+  const [theme, setTheme] = useState<Theme>(readTheme);
+  const mounted = useSyncExternalStore(
+    subscribeToMountedState,
+    () => true,
+    () => false,
+  );
 
   useEffect(() => {
-    const root = document.documentElement;
-    const storedTheme = window.localStorage.getItem(
-      THEME_STORAGE_KEY,
-    ) as Theme | null;
-    const systemPrefersDark = window.matchMedia(
-      "(prefers-color-scheme: dark)",
-    ).matches;
-    const nextTheme =
-      storedTheme === "dark" || storedTheme === "light"
-        ? storedTheme
-        : systemPrefersDark
-          ? "dark"
-          : "light";
+    if (!mounted) {
+      return;
+    }
 
-    root.classList.toggle("dark", nextTheme === "dark");
-    setTheme(nextTheme);
-    setMounted(true);
-  }, []);
+    const root = document.documentElement;
+    root.classList.toggle("dark", theme === "dark");
+    window.localStorage.setItem(THEME_STORAGE_KEY, theme);
+  }, [mounted, theme]);
 
   const toggleTheme = () => {
     setTheme((current) => {
       const nextTheme = current === "dark" ? "light" : "dark";
-      document.documentElement.classList.toggle("dark", nextTheme === "dark");
-      window.localStorage.setItem(THEME_STORAGE_KEY, nextTheme);
       return nextTheme;
     });
   };

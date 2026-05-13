@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import { MapPin, DollarSign, Clock, Briefcase, Building2, Users, Calendar, ArrowLeft, Edit, GraduationCap, CheckCircle2, Star, FileText } from "lucide-react";
+import { MapPin, DollarSign, Clock, Briefcase, Users, Calendar, ArrowLeft, Edit, GraduationCap, CheckCircle2, Star, FileText } from "lucide-react";
 
 export default function RecruiterJobDetailPage() {
     const params = useParams();
