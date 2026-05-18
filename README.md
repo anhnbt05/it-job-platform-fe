@@ -23,10 +23,18 @@ Copy-Item .env.example .env.local
 Gia tri mac dinh:
 
 ```env
-NEXT_PUBLIC_API_URL=http://localhost:8000
+NEXT_PUBLIC_API_URL=
+INTERNAL_API_URL=
 ```
 
 Frontend goi API qua Kong, khong goi truc tiep tung service.
+Neu `NEXT_PUBLIC_API_URL` de trong, frontend tren browser se tu suy ra `http://<host-hien-tai>:8000`.
+Vi du:
+
+- mo app tai `http://localhost:3000` thi frontend goi `http://localhost:8000`
+- mo app tai `http://103.153.74.191:3000` thi frontend goi `http://103.153.74.191:8000`
+
+`INTERNAL_API_URL` dung cho SSR/container, vi du tren Docker compose backend la `http://kong:8000`.
 
 ## 2. Chay local
 
@@ -68,6 +76,6 @@ Login page da co nut dien nhanh de dien san 3 tai khoan nay. Sau do bam `DANG NH
 
 ## 6. Neu frontend khong goi duoc API
 
-- Kiem tra `NEXT_PUBLIC_API_URL`
-- Kiem tra backend da chay sau Kong tai `http://localhost:8000`
+- Kiem tra `NEXT_PUBLIC_API_URL` va `INTERNAL_API_URL`
+- Kiem tra backend da chay sau Kong tai `http://<host>:8000`
 - Kiem tra da seed tai khoan demo trong backend
