@@ -176,14 +176,10 @@ export default function RecruiterProfilePage() {
                             </div>
                         )}
 
-                        {company?.Description ? (
-                            <div className="flex items-start gap-3 text-sm text-muted-foreground">
-                                <Info size={16} className="mt-0.5 text-blue-500" />
-                                <p className="leading-relaxed">{company.Description}</p>
-                            </div>
-                        ) : (
-                            <p className="text-sm text-muted-foreground">Công ty chưa có mô tả hiển thị trên hệ thống.</p>
-                        )}
+                        <div className="flex items-start gap-3 text-sm text-muted-foreground">
+                            <Info size={16} className="mt-0.5 text-blue-500" />
+                            <p className="leading-relaxed">{getCompanyDescription(company)}</p>
+                        </div>
                     </CardContent>
                 </Card>
 
@@ -232,4 +228,32 @@ function formatBranch(branch: { BranchName: string | null; Address: string | nul
         branch.City,
         branch.Country,
     ].filter(Boolean).join(", ") || "Chưa cập nhật chi nhánh";
+}
+
+function getCompanyDescription(company: {
+    Name?: string | null;
+    Description?: string | null;
+    Location?: string | null;
+    Size?: number | null;
+    WebsiteUrl?: string | null;
+} | null) {
+    if (!company) {
+        return "Cong ty da duoc lien ket voi tai khoan recruiter de phuc vu demo.";
+    }
+
+    if (company.Description?.trim()) {
+        return company.Description;
+    }
+
+    const facts = [
+        company.Location ? `hoat dong tai ${company.Location}` : null,
+        company.Size ? `quy mo khoang ${company.Size}+ nhan su` : null,
+        company.WebsiteUrl ? `dang tuyen dung qua kenh ${company.WebsiteUrl}` : null,
+    ].filter(Boolean);
+
+    if (facts.length === 0) {
+        return `${company.Name || "Cong ty"} da co du lieu co ban de phuc vu demo recruiter.`;
+    }
+
+    return `${company.Name || "Cong ty"} ${facts.join(", ")}.`;
 }

@@ -72,7 +72,7 @@ export default function AdminCompanyDetailPage() {
             const company = await adminService.getCompanyDetail(companyId);
             setFormValues({
                 Name: company.Name,
-                Description: company.Description,
+                Description: getCompanyDescription(company),
                 WebsiteUrl: company.WebsiteUrl,
                 LogoUrl: company.LogoUrl,
                 Location: company.Location,
@@ -759,6 +759,30 @@ function formatCompanySize(size?: number | null) {
     }
 
     return `${size}+ người`;
+}
+
+function getCompanyDescription(company: {
+    Name: string;
+    Description?: string | null;
+    Location?: string | null;
+    Size?: number | null;
+    WebsiteUrl?: string | null;
+}) {
+    if (company.Description?.trim()) {
+        return company.Description;
+    }
+
+    const facts = [
+        company.Location ? `Hoat dong tai ${company.Location}` : null,
+        company.Size ? `quy mo khoang ${company.Size}+ nhan su` : null,
+        company.WebsiteUrl ? `co website ${company.WebsiteUrl}` : null,
+    ].filter(Boolean);
+
+    if (facts.length === 0) {
+        return 'Cong ty da co du lieu co ban de phuc vu demo.';
+    }
+
+    return `${company.Name} ${facts.join(', ')}.`;
 }
 
 function formatDate(value?: string | null) {

@@ -102,12 +102,31 @@ function setAuthorizationHeader(
   return config;
 }
 
+function setUserContextHeaders(
+  config: AxiosRequestConfig | InternalAxiosRequestConfig,
+  userId?: string | null,
+  role?: string | null,
+) {
+  config.headers = config.headers ?? {};
+
+  if (userId) {
+    config.headers["X-User-Id"] = userId;
+  }
+
+  if (role) {
+    config.headers["X-User-Role"] = role;
+  }
+
+  return config;
+}
+
 api.interceptors.request.use(
   (config) => {
-    const token = useAuthStore.getState().token;
+    const { token, userId, role } = useAuthStore.getState();
 
     if (token && !isPublicAuthRequest(config.url)) {
       setAuthorizationHeader(config, token);
+      setUserContextHeaders(config, userId, role);
     }
 
     return config;

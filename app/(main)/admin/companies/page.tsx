@@ -95,6 +95,7 @@ export default function AdminCompaniesPage() {
                 company.Location,
                 company.WebsiteUrl,
                 company.Description,
+                getCompanyDescription(company),
             ]
                 .filter(Boolean)
                 .some((value) => value!.toLowerCase().includes(keyword));
@@ -248,7 +249,7 @@ export default function AdminCompaniesPage() {
                                                 <Badge variant="outline">{formatCompanySize(company.Size)}</Badge>
                                             </TableCell>
                                             <TableCell className="max-w-[280px] truncate text-muted-foreground">
-                                                {company.Description || "Chưa có mô tả"}
+                                                {getCompanyDescription(company)}
                                             </TableCell>
                                             <TableCell className="text-right">
                                                 <Button asChild size="sm" variant="outline">
@@ -411,6 +412,24 @@ function formatCompanySize(size?: number | null) {
     }
 
     return `${size}+ người`;
+}
+
+function getCompanyDescription(company: Company) {
+    if (company.Description?.trim()) {
+        return company.Description;
+    }
+
+    const facts = [
+        company.Location ? `hoat dong tai ${company.Location}` : null,
+        company.Size ? `quy mo khoang ${company.Size}+ nhan su` : null,
+        company.WebsiteUrl ? `co website ${simplifyUrl(company.WebsiteUrl)}` : null,
+    ].filter(Boolean);
+
+    if (facts.length === 0) {
+        return "Cong ty da co du lieu co ban de phuc vu demo.";
+    }
+
+    return `${company.Name} ${facts.join(", ")}.`;
 }
 
 function CompanyLogo({ company }: { company: Company }) {
