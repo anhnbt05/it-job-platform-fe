@@ -15,7 +15,39 @@ type QueuedRequest = {
   resolve: (token: string) => void;
 };
 
-const baseURL = process.env.NEXT_PUBLIC_API_URL;
+const LOCAL_HOSTS = new Set(["localhost", "127.0.0.1"]);
+
+function resolveApiBaseUrl() {
+  const configuredBaseUrl = process.env.NEXT_PUBLIC_API_URL?.trim();
+  const internalBaseUrl = process.env.INTERNAL_API_URL?.trim();
+
+  if (typeof window === "undefined") {
+    return internalBaseUrl || configuredBaseUrl || "http://localhost:8000";
+  }
+
+  const { protocol, hostname } = window.location;
+  const inferredBaseUrl = `${protocol}//${hostname}:8000`;
+
+  if (!configuredBaseUrl) {
+    return inferredBaseUrl;
+  }
+
+  try {
+    const configuredUrl = new URL(configuredBaseUrl);
+    const currentHostIsLocal = LOCAL_HOSTS.has(hostname);
+    const configuredHostIsLocal = LOCAL_HOSTS.has(configuredUrl.hostname);
+
+    if (!currentHostIsLocal && configuredHostIsLocal) {
+      return inferredBaseUrl;
+    }
+  } catch {
+    return configuredBaseUrl;
+  }
+
+  return configuredBaseUrl;
+}
+
+const baseURL = resolveApiBaseUrl();
 
 export const api = axios.create({
   baseURL,

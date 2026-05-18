@@ -3,6 +3,7 @@ set -euo pipefail
 
 FRONTEND_DIR="${FRONTEND_DIR:-/opt/it-job/it-job-platform-fe}"
 PLATFORM_DIR="${PLATFORM_DIR:-/opt/it-job/it-job-platform}"
+FRONTEND_PORT="${FRONTEND_PORT:-3000}"
 
 cd "$FRONTEND_DIR"
 
@@ -28,6 +29,6 @@ docker compose -f docker-compose.yml -f docker-compose.app.yml build frontend
 log "starting frontend container"
 docker compose -f docker-compose.yml -f docker-compose.app.yml up -d frontend
 
-wait_http http://127.0.0.1/ frontend
+wait_http "http://127.0.0.1:${FRONTEND_PORT}" frontend
 
 log "frontend deployment completed"
