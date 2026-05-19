@@ -114,6 +114,7 @@ export default function FindJobsPage() {
         const startIndex = (currentPage - 1) * jobsPerPage;
         return filteredJobs.slice(startIndex, startIndex + jobsPerPage);
     }, [currentPage, filteredJobs]);
+    const hasRecommendedJobs = recommendedJobs.length > 0;
 
     useEffect(() => {
         setCurrentPage(1);
@@ -126,7 +127,7 @@ export default function FindJobsPage() {
     return (
         <div className="mx-auto max-w-[1100px]">
             <section className="mb-6 overflow-hidden rounded-[28px] border border-primary/10 bg-[radial-gradient(circle_at_top_left,_rgba(25,77,142,0.16),_transparent_38%),linear-gradient(135deg,_#f8fbff_0%,_#eef6ff_46%,_#f4fbf7_100%)] shadow-sm dark:border-white/10 dark:bg-[radial-gradient(circle_at_top_left,_rgba(25,77,142,0.28),_transparent_36%),linear-gradient(135deg,_rgba(15,23,42,0.98)_0%,_rgba(17,24,39,0.95)_52%,_rgba(8,47,73,0.92)_100%)]">
-                <div className="grid gap-6 px-6 py-6 lg:grid-cols-[0.78fr_1.22fr] lg:px-8">
+                <div className={`grid gap-6 px-6 py-6 lg:px-8 ${hasRecommendedJobs ? "lg:grid-cols-[0.78fr_1.22fr]" : "lg:grid-cols-[0.88fr_1.12fr] lg:items-stretch"}`}>
                     <div>
                         <Badge className="bg-card text-primary shadow-sm">Dành riêng cho bạn</Badge>
                         <h2 className="mt-3 text-2xl font-bold text-foreground">
@@ -178,7 +179,7 @@ export default function FindJobsPage() {
                                     <Skeleton key={index} className="h-20 rounded-2xl" />
                                 ))}
                             </div>
-                        ) : recommendedJobs.length > 0 ? (
+                        ) : hasRecommendedJobs ? (
                             <>
                                 <p className="mb-3 text-xs text-muted-foreground">
                                     Vuốt hoặc để slider tự chạy để xem thêm công việc phù hợp với cấp độ hiện tại của bạn.
@@ -223,10 +224,58 @@ export default function FindJobsPage() {
                                 </Swiper>
                             </>
                         ) : (
-                            <div className="rounded-2xl border border-dashed border-border bg-muted/40 px-4 py-6 text-sm text-muted-foreground">
-                                {candidate?.Level
-                                    ? "Hiện chưa có công việc gợi ý phù hợp với level của bạn."
-                                    : "Cập nhật level trong hồ sơ để hệ thống gợi ý công việc tốt hơn."}
+                            <div className="space-y-4 rounded-[24px] border border-dashed border-border bg-[linear-gradient(180deg,_rgba(255,255,255,0.88)_0%,_rgba(245,249,255,0.92)_100%)] p-5 shadow-sm dark:bg-white/5">
+                                <div>
+                                    <p className="text-sm font-semibold text-foreground">
+                                        {candidate?.Level
+                                            ? "Tạm thời chưa có job nổi bật khớp level hiện tại"
+                                            : "Hoàn thiện hồ sơ để mở khoá gợi ý nổi bật"}
+                                    </p>
+                                    <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                                        {candidate?.Level
+                                            ? "Bạn vẫn có thể khám phá toàn bộ danh sách việc làm bên dưới hoặc mở rộng bộ lọc để bắt thêm cơ hội gần với level hiện tại."
+                                            : "Khi hồ sơ có level và thông tin rõ hơn, hệ thống sẽ ưu tiên đẩy các vị trí phù hợp lên khu vực này cho bạn."}
+                                    </p>
+                                </div>
+
+                                <div className="grid gap-3 sm:grid-cols-3">
+                                    <div className="rounded-2xl border border-white/70 bg-white/85 px-4 py-3 shadow-sm dark:border-white/10 dark:bg-white/5 dark:shadow-none">
+                                        <p className="text-xs uppercase tracking-wide text-muted-foreground">Việc làm mở</p>
+                                        <p className="mt-1 text-sm font-semibold text-primary">{jobs.length} công việc</p>
+                                    </div>
+                                    <div className="rounded-2xl border border-white/70 bg-white/85 px-4 py-3 shadow-sm dark:border-white/10 dark:bg-white/5 dark:shadow-none">
+                                        <p className="text-xs uppercase tracking-wide text-muted-foreground">Danh mục</p>
+                                        <p className="mt-1 text-sm font-semibold text-primary">{categories.length} nhóm ngành</p>
+                                    </div>
+                                    <div className="rounded-2xl border border-white/70 bg-white/85 px-4 py-3 shadow-sm dark:border-white/10 dark:bg-white/5 dark:shadow-none">
+                                        <p className="text-xs uppercase tracking-wide text-muted-foreground">Phù hợp hiện tại</p>
+                                        <p className="mt-1 text-sm font-semibold text-primary">{filteredJobs.length} kết quả</p>
+                                    </div>
+                                </div>
+
+                                <div className="rounded-2xl border border-border/70 bg-white/75 p-4 dark:bg-slate-950/20">
+                                    <div className="space-y-2 text-sm text-muted-foreground">
+                                        <p>1. Cập nhật level và hồ sơ để hệ thống hiểu rõ hơn vị trí bạn đang hướng tới.</p>
+                                        <p>2. Mở rộng bộ lọc theo danh mục, hình thức làm việc hoặc địa điểm để tăng độ phủ kết quả.</p>
+                                        <p>3. Ưu tiên lưu các job phù hợp, hệ thống sẽ học thêm hành vi quan tâm của bạn.</p>
+                                    </div>
+                                </div>
+
+                                <div className="flex flex-col gap-3 sm:flex-row">
+                                    <Link href="/candidate/profile/edit" className="flex-1">
+                                        <Button className="w-full bg-primary hover:bg-primary/90">
+                                            Hoàn thiện hồ sơ
+                                        </Button>
+                                    </Link>
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        className="flex-1 border-border bg-white/80 hover:bg-white dark:bg-white/5 dark:hover:bg-white/10"
+                                        onClick={() => setShowFilters(true)}
+                                    >
+                                        Mở bộ lọc việc làm
+                                    </Button>
+                                </div>
                             </div>
                         )}
                     </div>
