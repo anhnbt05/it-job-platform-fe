@@ -19,7 +19,6 @@ import {
     ShieldCheck,
     Tags,
     Building2,
-    Upload,
     MapPin,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -60,7 +59,6 @@ const adminNavItems: NavItem[] = [
     { label: "Danh mục", href: "/admin/categories", icon: <Tags size={20} /> },
     { label: "Công ty", href: "/admin/companies", icon: <Building2 size={20} /> },
     { label: "Duyệt công việc", href: "/admin/jobs-review", icon: <ShieldCheck size={20} /> },
-    { label: "Tải tệp", href: "/admin/uploads", icon: <Upload size={20} /> },
     { label: "Thông báo", href: "/admin/notifications", icon: <Bell size={20} /> },
 ];
 

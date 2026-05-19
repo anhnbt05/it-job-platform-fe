@@ -41,7 +41,7 @@ export const candidateService = {
 
     uploadResume: (file: File) => {
         const formData = new FormData();
-        formData.append("avatar", file);
+        formData.append("file", file);
 
         return api.post("/identity/uploads/resume", formData, {
             headers: { "Content-Type": "multipart/form-data" },

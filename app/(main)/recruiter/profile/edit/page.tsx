@@ -87,6 +87,7 @@ function RecruiterProfileFormCard({ recruiter }: { recruiter: RecruiterInfo }) {
     const canEditCompany = Boolean(company?.ID);
     const canEditBranch = Boolean(branch?.ID);
     const [deleteAccountDialogOpen, setDeleteAccountDialogOpen] = useState(false);
+    const [pendingAvatarFile, setPendingAvatarFile] = useState<File | null>(null);
 
     const [form, setForm] = useState<RecruiterProfileForm>({
         FullName: recruiter.FullName || "",
@@ -145,9 +146,14 @@ function RecruiterProfileFormCard({ recruiter }: { recruiter: RecruiterInfo }) {
             }
 
             await Promise.all(requests);
+
+            if (pendingAvatarFile) {
+                await recruiterService.uploadAvatar(pendingAvatarFile);
+            }
         },
         onSuccess: () => {
             toast.success("Đã cập nhật hồ sơ recruiter, công ty và chi nhánh");
+            setPendingAvatarFile(null);
             queryClient.invalidateQueries({ queryKey: ["recruiter-profile"] });
             router.push("/recruiter/profile");
         },
@@ -159,15 +165,6 @@ function RecruiterProfileFormCard({ recruiter }: { recruiter: RecruiterInfo }) {
 
             toast.error("Không thể cập nhật thông tin recruiter");
         },
-    });
-
-    const uploadAvatarMutation = useMutation({
-        mutationFn: (file: File) => recruiterService.uploadAvatar(file),
-        onSuccess: () => {
-            toast.success("Đã cập nhật ảnh đại diện");
-            queryClient.invalidateQueries({ queryKey: ["recruiter-profile"] });
-        },
-        onError: () => toast.error("Không thể tải ảnh đại diện"),
     });
 
     const deleteAccountMutation = useMutation({
@@ -217,12 +214,16 @@ function RecruiterProfileFormCard({ recruiter }: { recruiter: RecruiterInfo }) {
                                         onChange={(event) => {
                                             const file = event.target.files?.[0];
                                             if (file) {
-                                                uploadAvatarMutation.mutate(file);
+                                                setPendingAvatarFile(file);
                                             }
+                                            event.target.value = "";
                                         }}
+                                        disabled={updateMutation.isPending}
                                     />
                                     <p className="mt-2 text-xs text-muted-foreground">
-                                        {uploadAvatarMutation.isPending ? "Đang tải ảnh..." : "Chọn ảnh mới để cập nhật avatar recruiter."}
+                                        {pendingAvatarFile
+                                            ? `Đã chọn: ${pendingAvatarFile.name}. Ảnh sẽ được tải lên khi bạn bấm Lưu thay đổi.`
+                                            : "Chọn ảnh mới để cập nhật avatar recruiter."}
                                     </p>
                                 </div>
                             </Field>

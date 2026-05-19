@@ -42,6 +42,7 @@ export default function AccountDialog({
     const queryClient = useQueryClient();
     const { logout } = useAuthStore();
     const [isEditing, setIsEditing] = useState(false);
+    const [pendingAvatarFile, setPendingAvatarFile] = useState<File | null>(null);
     const [form, setForm] = useState<AccountFormState>({
         FullName: "",
         PhoneNumber: "",
@@ -55,27 +56,30 @@ export default function AccountDialog({
     });
 
     const updateProfileMutation = useMutation({
-        mutationFn: () =>
-            accountService.updateProfile({
-                FullName: form.FullName.trim(),
-                PhoneNumber: form.PhoneNumber.trim(),
-                Bio: form.Bio.trim(),
-            }),
-        onSuccess: async () => {
-            toast.success("Đã cập nhật thông tin tài khoản");
-            setIsEditing(false);
-            await invalidateAccountQueries(queryClient);
-        },
-        onError: () => toast.error("Không thể cập nhật tài khoản"),
-    });
+        mutationFn: async () => {
+            if (!account) {
+                throw new Error("missing-account");
+            }
 
-    const uploadAvatarMutation = useMutation({
-        mutationFn: (file: File) => accountService.uploadAvatar(file),
+            if (isEditing) {
+                await accountService.updateProfile({
+                    FullName: form.FullName.trim(),
+                    PhoneNumber: form.PhoneNumber.trim(),
+                    Bio: form.Bio.trim(),
+                });
+            }
+
+            if (pendingAvatarFile) {
+                await accountService.uploadAvatar(pendingAvatarFile);
+            }
+        },
         onSuccess: async () => {
-            toast.success("Đã cập nhật ảnh đại diện");
+            toast.success("Đã lưu thay đổi tài khoản");
+            setIsEditing(false);
+            setPendingAvatarFile(null);
             await invalidateAccountQueries(queryClient);
         },
-        onError: () => toast.error("Không thể cập nhật ảnh đại diện"),
+        onError: () => toast.error("Không thể lưu thay đổi tài khoản"),
     });
 
     const signOutMutation = useMutation({
@@ -112,10 +116,12 @@ export default function AccountDialog({
 
     const summaryRows = useMemo(() => buildSummaryRows(account), [account]);
     const fallbackText = getInitials(account);
+    const hasPendingChanges = isEditing || Boolean(pendingAvatarFile);
 
     const handleOpenChange = (nextOpen: boolean) => {
         if (!nextOpen) {
             setIsEditing(false);
+            setPendingAvatarFile(null);
         }
 
         onOpenChange(nextOpen);
@@ -132,6 +138,7 @@ export default function AccountDialog({
                 PhoneNumber: account.PhoneNumber ?? "",
                 Bio: account.Bio ?? "",
             });
+            setPendingAvatarFile(null);
             setIsEditing(false);
             return;
         }
@@ -146,20 +153,21 @@ export default function AccountDialog({
 
     return (
         <Dialog open={open} onOpenChange={handleOpenChange}>
-            <DialogContent className="max-w-2xl">
-                <DialogHeader>
-                    <DialogTitle>Tài khoản của bạn</DialogTitle>
-                    <DialogDescription>
-                        Xem nhanh thông tin tài khoản, cập nhật hồ sơ cơ bản và ảnh đại diện.
-                    </DialogDescription>
-                </DialogHeader>
+            <DialogContent className="max-h-[90vh] max-w-2xl overflow-hidden p-0">
+                <div className="flex max-h-[90vh] flex-col">
+                    <DialogHeader className="shrink-0 border-b border-border px-6 py-5">
+                        <DialogTitle>Tài khoản của bạn</DialogTitle>
+                        <DialogDescription>
+                            Xem nhanh thông tin tài khoản, cập nhật hồ sơ cơ bản và ảnh đại diện.
+                        </DialogDescription>
+                    </DialogHeader>
 
-                {isLoading ? (
-                    <div className="flex min-h-[240px] items-center justify-center">
-                        <Loader2 className="h-6 w-6 animate-spin text-primary" />
-                    </div>
-                ) : account ? (
-                    <div className="space-y-6">
+                    {isLoading ? (
+                        <div className="flex min-h-[240px] items-center justify-center px-6 py-6">
+                            <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                        </div>
+                    ) : account ? (
+                        <div className="flex-1 space-y-6 overflow-y-auto px-6 py-6">
                         <div className="flex flex-col gap-4 rounded-2xl border border-border bg-muted/70 p-5 sm:flex-row sm:items-start sm:justify-between">
                             <div className="flex items-center gap-4">
                                 <Avatar size="lg" className="h-16 w-16 ring-4 ring-white">
@@ -190,14 +198,24 @@ export default function AccountDialog({
                                     onChange={(event) => {
                                         const file = event.target.files?.[0];
                                         if (file) {
-                                            uploadAvatarMutation.mutate(file);
+                                            setPendingAvatarFile(file);
+                                            if (!isEditing && account) {
+                                                setForm({
+                                                    FullName: account.FullName ?? "",
+                                                    PhoneNumber: account.PhoneNumber ?? "",
+                                                    Bio: account.Bio ?? "",
+                                                });
+                                                setIsEditing(true);
+                                            }
                                         }
                                         event.target.value = "";
                                     }}
-                                    disabled={uploadAvatarMutation.isPending}
+                                    disabled={updateProfileMutation.isPending}
                                 />
                                 <p className="text-xs text-muted-foreground">
-                                    {uploadAvatarMutation.isPending ? "Đang tải ảnh lên..." : "PNG, JPG hoặc WEBP."}
+                                    {pendingAvatarFile
+                                        ? `Đã chọn: ${pendingAvatarFile.name}. Ảnh sẽ được tải lên khi bạn bấm Lưu thay đổi.`
+                                        : "PNG, JPG hoặc WEBP."}
                                 </p>
                             </div>
                         </div>
@@ -260,56 +278,59 @@ export default function AccountDialog({
                                 ))}
                             </div>
                         )}
-                    </div>
-                ) : (
-                    <div className="rounded-xl border border-amber-100 bg-amber-50/80 px-4 py-3 text-sm text-amber-900">
-                        Không tải được thông tin tài khoản.
-                    </div>
-                )}
+                        </div>
+                    ) : (
+                        <div className="px-6 py-6">
+                            <div className="rounded-xl border border-amber-100 bg-amber-50/80 px-4 py-3 text-sm text-amber-900">
+                                Không tải được thông tin tài khoản.
+                            </div>
+                        </div>
+                    )}
 
-                <DialogFooter className="gap-2 sm:justify-between">
-                    <div className="flex flex-col-reverse gap-2 sm:flex-row">
-                        <Button
-                            type="button"
-                            variant="outline"
-                            className="text-red-600 hover:bg-red-50 hover:text-red-700"
-                            onClick={() => signOutMutation.mutate()}
-                            disabled={signOutMutation.isPending}
-                        >
-                            {signOutMutation.isPending && (
-                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    <DialogFooter className="shrink-0 gap-2 border-t border-border px-6 py-4 sm:justify-between">
+                        <div className="flex flex-col-reverse gap-2 sm:flex-row sm:flex-wrap">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                className="text-red-600 hover:bg-red-50 hover:text-red-700"
+                                onClick={() => signOutMutation.mutate()}
+                                disabled={signOutMutation.isPending}
+                            >
+                                {signOutMutation.isPending && (
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                )}
+                                Đăng xuất
+                            </Button>
+                            {profileRoute && (
+                                <Button asChild variant="outline" onClick={() => onOpenChange(false)}>
+                                    <Link href={profileRoute}>Xem hồ sơ đầy đủ</Link>
+                                </Button>
                             )}
-                            Đăng xuất
-                        </Button>
-                        {profileRoute && (
-                            <Button asChild variant="outline" onClick={() => onOpenChange(false)}>
-                                <Link href={profileRoute}>Xem hồ sơ đầy đủ</Link>
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={handleToggleEditing}
+                                disabled={!account || updateProfileMutation.isPending || signOutMutation.isPending}
+                            >
+                                {isEditing ? "Hủy chỉnh sửa" : "Chỉnh sửa nhanh"}
+                            </Button>
+                        </div>
+
+                        {hasPendingChanges && (
+                            <Button
+                                type="button"
+                                className="bg-primary hover:bg-primary/90"
+                                onClick={() => updateProfileMutation.mutate()}
+                                disabled={updateProfileMutation.isPending || signOutMutation.isPending}
+                            >
+                                {updateProfileMutation.isPending && (
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                )}
+                                Lưu thay đổi
                             </Button>
                         )}
-                        <Button
-                            type="button"
-                            variant="outline"
-                            onClick={handleToggleEditing}
-                            disabled={!account || updateProfileMutation.isPending || signOutMutation.isPending}
-                        >
-                            {isEditing ? "Hủy chỉnh sửa" : "Chỉnh sửa nhanh"}
-                        </Button>
-                    </div>
-
-                    {isEditing && (
-                        <Button
-                            type="button"
-                            className="bg-primary hover:bg-primary/90"
-                            onClick={() => updateProfileMutation.mutate()}
-                            disabled={updateProfileMutation.isPending || signOutMutation.isPending}
-                        >
-                            {updateProfileMutation.isPending && (
-                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            )}
-                            Lưu thay đổi
-                        </Button>
-                    )}
-                </DialogFooter>
+                    </DialogFooter>
+                </div>
             </DialogContent>
         </Dialog>
     );

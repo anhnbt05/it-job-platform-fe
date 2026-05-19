@@ -73,6 +73,8 @@ export default function EditProfilePage() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [form, setForm] = useState<Partial<ProfileFormState>>({});
+  const [pendingAvatarFile, setPendingAvatarFile] = useState<File | null>(null);
+  const [pendingResumeFile, setPendingResumeFile] = useState<File | null>(null);
   const [experienceDialogOpen, setExperienceDialogOpen] = useState(false);
   const [deleteAccountDialogOpen, setDeleteAccountDialogOpen] =
     useState(false);
@@ -86,32 +88,25 @@ export default function EditProfilePage() {
   });
 
   const updateProfileMutation = useMutation({
-    mutationFn: (payload: Partial<Candidate>) =>
-      candidateService.updateProfile(payload),
+    mutationFn: async (payload: Partial<Candidate>) => {
+      await candidateService.updateProfile(payload);
+
+      if (pendingAvatarFile) {
+        await candidateService.uploadAvatar(pendingAvatarFile);
+      }
+
+      if (pendingResumeFile) {
+        await candidateService.uploadResume(pendingResumeFile);
+      }
+    },
     onSuccess: () => {
       toast.success("Đã cập nhật hồ sơ");
+      setPendingAvatarFile(null);
+      setPendingResumeFile(null);
       queryClient.invalidateQueries({ queryKey: ["candidate-profile"] });
       router.push("/candidate/profile");
     },
     onError: () => toast.error("Không thể cập nhật hồ sơ"),
-  });
-
-  const uploadAvatarMutation = useMutation({
-    mutationFn: (file: File) => candidateService.uploadAvatar(file),
-    onSuccess: () => {
-      toast.success("Đã cập nhật ảnh đại diện");
-      queryClient.invalidateQueries({ queryKey: ["candidate-profile"] });
-    },
-    onError: () => toast.error("Không thể tải ảnh đại diện"),
-  });
-
-  const uploadResumeMutation = useMutation({
-    mutationFn: (file: File) => candidateService.uploadResume(file),
-    onSuccess: () => {
-      toast.success("Đã tải CV lên hồ sơ");
-      queryClient.invalidateQueries({ queryKey: ["candidate-profile"] });
-    },
-    onError: () => toast.error("Không thể tải CV"),
   });
 
   const saveExperienceMutation = useMutation({
@@ -312,10 +307,17 @@ export default function EditProfilePage() {
                   onChange={(event) => {
                     const file = event.target.files?.[0];
                     if (file) {
-                      uploadAvatarMutation.mutate(file);
+                      setPendingAvatarFile(file);
                     }
+                    event.target.value = "";
                   }}
+                  disabled={updateProfileMutation.isPending}
                 />
+                <p className="mt-2 text-xs text-muted-foreground">
+                  {pendingAvatarFile
+                    ? `Đã chọn: ${pendingAvatarFile.name}. Ảnh sẽ được tải lên khi bạn bấm Lưu thay đổi.`
+                    : "Chọn ảnh mới nếu bạn muốn thay avatar hiện tại."}
+                </p>
               </Field>
 
               <Field label="Tải CV mới">
@@ -325,10 +327,17 @@ export default function EditProfilePage() {
                   onChange={(event) => {
                     const file = event.target.files?.[0];
                     if (file) {
-                      uploadResumeMutation.mutate(file);
+                      setPendingResumeFile(file);
                     }
+                    event.target.value = "";
                   }}
+                  disabled={updateProfileMutation.isPending}
                 />
+                <p className="mt-2 text-xs text-muted-foreground">
+                  {pendingResumeFile
+                    ? `Đã chọn: ${pendingResumeFile.name}. CV sẽ được tải lên khi bạn bấm Lưu thay đổi.`
+                    : "Hỗ trợ PDF, DOC, DOCX."}
+                </p>
               </Field>
 
               <div className="space-y-2">
