@@ -185,7 +185,7 @@ export default function FindJobsPage() {
                                 </p>
                                 <Swiper
                                     modules={[Autoplay, Pagination]}
-                                    className="pb-12 [&_.swiper-pagination]:!bottom-0 [&_.swiper-pagination-bullet]:bg-slate-300 [&_.swiper-pagination-bullet]:opacity-100 [&_.swiper-pagination-bullet-active]:!bg-primary"
+                                    className="[&_.swiper-pagination]:!-bottom-0.5 [&_.swiper-pagination-bullet]:bg-slate-300 [&_.swiper-pagination-bullet]:opacity-100 [&_.swiper-pagination-bullet-active]:!bg-primary"
                                     spaceBetween={16}
                                     loop={recommendedJobs.length > 1}
                                     autoplay={
@@ -206,7 +206,7 @@ export default function FindJobsPage() {
                                     }}
                                 >
                                     {recommendedJobs.map((job) => (
-                                        <SwiperSlide key={job.ID} className="!h-auto">
+                                        <SwiperSlide key={job.ID} className="!h-auto pb-8">
                                             <RecommendedJobCard
                                                 job={job}
                                                 isFavorite={favoriteIds.has(job.ID)}
