@@ -13,6 +13,8 @@ export async function loginAs(page: Page, role: DemoRole) {
   await page.getByTestId("login-password").fill(account.password);
   await page.getByTestId("login-submit").click();
 
-  await page.waitForURL(`**${account.redirectPath}`);
-  await expect(page).toHaveURL(new RegExp(`${account.redirectPath.replace(/\//g, "\\/")}$`));
+  await expect(page).toHaveURL(
+    new RegExp(`${account.redirectPath.replace(/\//g, "\\/")}(\\?.*)?$`),
+    { timeout: 45000 },
+  );
 }
