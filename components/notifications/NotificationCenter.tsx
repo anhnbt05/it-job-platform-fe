@@ -7,10 +7,16 @@ import { UserNotification, UserNotificationType, UserNotificationTypeLabel } fro
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Check, CheckCheck, ChevronRight, Clock3, Loader2, Trash2 } from "lucide-react";
 import { toast } from "react-toastify";
 import { cn } from "@/lib/utils";
@@ -331,10 +337,10 @@ export default function NotificationCenter() {
                 </div>
             )}
 
-            <Sheet open={!!activeNotificationId} onOpenChange={(open) => !open && setActiveNotificationId(null)}>
-                <SheetContent className="sm:max-w-xl">
+            <Dialog open={!!activeNotificationId} onOpenChange={(open) => !open && setActiveNotificationId(null)}>
+                <DialogContent className="max-w-2xl">
                     {notificationDetailQuery.isLoading ? (
-                        <div className="space-y-3 pt-10">
+                        <div className="space-y-3 py-4">
                             <Skeleton className="h-6 w-2/3" />
                             <Skeleton className="h-4 w-1/3" />
                             <Skeleton className="h-24 w-full" />
@@ -342,44 +348,78 @@ export default function NotificationCenter() {
                         </div>
                     ) : (
                         <>
-                            <SheetHeader>
-                                <SheetTitle>
-                                    {notificationDetailQuery.data?.Notification?.Title || "Thông báo"}
-                                </SheetTitle>
-                                <SheetDescription>
-                                    {notificationDetailQuery.data?.CreatedAt ? formatNotificationDate(notificationDetailQuery.data.CreatedAt) : ""}
-                                </SheetDescription>
-                            </SheetHeader>
-
-                            <div className="mt-6 space-y-4">
-                                {notificationDetailQuery.data?.Notification?.Type && (
-                                    <Badge
-                                        variant="outline"
-                                        className={getNotificationAppearance(notificationDetailQuery.data.Notification.Type).badge}
-                                    >
-                                        {getNotificationTypeLabel(notificationDetailQuery.data.Notification.Type)}
-                                    </Badge>
-                                )}
-
-                                {notificationDetailQuery.data?.Content.map((line, index) => (
-                                    <div key={`${line}-${index}`} className="rounded-xl bg-muted/40 p-4 text-sm leading-relaxed text-foreground">
-                                        {line}
+                            <DialogHeader className="space-y-3 text-left">
+                                <div className="flex flex-wrap items-start justify-between gap-3">
+                                    <div className="space-y-2">
+                                        <DialogTitle className="text-xl leading-tight">
+                                            {notificationDetailQuery.data?.Notification?.Title || "Thông báo"}
+                                        </DialogTitle>
+                                        <DialogDescription>
+                                            {notificationDetailQuery.data?.CreatedAt
+                                                ? formatNotificationDate(notificationDetailQuery.data.CreatedAt)
+                                                : ""}
+                                        </DialogDescription>
                                     </div>
-                                ))}
+                                    {notificationDetailQuery.data?.Notification?.Type && (
+                                        <Badge
+                                            variant="outline"
+                                            className={getNotificationAppearance(notificationDetailQuery.data.Notification.Type).badge}
+                                        >
+                                            {getNotificationTypeLabel(notificationDetailQuery.data.Notification.Type)}
+                                        </Badge>
+                                    )}
+                                </div>
+                            </DialogHeader>
 
-                                {!notificationDetailQuery.data?.Content.length && (
-                                    <p className="text-sm text-muted-foreground">Thông báo này chưa có nội dung chi tiết.</p>
-                                )}
+                            <div className="space-y-5">
+                                <div className="rounded-2xl border border-border bg-muted/30 p-4">
+                                    <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">
+                                        Nội dung
+                                    </p>
+                                    <div className="mt-3 space-y-3">
+                                        {notificationDetailQuery.data?.Content.map((line, index) => (
+                                            <div
+                                                key={`${line}-${index}`}
+                                                className="rounded-xl bg-background p-4 text-sm leading-relaxed text-foreground shadow-sm"
+                                            >
+                                                {line}
+                                            </div>
+                                        ))}
 
-                                <div className="rounded-xl border border-border bg-card p-4 text-xs text-muted-foreground">
-                                    Trạng thái: {notificationDetailQuery.data?.IsRead ? "Đã đọc" : "Chưa đọc"}
-                                    {notificationDetailQuery.data?.ReadAt && ` • Đọc lúc ${formatNotificationDate(notificationDetailQuery.data.ReadAt)}`}
+                                        {!notificationDetailQuery.data?.Content.length && (
+                                            <p className="text-sm text-muted-foreground">
+                                                Thông báo này chưa có nội dung chi tiết.
+                                            </p>
+                                        )}
+                                    </div>
+                                </div>
+
+                                <div className="grid gap-3 sm:grid-cols-2">
+                                    <div className="rounded-2xl border border-border bg-card p-4">
+                                        <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">
+                                            Trạng thái
+                                        </p>
+                                        <p className="mt-2 text-sm font-medium text-foreground">
+                                            {notificationDetailQuery.data?.IsRead ? "Đã đọc" : "Chưa đọc"}
+                                        </p>
+                                    </div>
+
+                                    <div className="rounded-2xl border border-border bg-card p-4">
+                                        <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">
+                                            Thời điểm đọc
+                                        </p>
+                                        <p className="mt-2 text-sm font-medium text-foreground">
+                                            {notificationDetailQuery.data?.ReadAt
+                                                ? formatNotificationDate(notificationDetailQuery.data.ReadAt)
+                                                : "Chưa đọc"}
+                                        </p>
+                                    </div>
                                 </div>
                             </div>
                         </>
                     )}
-                </SheetContent>
-            </Sheet>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }
