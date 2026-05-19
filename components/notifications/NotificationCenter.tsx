@@ -41,10 +41,14 @@ export default function NotificationCenter() {
     const [typeFilter, setTypeFilter] = useState<UserNotificationType | "all">("all");
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
     const [activeNotificationId, setActiveNotificationId] = useState<string | null>(null);
+    const shouldUseFilteredQuery =
+        statusFilter !== "all" || typeFilter !== "all";
 
     const allNotificationsQuery = useQuery({
         queryKey: notificationQueryKeys.all,
         queryFn: () => notificationService.getNotifications(),
+        staleTime: 15_000,
+        refetchOnWindowFocus: false,
     });
 
     const notificationsQuery = useQuery({
@@ -55,6 +59,9 @@ export default function NotificationCenter() {
                 ...(statusFilter === "read" ? { isRead: true } : {}),
                 ...(typeFilter !== "all" ? { type: typeFilter } : {}),
             }),
+        enabled: shouldUseFilteredQuery,
+        staleTime: 15_000,
+        refetchOnWindowFocus: false,
     });
 
     const notificationDetailQuery = useQuery({
@@ -85,14 +92,17 @@ export default function NotificationCenter() {
         onError: () => toast.error("Không thể xóa thông báo"),
     });
 
-    const filteredNotifications = useMemo(
-        () => sortNotificationsByNewest(notificationsQuery.data || []),
-        [notificationsQuery.data],
-    );
-
     const allNotifications = useMemo(
         () => sortNotificationsByNewest(allNotificationsQuery.data || []),
         [allNotificationsQuery.data],
+    );
+
+    const filteredNotifications = useMemo(
+        () =>
+            shouldUseFilteredQuery
+                ? sortNotificationsByNewest(notificationsQuery.data || [])
+                : allNotifications,
+        [allNotifications, notificationsQuery.data, shouldUseFilteredQuery],
     );
 
     const {
@@ -117,7 +127,9 @@ export default function NotificationCenter() {
     }, [allNotifications]);
 
     const visibleUnreadIds = paginatedNotifications.filter((notification) => !notification.IsRead).map((notification) => notification.ID);
-    const isLoading = notificationsQuery.isLoading || allNotificationsQuery.isLoading;
+    const isLoading =
+        allNotificationsQuery.isLoading ||
+        (shouldUseFilteredQuery && notificationsQuery.isLoading);
     const allVisibleSelected =
         paginatedNotifications.length > 0 &&
         paginatedNotifications.every((notification) => selectedIds.includes(notification.ID));

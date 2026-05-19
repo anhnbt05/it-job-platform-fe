@@ -35,6 +35,8 @@ export default function NotificationBell() {
     const { data: notifications, isLoading } = useQuery({
         queryKey: notificationQueryKeys.all,
         queryFn: () => notificationService.getNotifications(),
+        staleTime: 15_000,
+        refetchOnWindowFocus: false,
     });
 
     const markAsReadMutation = useMutation({
