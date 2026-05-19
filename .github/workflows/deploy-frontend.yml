@@ -38,6 +38,8 @@ jobs:
             cd "$FRONTEND_PATH"
             git fetch origin main
             git checkout main
-            git pull --ff-only origin main
+            git reset --hard origin/main
+            git clean -fd
 
             FRONTEND_DIR="$FRONTEND_PATH" PLATFORM_DIR="$BACKEND_PATH" bash ./scripts/dev/deploy-frontend-vps.sh
+            docker image prune -f
