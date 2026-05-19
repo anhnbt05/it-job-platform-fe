@@ -150,7 +150,7 @@ export default function LoginPage() {
                             <p className="mt-1 text-muted-foreground">Chào mừng bạn trở lại</p>
                         </div>
 
-                        <form onSubmit={handleLogin} className="mt-8 space-y-5">
+                        <form onSubmit={handleLogin} className="mt-8 space-y-5" data-testid="login-form">
                             <div className="space-y-2">
                                 <Label htmlFor="email" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                                     Email
@@ -163,6 +163,7 @@ export default function LoginPage() {
                                         placeholder="Nhập email của bạn"
                                         value={email}
                                         onChange={(e) => setEmail(e.target.value)}
+                                        data-testid="login-email"
                                         className="h-12 bg-muted pl-10 border-0 focus-visible:ring-primary"
                                     />
                                 </div>
@@ -180,6 +181,7 @@ export default function LoginPage() {
                                         placeholder="Nhập mật khẩu"
                                         value={password}
                                         onChange={(e) => setPassword(e.target.value)}
+                                        data-testid="login-password"
                                         className="h-12 bg-muted pl-10 pr-10 border-0 focus-visible:ring-primary"
                                     />
                                     <button
@@ -195,6 +197,7 @@ export default function LoginPage() {
                             <Button
                                 type="submit"
                                 disabled={isLoading}
+                                data-testid="login-submit"
                                 className="h-12 w-full bg-primary text-base font-semibold hover:bg-primary/90"
                             >
                                 {isLoading ? (
@@ -233,6 +236,7 @@ export default function LoginPage() {
                                             key={account.email}
                                             type="button"
                                             onClick={() => applyDemoAccount(account.email, account.password)}
+                                            data-testid={`demo-account-${account.roleLabel.toLowerCase().replace(/\s+/g, "-")}`}
                                             className="flex w-full items-center justify-between rounded-2xl border border-border bg-card px-4 py-3 text-left transition-colors hover:border-primary/30 hover:bg-primary/5"
                                         >
                                             <div className="flex items-center gap-3">

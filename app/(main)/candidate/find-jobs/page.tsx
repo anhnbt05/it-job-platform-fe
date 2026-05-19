@@ -300,7 +300,7 @@ export default function FindJobsPage() {
     };
 
     return (
-        <div className="mx-auto max-w-[1100px]">
+        <div className="mx-auto max-w-[1100px]" data-testid="candidate-find-jobs-page">
             <section className="mb-6 overflow-hidden rounded-[28px] border border-primary/10 bg-[radial-gradient(circle_at_top_left,_rgba(25,77,142,0.16),_transparent_38%),linear-gradient(135deg,_#f8fbff_0%,_#eef6ff_46%,_#f4fbf7_100%)] shadow-sm dark:border-white/10 dark:bg-[radial-gradient(circle_at_top_left,_rgba(25,77,142,0.28),_transparent_36%),linear-gradient(135deg,_rgba(15,23,42,0.98)_0%,_rgba(17,24,39,0.95)_52%,_rgba(8,47,73,0.92)_100%)]">
                 <div className={`grid gap-6 px-6 py-6 lg:px-8 ${hasRecommendedJobs ? "lg:grid-cols-[0.78fr_1.22fr]" : "lg:grid-cols-[0.88fr_1.12fr] lg:items-stretch"}`}>
                     <div>
@@ -475,6 +475,7 @@ export default function FindJobsPage() {
                             placeholder="Tìm theo vị trí, mô tả hoặc kỹ năng"
                             value={filters.query}
                             onChange={(event) => updateFilter("query", event.target.value)}
+                            data-testid="candidate-job-search-input"
                             className="h-12 border-border bg-card pl-12 text-base shadow-sm"
                         />
                     </div>
@@ -484,6 +485,7 @@ export default function FindJobsPage() {
                             placeholder="Lọc theo địa điểm"
                             value={filters.location}
                             onChange={(event) => updateFilter("location", event.target.value)}
+                            data-testid="candidate-job-location-input"
                             className="h-12 border-border bg-card pl-12 text-base shadow-sm"
                         />
                     </div>

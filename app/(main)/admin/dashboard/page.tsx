@@ -111,7 +111,7 @@ export default function AdminDashboardPage() {
     ]), [applicationStats, jobStats]);
 
     return (
-        <div className="mx-auto max-w-[1120px] space-y-6">
+        <div className="mx-auto max-w-[1120px] space-y-6" data-testid="admin-dashboard-page">
             <Card className="border-border shadow-sm">
                 <CardContent className="flex flex-col gap-4 p-6 lg:flex-row lg:items-end lg:justify-between">
                     <div>

@@ -1,0 +1,65 @@
+name: UI E2E Tests
+
+on:
+  workflow_dispatch:
+  workflow_run:
+    workflows:
+      - Deploy Frontend VPS
+    types:
+      - completed
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ui-e2e-vps
+  cancel-in-progress: false
+
+jobs:
+  playwright:
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      E2E_BASE_URL: ${{ vars.E2E_BASE_URL }}
+      E2E_ADMIN_EMAIL: ${{ vars.E2E_ADMIN_EMAIL }}
+      E2E_ADMIN_PASSWORD: ${{ secrets.E2E_ADMIN_PASSWORD }}
+      E2E_RECRUITER_EMAIL: ${{ vars.E2E_RECRUITER_EMAIL }}
+      E2E_RECRUITER_PASSWORD: ${{ secrets.E2E_RECRUITER_PASSWORD }}
+      E2E_CANDIDATE_EMAIL: ${{ vars.E2E_CANDIDATE_EMAIL }}
+      E2E_CANDIDATE_PASSWORD: ${{ secrets.E2E_CANDIDATE_PASSWORD }}
+    steps:
+      - name: Checkout frontend repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Validate target base URL
+        run: |
+          if [ -z "${E2E_BASE_URL:-}" ]; then
+            echo "Missing E2E_BASE_URL repo variable." >&2
+            exit 1
+          fi
+
+      - name: Run Playwright UI E2E
+        run: npm run test:e2e
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: |
+            playwright-report
+            test-results
+          if-no-files-found: ignore

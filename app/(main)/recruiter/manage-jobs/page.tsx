@@ -107,7 +107,7 @@ export default function ManageJobsPage() {
     };
 
     return (
-        <div className="mx-auto max-w-[1100px]">
+        <div className="mx-auto max-w-[1100px]" data-testid="recruiter-manage-jobs-page">
             {/* Header */}
             <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
