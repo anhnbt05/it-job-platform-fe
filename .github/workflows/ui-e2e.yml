@@ -57,6 +57,22 @@ jobs:
         id: mark_start
         run: echo "epoch=$(date +%s)" >> "$GITHUB_OUTPUT"
 
+      - name: Wait for VPS stack readiness
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_PORT || 22 }}
+          script_stop: true
+          command_timeout: 10m
+          script: |
+            set -euo pipefail
+
+            BACKEND_PATH="${VPS_BACKEND_PATH:-/opt/it-job/it-job-platform}"
+            cd "$BACKEND_PATH"
+            bash ./scripts/dev/wait-app-stack-vps.sh
+
       - name: Run Playwright UI E2E
         id: run_e2e
         continue-on-error: true
