@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { candidateService } from "@/services/candidate.service";
 import { categoryService } from "@/services/category.service";
@@ -17,6 +17,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import {
     BrainCircuit,
     Briefcase,
+    ChevronLeft,
     ChevronRight,
     Clock,
     DollarSign,
@@ -29,13 +30,16 @@ import {
 import { toast } from "react-toastify";
 
 export default function FindJobsPage() {
+    const jobsPerPage = 8;
     const { userId } = useAuthStore();
     const queryClient = useQueryClient();
     const [searchQuery, setSearchQuery] = useState("");
     const [filterType, setFilterType] = useState<string>("all");
     const [filterLevel, setFilterLevel] = useState<string>("all");
     const [filterCategory, setFilterCategory] = useState<string>("all");
+    const [currentPage, setCurrentPage] = useState(1);
     const [showFilters, setShowFilters] = useState(false);
+    const recommendedScrollRef = useRef<HTMLDivElement | null>(null);
 
     const { data: jobs = [], isLoading } = useQuery({
         queryKey: ["jobs"],
@@ -101,6 +105,27 @@ export default function FindJobsPage() {
         });
     }, [filterCategory, filterLevel, filterType, jobs, searchQuery]);
 
+    const totalPages = Math.max(1, Math.ceil(filteredJobs.length / jobsPerPage));
+    const paginatedJobs = useMemo(() => {
+        const startIndex = (currentPage - 1) * jobsPerPage;
+        return filteredJobs.slice(startIndex, startIndex + jobsPerPage);
+    }, [currentPage, filteredJobs]);
+
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [searchQuery, filterType, filterLevel, filterCategory]);
+
+    useEffect(() => {
+        setCurrentPage((page) => Math.min(page, totalPages));
+    }, [totalPages]);
+
+    const scrollRecommendedJobs = (direction: "left" | "right") => {
+        recommendedScrollRef.current?.scrollBy({
+            left: direction === "left" ? -320 : 320,
+            behavior: "smooth",
+        });
+    };
+
     return (
         <div className="mx-auto max-w-[1100px]">
             <section className="mb-6 overflow-hidden rounded-[28px] border border-primary/10 bg-[radial-gradient(circle_at_top_left,_rgba(25,77,142,0.16),_transparent_38%),linear-gradient(135deg,_#f8fbff_0%,_#eef6ff_46%,_#f4fbf7_100%)] shadow-sm dark:border-white/10 dark:bg-[radial-gradient(circle_at_top_left,_rgba(25,77,142,0.28),_transparent_36%),linear-gradient(135deg,_rgba(15,23,42,0.98)_0%,_rgba(17,24,39,0.95)_52%,_rgba(8,47,73,0.92)_100%)]">
@@ -131,34 +156,67 @@ export default function FindJobsPage() {
                     </div>
 
                     <div className="rounded-[24px] border border-white/60 bg-white/85 p-4 shadow-sm backdrop-blur dark:border-white/10 dark:bg-slate-950/40 dark:shadow-none">
-                        <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-primary">
-                            <BrainCircuit size={16} />
-                            Top gợi ý nổi bật
+                        <div className="mb-3 flex items-center justify-between gap-3">
+                            <div className="flex items-center gap-2 text-sm font-semibold text-primary">
+                                <BrainCircuit size={16} />
+                                Top gợi ý nổi bật
+                            </div>
+
+                            {recommendedJobs.length > 1 && (
+                                <div className="flex items-center gap-2">
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="icon"
+                                        className="h-9 w-9 rounded-full border-white/70 bg-white/80 shadow-sm dark:border-white/10 dark:bg-white/5"
+                                        onClick={() => scrollRecommendedJobs("left")}
+                                    >
+                                        <ChevronLeft size={16} />
+                                    </Button>
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="icon"
+                                        className="h-9 w-9 rounded-full border-white/70 bg-white/80 shadow-sm dark:border-white/10 dark:bg-white/5"
+                                        onClick={() => scrollRecommendedJobs("right")}
+                                    >
+                                        <ChevronRight size={16} />
+                                    </Button>
+                                </div>
+                            )}
                         </div>
 
                         {isLoadingRecommended ? (
-                            <div className="space-y-3">
+                            <div className="grid gap-3 sm:grid-cols-2">
                                 {[...Array(3)].map((_, index) => (
                                     <Skeleton key={index} className="h-20 rounded-2xl" />
                                 ))}
                             </div>
                         ) : recommendedJobs.length > 0 ? (
-                            <div className="space-y-3">
-                                {recommendedJobs.slice(0, 3).map((job) => (
-                                    <RecommendedJobCard
-                                        key={job.ID}
-                                        job={job}
-                                        isFavorite={favoriteIds.has(job.ID)}
-                                        isUpdatingFavorite={favoriteMutation.isPending && favoriteMutation.variables?.jobId === job.ID}
-                                        onToggleFavorite={() =>
-                                            favoriteMutation.mutate({
-                                                jobId: job.ID,
-                                                shouldSave: !favoriteIds.has(job.ID),
-                                            })
-                                        }
-                                    />
-                                ))}
-                            </div>
+                            <>
+                                <p className="mb-3 text-xs text-muted-foreground">
+                                    Kéo ngang để xem thêm công việc phù hợp với cấp độ hiện tại của bạn.
+                                </p>
+                                <div
+                                    ref={recommendedScrollRef}
+                                    className="flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2 pr-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                                >
+                                    {recommendedJobs.map((job) => (
+                                        <RecommendedJobCard
+                                            key={job.ID}
+                                            job={job}
+                                            isFavorite={favoriteIds.has(job.ID)}
+                                            isUpdatingFavorite={favoriteMutation.isPending && favoriteMutation.variables?.jobId === job.ID}
+                                            onToggleFavorite={() =>
+                                                favoriteMutation.mutate({
+                                                    jobId: job.ID,
+                                                    shouldSave: !favoriteIds.has(job.ID),
+                                                })
+                                            }
+                                        />
+                                    ))}
+                                </div>
+                            </>
                         ) : (
                             <div className="rounded-2xl border border-dashed border-border bg-muted/40 px-4 py-6 text-sm text-muted-foreground">
                                 {candidate?.Level
@@ -249,6 +307,11 @@ export default function FindJobsPage() {
                 <p className="text-sm text-muted-foreground">
                     {isLoading ? "Đang tải danh sách công việc..." : `Tìm thấy ${filteredJobs.length} công việc phù hợp`}
                 </p>
+                {!isLoading && filteredJobs.length > 0 && (
+                    <p className="text-sm text-muted-foreground">
+                        Trang {currentPage}/{totalPages}
+                    </p>
+                )}
             </div>
 
             {isLoading ? (
@@ -259,7 +322,7 @@ export default function FindJobsPage() {
                 </div>
             ) : (
                 <div className="space-y-4">
-                    {filteredJobs.map((job) => (
+                    {paginatedJobs.map((job) => (
                         <JobCard
                             key={job.ID}
                             job={job}
@@ -279,6 +342,43 @@ export default function FindJobsPage() {
                             <Briefcase size={48} className="mb-4 text-muted-foreground" />
                             <p className="text-lg font-medium text-muted-foreground">Không tìm thấy công việc phù hợp</p>
                             <p className="mt-1 text-sm text-muted-foreground">Thử đổi bộ lọc hoặc dùng từ khóa ngắn hơn</p>
+                        </div>
+                    )}
+
+                    {filteredJobs.length > jobsPerPage && (
+                        <div className="flex flex-col gap-3 rounded-2xl border border-border bg-card/80 px-4 py-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+                            <p className="text-sm text-muted-foreground">
+                                Hiển thị {Math.min((currentPage - 1) * jobsPerPage + 1, filteredJobs.length)}-
+                                {Math.min(currentPage * jobsPerPage, filteredJobs.length)} / {filteredJobs.length} công việc
+                            </p>
+
+                            <div className="flex items-center gap-2 self-end sm:self-auto">
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    className="gap-1"
+                                    disabled={currentPage === 1}
+                                    onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
+                                >
+                                    <ChevronLeft size={16} />
+                                    Trước
+                                </Button>
+                                <div className="min-w-[92px] rounded-full border border-border px-3 py-1 text-center text-sm font-medium text-foreground">
+                                    {currentPage} / {totalPages}
+                                </div>
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    className="gap-1"
+                                    disabled={currentPage === totalPages}
+                                    onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}
+                                >
+                                    Sau
+                                    <ChevronRight size={16} />
+                                </Button>
+                            </div>
                         </div>
                     )}
                 </div>
@@ -301,7 +401,7 @@ function RecommendedJobCard({
     return (
         <Link
             href={`/candidate/jobs/${job.ID}`}
-            className="block rounded-2xl border border-border bg-card p-4 transition-all hover:border-primary/20 hover:shadow-sm"
+            className="block w-[280px] flex-shrink-0 snap-start rounded-2xl border border-border bg-card p-4 transition-all hover:border-primary/20 hover:shadow-sm sm:w-[300px]"
         >
             <div className="flex items-start gap-3">
                 <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-2xl bg-primary/10">

@@ -223,9 +223,14 @@ export default function AdminCompaniesPage() {
                                             <TableCell>
                                                 <div className="flex items-center gap-3">
                                                     <CompanyLogo company={company} />
-                                                    <div>
+                                                    <div className="min-w-0">
                                                         <p className="font-medium text-foreground">{company.Name}</p>
-                                                        <p className="text-xs text-muted-foreground">{company.ID}</p>
+                                                        <p
+                                                            className="max-w-[220px] truncate text-xs text-muted-foreground"
+                                                            title={company.ID}
+                                                        >
+                                                            {company.ID}
+                                                        </p>
                                                     </div>
                                                 </div>
                                             </TableCell>

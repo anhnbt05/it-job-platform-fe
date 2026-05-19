@@ -283,21 +283,23 @@ export default function AdminJobsReviewPage() {
             )}
 
             <Dialog open={!!detailJobId} onOpenChange={(open) => !open && setDetailJobId(null)}>
-                <DialogContent className="max-w-3xl">
+                <DialogContent className="flex max-h-[90vh] max-w-3xl flex-col overflow-hidden">
                     <DialogHeader>
                         <DialogTitle>Chi tiết tin tuyển dụng</DialogTitle>
                         <DialogDescription>Rà soát nội dung trước khi duyệt hoặc từ chối.</DialogDescription>
                     </DialogHeader>
 
-                    {detailQuery.isLoading ? (
-                        <div className="space-y-3">
-                            {[...Array(4)].map((_, index) => <Skeleton key={index} className="h-20 rounded-lg" />)}
-                        </div>
-                    ) : detailQuery.data ? (
-                        <JobDetailView job={detailQuery.data} />
-                    ) : (
-                        <p className="text-sm text-muted-foreground">Không thể tải chi tiết công việc.</p>
-                    )}
+                    <div className="flex-1 overflow-y-auto pr-1">
+                        {detailQuery.isLoading ? (
+                            <div className="space-y-3">
+                                {[...Array(4)].map((_, index) => <Skeleton key={index} className="h-20 rounded-lg" />)}
+                            </div>
+                        ) : detailQuery.data ? (
+                            <JobDetailView job={detailQuery.data} />
+                        ) : (
+                            <p className="text-sm text-muted-foreground">Không thể tải chi tiết công việc.</p>
+                        )}
+                    </div>
 
                     <DialogFooter>
                         <Button
