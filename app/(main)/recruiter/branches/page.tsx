@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useClientPagination } from "@/hooks/use-client-pagination";
 import { recruiterService } from "@/services/recruiter.service";
 import { CompanyBranch } from "@/types";
 import { Badge } from "@/components/ui/badge";
@@ -17,6 +18,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PaginationBar } from "@/components/ui/pagination-bar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MapPin, Building2, Plus, Pencil, Search, Loader2, Network } from "lucide-react";
 import { toast } from "react-toastify";
@@ -49,6 +51,7 @@ const emptyBranchForm: BranchFormValues = {
 
 export default function RecruiterBranchesPage() {
     const queryClient = useQueryClient();
+    const branchesPerPage = 6;
     const [searchTerm, setSearchTerm] = useState("");
     const [dialogState, setDialogState] = useState<BranchDialogState | null>(null);
 
@@ -152,6 +155,17 @@ export default function RecruiterBranchesPage() {
         });
     }, [branches, searchTerm]);
 
+    const {
+        currentPage,
+        totalPages,
+        paginatedItems: paginatedBranches,
+        setCurrentPage,
+    } = useClientPagination({
+        items: filteredBranches,
+        itemsPerPage: branchesPerPage,
+        resetKey: `${searchTerm}|${branches.length}|${linkedBranchId || ""}`,
+    });
+
     const isSaving = createMutation.isPending || updateMutation.isPending;
 
     if (recruiterLoading) {
@@ -248,58 +262,69 @@ export default function RecruiterBranchesPage() {
                             </p>
                         </div>
                     ) : (
-                        <div className="grid gap-4 lg:grid-cols-2">
-                            {filteredBranches.map((branch) => (
-                                <Card key={branch.ID} className="border-border shadow-sm">
-                                    <CardContent className="space-y-4 p-5">
-                                        <div className="flex items-start justify-between gap-3">
-                                            <div>
-                                                <div className="flex flex-wrap items-center gap-2">
-                                                    <h3 className="text-lg font-semibold text-foreground">
-                                                        {branch.BranchName || "Chi nhánh chưa đặt tên"}
-                                                    </h3>
-                                                    {branch.ID === linkedBranchId && (
-                                                        <Badge className="bg-primary/10 text-primary">
-                                                            Đang gắn với tài khoản
-                                                        </Badge>
-                                                    )}
+                        <div className="space-y-4">
+                            <div className="grid gap-4 lg:grid-cols-2">
+                                {paginatedBranches.map((branch) => (
+                                    <Card key={branch.ID} className="border-border shadow-sm">
+                                        <CardContent className="space-y-4 p-5">
+                                            <div className="flex items-start justify-between gap-3">
+                                                <div>
+                                                    <div className="flex flex-wrap items-center gap-2">
+                                                        <h3 className="text-lg font-semibold text-foreground">
+                                                            {branch.BranchName || "Chi nhánh chưa đặt tên"}
+                                                        </h3>
+                                                        {branch.ID === linkedBranchId && (
+                                                            <Badge className="bg-primary/10 text-primary">
+                                                                Đang gắn với tài khoản
+                                                            </Badge>
+                                                        )}
+                                                    </div>
+                                                    <p className="mt-2 text-sm text-muted-foreground">
+                                                        {formatBranchLocation(branch)}
+                                                    </p>
                                                 </div>
-                                                <p className="mt-2 text-sm text-muted-foreground">
-                                                    {formatBranchLocation(branch)}
-                                                </p>
+
+                                                <Button
+                                                    type="button"
+                                                    size="sm"
+                                                    variant="outline"
+                                                    onClick={() =>
+                                                        setDialogState({
+                                                            mode: "edit",
+                                                            branch,
+                                                            values: {
+                                                                BranchName: branch.BranchName || "",
+                                                                Address: branch.Address || "",
+                                                                City: branch.City || "",
+                                                                Country: branch.Country || "",
+                                                            },
+                                                        })
+                                                    }
+                                                >
+                                                    <Pencil size={14} className="mr-1.5" />
+                                                    Sửa
+                                                </Button>
                                             </div>
 
-                                            <Button
-                                                type="button"
-                                                size="sm"
-                                                variant="outline"
-                                                onClick={() =>
-                                                    setDialogState({
-                                                        mode: "edit",
-                                                        branch,
-                                                        values: {
-                                                            BranchName: branch.BranchName || "",
-                                                            Address: branch.Address || "",
-                                                            City: branch.City || "",
-                                                            Country: branch.Country || "",
-                                                        },
-                                                    })
-                                                }
-                                            >
-                                                <Pencil size={14} className="mr-1.5" />
-                                                Sửa
-                                            </Button>
-                                        </div>
+                                            <div className="grid gap-3 sm:grid-cols-2">
+                                                <InfoTile label="Địa chỉ" value={branch.Address || "Chưa cập nhật"} />
+                                                <InfoTile label="Thành phố" value={branch.City || "Chưa cập nhật"} />
+                                                <InfoTile label="Quốc gia" value={branch.Country || "Chưa cập nhật"} />
+                                                <InfoTile label="Cập nhật" value={formatDate(branch.UpdatedAt)} />
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+                                ))}
+                            </div>
 
-                                        <div className="grid gap-3 sm:grid-cols-2">
-                                            <InfoTile label="Địa chỉ" value={branch.Address || "Chưa cập nhật"} />
-                                            <InfoTile label="Thành phố" value={branch.City || "Chưa cập nhật"} />
-                                            <InfoTile label="Quốc gia" value={branch.Country || "Chưa cập nhật"} />
-                                            <InfoTile label="Cập nhật" value={formatDate(branch.UpdatedAt)} />
-                                        </div>
-                                    </CardContent>
-                                </Card>
-                            ))}
+                            <PaginationBar
+                                currentPage={currentPage}
+                                totalPages={totalPages}
+                                totalItems={filteredBranches.length}
+                                itemsPerPage={branchesPerPage}
+                                itemLabel="chi nhánh"
+                                onPageChange={setCurrentPage}
+                            />
                         </div>
                     )}
                 </CardContent>

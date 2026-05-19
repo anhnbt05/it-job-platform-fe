@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useClientPagination } from "@/hooks/use-client-pagination";
 import { applicationService } from "@/services/application.service";
 import { jobService } from "@/services/job.service";
 import { ApplicationRecruiter, ApplicationStatus, ApplicationStatusLabel, JobListItem } from "@/types";
@@ -24,6 +25,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PaginationBar } from "@/components/ui/pagination-bar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -31,6 +33,7 @@ import { Check, Clock, FileText, Loader2, Search, Users, X } from "lucide-react"
 import { toast } from "react-toastify";
 
 export default function CandidatesPage() {
+    const jobsPerPage = 5;
     const [searchTerm, setSearchTerm] = useState("");
     const { data: jobs, isLoading, isError } = useQuery({
         queryKey: ["recruiter-jobs-for-candidates"],
@@ -49,6 +52,17 @@ export default function CandidatesPage() {
                 .some((value) => value.toLowerCase().includes(keyword)),
         );
     }, [jobs, searchTerm]);
+
+    const {
+        currentPage,
+        totalPages,
+        paginatedItems: paginatedJobs,
+        setCurrentPage,
+    } = useClientPagination({
+        items: filteredJobs,
+        itemsPerPage: jobsPerPage,
+        resetKey: `${searchTerm}|${jobs?.length || 0}`,
+    });
 
     if (isLoading) {
         return (
@@ -107,11 +121,24 @@ export default function CandidatesPage() {
                 </div>
             </div>
 
-            <Accordion type="multiple" className="space-y-3">
-                {filteredJobs.map((job) => (
-                    <JobApplicationItem key={job.ID} job={job} />
-                ))}
-            </Accordion>
+            {filteredJobs.length > 0 && (
+                <>
+                    <Accordion type="multiple" className="space-y-3">
+                        {paginatedJobs.map((job) => (
+                            <JobApplicationItem key={job.ID} job={job} />
+                        ))}
+                    </Accordion>
+
+                    <PaginationBar
+                        currentPage={currentPage}
+                        totalPages={totalPages}
+                        totalItems={filteredJobs.length}
+                        itemsPerPage={jobsPerPage}
+                        itemLabel="bài đăng"
+                        onPageChange={setCurrentPage}
+                    />
+                </>
+            )}
 
             {filteredJobs.length === 0 && (
                 <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-card py-16 text-center">

@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useClientPagination } from "@/hooks/use-client-pagination";
 import { jobService } from "@/services/job.service";
 import { useAuthStore } from "@/store/useAuthStore";
 import { JobListItem, JobStatus, JobStatusLabel, JobTypeLabel, LevelLabel, JobType, Level } from "@/types";
@@ -10,6 +11,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PaginationBar } from "@/components/ui/pagination-bar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
@@ -36,6 +38,7 @@ import { toast } from "react-toastify";
 
 export default function ManageJobsPage() {
     const { userId } = useAuthStore();
+    const jobsPerPage = 6;
     const [searchTerm, setSearchTerm] = useState("");
     const [statusFilter, setStatusFilter] = useState<string>("all");
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -76,6 +79,17 @@ export default function ManageJobsPage() {
             .filter(Boolean)
             .some((value) => value.toLowerCase().includes(keyword));
     }), [jobs, searchTerm, statusFilter]);
+
+    const {
+        currentPage,
+        totalPages,
+        paginatedItems: paginatedJobs,
+        setCurrentPage,
+    } = useClientPagination({
+        items: filteredJobs,
+        itemsPerPage: jobsPerPage,
+        resetKey: `${searchTerm}|${statusFilter}|${jobs?.length || 0}`,
+    });
 
     const getStatusColor = (status: string) => {
         switch (status) {
@@ -180,7 +194,7 @@ export default function ManageJobsPage() {
                 </div>
             ) : (
                 <div className="space-y-3">
-                    {filteredJobs?.map((job) => (
+                    {paginatedJobs.map((job) => (
                         <Card key={job.ID} className="border-border p-0 shadow-sm transition-all hover:shadow-md">
                             <div className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:gap-5">
                                 <div className="min-w-0 flex-1">
@@ -239,6 +253,15 @@ export default function ManageJobsPage() {
                             <Link href="/recruiter/post-job" className="mt-2 text-sm text-primary hover:underline">Thêm tin tuyển dụng</Link>
                         </div>
                     )}
+
+                    <PaginationBar
+                        currentPage={currentPage}
+                        totalPages={totalPages}
+                        totalItems={filteredJobs.length}
+                        itemsPerPage={jobsPerPage}
+                        itemLabel="bài đăng"
+                        onPageChange={setCurrentPage}
+                    />
                 </div>
             )}
 

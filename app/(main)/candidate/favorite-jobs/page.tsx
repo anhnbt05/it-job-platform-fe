@@ -1,7 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import { useClientPagination } from "@/hooks/use-client-pagination";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { PaginationBar } from "@/components/ui/pagination-bar";
 import { jobService } from "@/services/job.service";
 import { JobType, JobTypeLabel, Level, LevelLabel } from "@/types";
 import { Badge } from "@/components/ui/badge";
@@ -20,10 +22,21 @@ import { toast } from "react-toastify";
 
 export default function FavoriteJobsPage() {
     const queryClient = useQueryClient();
+    const favoritesPerPage = 6;
 
     const { data: favorites = [], isLoading } = useQuery({
         queryKey: ["favorite-jobs"],
         queryFn: () => jobService.getFavoriteJobs(),
+    });
+
+    const {
+        currentPage,
+        totalPages,
+        paginatedItems: paginatedFavorites,
+        setCurrentPage,
+    } = useClientPagination({
+        items: favorites,
+        itemsPerPage: favoritesPerPage,
     });
 
     const removeMutation = useMutation({
@@ -49,7 +62,7 @@ export default function FavoriteJobsPage() {
                 </div>
             ) : (
                 <div className="space-y-3">
-                    {favorites.map((favorite) => (
+                    {paginatedFavorites.map((favorite) => (
                         <Card key={favorite.ID} className="group border-border p-0 shadow-sm transition-all hover:shadow-md">
                             <div className="flex items-start gap-5 p-5">
                                 <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-primary/5">
@@ -122,6 +135,15 @@ export default function FavoriteJobsPage() {
                             </Link>
                         </div>
                     )}
+
+                    <PaginationBar
+                        currentPage={currentPage}
+                        totalPages={totalPages}
+                        totalItems={favorites.length}
+                        itemsPerPage={favoritesPerPage}
+                        itemLabel="công việc"
+                        onPageChange={setCurrentPage}
+                    />
                 </div>
             )}
         </div>

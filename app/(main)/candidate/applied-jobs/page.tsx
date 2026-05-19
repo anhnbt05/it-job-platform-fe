@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useClientPagination } from "@/hooks/use-client-pagination";
 import { applicationService } from "@/services/application.service";
 import { Application, ApplicationStatus, ApplicationStatusLabel } from "@/types";
 import { Badge } from "@/components/ui/badge";
@@ -17,6 +18,7 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { PaginationBar } from "@/components/ui/pagination-bar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -32,6 +34,7 @@ import { toast } from "react-toastify";
 
 export default function AppliedJobsPage() {
     const queryClient = useQueryClient();
+    const applicationsPerPage = 6;
     const [searchQuery, setSearchQuery] = useState("");
     const [statusFilter, setStatusFilter] = useState<string>("all");
     const [selectedApplication, setSelectedApplication] = useState<Application | null>(null);
@@ -65,6 +68,17 @@ export default function AppliedJobsPage() {
             return matchesKeyword && matchesStatus;
         });
     }, [applications, searchQuery, statusFilter]);
+
+    const {
+        currentPage,
+        totalPages,
+        paginatedItems: paginatedApplications,
+        setCurrentPage,
+    } = useClientPagination({
+        items: filteredApplications,
+        itemsPerPage: applicationsPerPage,
+        resetKey: `${searchQuery}|${statusFilter}|${applications.length}`,
+    });
 
     return (
         <div className="mx-auto max-w-[1100px]">
@@ -144,7 +158,7 @@ export default function AppliedJobsPage() {
                 </div>
             ) : (
                 <div className="space-y-3">
-                    {filteredApplications.map((application) => (
+                    {paginatedApplications.map((application) => (
                         <ApplicationCard
                             key={application.ID}
                             application={application}
@@ -161,6 +175,15 @@ export default function AppliedJobsPage() {
                             </Link>
                         </div>
                     )}
+
+                    <PaginationBar
+                        currentPage={currentPage}
+                        totalPages={totalPages}
+                        totalItems={filteredApplications.length}
+                        itemsPerPage={applicationsPerPage}
+                        itemLabel="đơn ứng tuyển"
+                        onPageChange={setCurrentPage}
+                    />
                 </div>
             )}
 

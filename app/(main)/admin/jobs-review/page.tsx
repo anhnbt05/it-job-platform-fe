@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useClientPagination } from "@/hooks/use-client-pagination";
 import { jobService } from "@/services/job.service";
 import { JobDetail, JobListItem, JobType, JobTypeLabel, Level, LevelLabel } from "@/types";
 import { Badge } from "@/components/ui/badge";
@@ -17,6 +18,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PaginationBar } from "@/components/ui/pagination-bar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
@@ -27,6 +29,7 @@ type ExpiryFilter = "all" | "expiring_7d" | "expiring_30d" | "over_30d";
 
 export default function AdminJobsReviewPage() {
     const queryClient = useQueryClient();
+    const jobsPerPage = 6;
     const [detailJobId, setDetailJobId] = useState<string | null>(null);
     const [searchTerm, setSearchTerm] = useState("");
     const [typeFilter, setTypeFilter] = useState<JobType | "all">("all");
@@ -118,6 +121,17 @@ export default function AdminJobsReviewPage() {
                 .some((value) => value.toLowerCase().includes(keyword));
         });
     }, [expiryFilter, levelFilter, pendingJobs, searchTerm, typeFilter]);
+
+    const {
+        currentPage,
+        totalPages,
+        paginatedItems: paginatedPendingJobs,
+        setCurrentPage,
+    } = useClientPagination({
+        items: filteredPendingJobs,
+        itemsPerPage: jobsPerPage,
+        resetKey: `${searchTerm}|${typeFilter}|${levelFilter}|${expiryFilter}|${pendingJobs.length}`,
+    });
 
     return (
         <div className="mx-auto max-w-[1100px] space-y-6">
@@ -225,7 +239,7 @@ export default function AdminJobsReviewPage() {
                 </div>
             ) : (
                 <div className="space-y-4">
-                    {filteredPendingJobs.map((job) => (
+                    {paginatedPendingJobs.map((job) => (
                         <Card key={job.ID} className="border-border shadow-sm">
                             <CardContent className="flex flex-col gap-4 p-5 lg:flex-row lg:items-start lg:justify-between">
                                 <div className="min-w-0 flex-1">
@@ -279,6 +293,15 @@ export default function AdminJobsReviewPage() {
                             </CardContent>
                         </Card>
                     ))}
+
+                    <PaginationBar
+                        currentPage={currentPage}
+                        totalPages={totalPages}
+                        totalItems={filteredPendingJobs.length}
+                        itemsPerPage={jobsPerPage}
+                        itemLabel="tin chờ duyệt"
+                        onPageChange={setCurrentPage}
+                    />
                 </div>
             )}
 

@@ -1,7 +1,11 @@
 "use client";
 
+import "swiper/css";
+import "swiper/css/navigation";
+import "swiper/css/pagination";
+
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { candidateService } from "@/services/candidate.service";
 import { categoryService } from "@/services/category.service";
@@ -12,6 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { PaginationBar } from "@/components/ui/pagination-bar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -28,6 +33,8 @@ import {
     Tag,
 } from "lucide-react";
 import { toast } from "react-toastify";
+import { Autoplay, Navigation, Pagination } from "swiper/modules";
+import { Swiper, SwiperSlide } from "swiper/react";
 
 export default function FindJobsPage() {
     const jobsPerPage = 8;
@@ -39,7 +46,6 @@ export default function FindJobsPage() {
     const [filterCategory, setFilterCategory] = useState<string>("all");
     const [currentPage, setCurrentPage] = useState(1);
     const [showFilters, setShowFilters] = useState(false);
-    const recommendedScrollRef = useRef<HTMLDivElement | null>(null);
 
     const { data: jobs = [], isLoading } = useQuery({
         queryKey: ["jobs"],
@@ -119,17 +125,10 @@ export default function FindJobsPage() {
         setCurrentPage((page) => Math.min(page, totalPages));
     }, [totalPages]);
 
-    const scrollRecommendedJobs = (direction: "left" | "right") => {
-        recommendedScrollRef.current?.scrollBy({
-            left: direction === "left" ? -320 : 320,
-            behavior: "smooth",
-        });
-    };
-
     return (
         <div className="mx-auto max-w-[1100px]">
             <section className="mb-6 overflow-hidden rounded-[28px] border border-primary/10 bg-[radial-gradient(circle_at_top_left,_rgba(25,77,142,0.16),_transparent_38%),linear-gradient(135deg,_#f8fbff_0%,_#eef6ff_46%,_#f4fbf7_100%)] shadow-sm dark:border-white/10 dark:bg-[radial-gradient(circle_at_top_left,_rgba(25,77,142,0.28),_transparent_36%),linear-gradient(135deg,_rgba(15,23,42,0.98)_0%,_rgba(17,24,39,0.95)_52%,_rgba(8,47,73,0.92)_100%)]">
-                <div className="grid gap-6 px-6 py-6 lg:grid-cols-[1.1fr_0.9fr] lg:px-8">
+                <div className="grid gap-6 px-6 py-6 lg:grid-cols-[0.78fr_1.22fr] lg:px-8">
                     <div>
                         <Badge className="bg-card text-primary shadow-sm">Dành riêng cho bạn</Badge>
                         <h2 className="mt-3 text-2xl font-bold text-foreground">
@@ -155,7 +154,7 @@ export default function FindJobsPage() {
                         </div>
                     </div>
 
-                    <div className="rounded-[24px] border border-white/60 bg-white/85 p-4 shadow-sm backdrop-blur dark:border-white/10 dark:bg-slate-950/40 dark:shadow-none">
+                    <div className="min-w-0 rounded-[24px] border border-white/60 bg-white/85 p-4 shadow-sm backdrop-blur dark:border-white/10 dark:bg-slate-950/40 dark:shadow-none">
                         <div className="mb-3 flex items-center justify-between gap-3">
                             <div className="flex items-center gap-2 text-sm font-semibold text-primary">
                                 <BrainCircuit size={16} />
@@ -163,26 +162,9 @@ export default function FindJobsPage() {
                             </div>
 
                             {recommendedJobs.length > 1 && (
-                                <div className="flex items-center gap-2">
-                                    <Button
-                                        type="button"
-                                        variant="outline"
-                                        size="icon"
-                                        className="h-9 w-9 rounded-full border-white/70 bg-white/80 shadow-sm dark:border-white/10 dark:bg-white/5"
-                                        onClick={() => scrollRecommendedJobs("left")}
-                                    >
-                                        <ChevronLeft size={16} />
-                                    </Button>
-                                    <Button
-                                        type="button"
-                                        variant="outline"
-                                        size="icon"
-                                        className="h-9 w-9 rounded-full border-white/70 bg-white/80 shadow-sm dark:border-white/10 dark:bg-white/5"
-                                        onClick={() => scrollRecommendedJobs("right")}
-                                    >
-                                        <ChevronRight size={16} />
-                                    </Button>
-                                </div>
+                                <Badge variant="secondary" className="bg-primary/10 text-primary">
+                                    Tự động phát
+                                </Badge>
                             )}
                         </div>
 
@@ -195,27 +177,47 @@ export default function FindJobsPage() {
                         ) : recommendedJobs.length > 0 ? (
                             <>
                                 <p className="mb-3 text-xs text-muted-foreground">
-                                    Kéo ngang để xem thêm công việc phù hợp với cấp độ hiện tại của bạn.
+                                    Vuốt hoặc để slider tự chạy để xem thêm công việc phù hợp với cấp độ hiện tại của bạn.
                                 </p>
-                                <div
-                                    ref={recommendedScrollRef}
-                                    className="flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2 pr-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                                <Swiper
+                                    modules={[Autoplay, Navigation, Pagination]}
+                                    className="pb-10"
+                                    spaceBetween={16}
+                                    loop={recommendedJobs.length > 1}
+                                    autoplay={
+                                        recommendedJobs.length > 1
+                                            ? {
+                                                delay: 2600,
+                                                disableOnInteraction: false,
+                                                pauseOnMouseEnter: true,
+                                            }
+                                            : false
+                                    }
+                                    navigation={recommendedJobs.length > 1}
+                                    pagination={recommendedJobs.length > 1 ? { clickable: true } : false}
+                                    breakpoints={{
+                                        0: { slidesPerView: 1 },
+                                        768: { slidesPerView: 1.1 },
+                                        1024: { slidesPerView: 1.25 },
+                                        1280: { slidesPerView: 1.45 },
+                                    }}
                                 >
                                     {recommendedJobs.map((job) => (
-                                        <RecommendedJobCard
-                                            key={job.ID}
-                                            job={job}
-                                            isFavorite={favoriteIds.has(job.ID)}
-                                            isUpdatingFavorite={favoriteMutation.isPending && favoriteMutation.variables?.jobId === job.ID}
-                                            onToggleFavorite={() =>
-                                                favoriteMutation.mutate({
-                                                    jobId: job.ID,
-                                                    shouldSave: !favoriteIds.has(job.ID),
-                                                })
-                                            }
-                                        />
+                                        <SwiperSlide key={job.ID} className="!h-auto">
+                                            <RecommendedJobCard
+                                                job={job}
+                                                isFavorite={favoriteIds.has(job.ID)}
+                                                isUpdatingFavorite={favoriteMutation.isPending && favoriteMutation.variables?.jobId === job.ID}
+                                                onToggleFavorite={() =>
+                                                    favoriteMutation.mutate({
+                                                        jobId: job.ID,
+                                                        shouldSave: !favoriteIds.has(job.ID),
+                                                    })
+                                                }
+                                            />
+                                        </SwiperSlide>
                                     ))}
-                                </div>
+                                </Swiper>
                             </>
                         ) : (
                             <div className="rounded-2xl border border-dashed border-border bg-muted/40 px-4 py-6 text-sm text-muted-foreground">
@@ -345,42 +347,14 @@ export default function FindJobsPage() {
                         </div>
                     )}
 
-                    {filteredJobs.length > jobsPerPage && (
-                        <div className="flex flex-col gap-3 rounded-2xl border border-border bg-card/80 px-4 py-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
-                            <p className="text-sm text-muted-foreground">
-                                Hiển thị {Math.min((currentPage - 1) * jobsPerPage + 1, filteredJobs.length)}-
-                                {Math.min(currentPage * jobsPerPage, filteredJobs.length)} / {filteredJobs.length} công việc
-                            </p>
-
-                            <div className="flex items-center gap-2 self-end sm:self-auto">
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    size="sm"
-                                    className="gap-1"
-                                    disabled={currentPage === 1}
-                                    onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
-                                >
-                                    <ChevronLeft size={16} />
-                                    Trước
-                                </Button>
-                                <div className="min-w-[92px] rounded-full border border-border px-3 py-1 text-center text-sm font-medium text-foreground">
-                                    {currentPage} / {totalPages}
-                                </div>
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    size="sm"
-                                    className="gap-1"
-                                    disabled={currentPage === totalPages}
-                                    onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}
-                                >
-                                    Sau
-                                    <ChevronRight size={16} />
-                                </Button>
-                            </div>
-                        </div>
-                    )}
+                    <PaginationBar
+                        currentPage={currentPage}
+                        totalPages={totalPages}
+                        totalItems={filteredJobs.length}
+                        itemsPerPage={jobsPerPage}
+                        itemLabel="công việc"
+                        onPageChange={setCurrentPage}
+                    />
                 </div>
             )}
         </div>
@@ -401,7 +375,7 @@ function RecommendedJobCard({
     return (
         <Link
             href={`/candidate/jobs/${job.ID}`}
-            className="block w-[280px] flex-shrink-0 snap-start rounded-2xl border border-border bg-card p-4 transition-all hover:border-primary/20 hover:shadow-sm sm:w-[300px]"
+            className="block h-full rounded-2xl border border-border bg-card p-4 transition-all hover:border-primary/20 hover:shadow-sm"
         >
             <div className="flex items-start gap-3">
                 <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-2xl bg-primary/10">
@@ -410,8 +384,8 @@ function RecommendedJobCard({
 
                 <div className="min-w-0 flex-1">
                     <div className="flex items-start justify-between gap-3">
-                        <div>
-                            <p className="line-clamp-1 text-sm font-semibold text-foreground">{job.Title}</p>
+                        <div className="min-w-0">
+                            <p className="line-clamp-2 text-sm font-semibold text-foreground">{job.Title}</p>
                             <p className="mt-1 line-clamp-1 text-xs text-muted-foreground">{job.Address || "Chưa cập nhật địa điểm"}</p>
                         </div>
 

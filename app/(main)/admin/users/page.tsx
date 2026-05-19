@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useClientPagination } from "@/hooks/use-client-pagination";
 import { adminService } from "@/services/admin.service";
 import { AdminUser, AdminUserStatus, AdminUserStatusLabel, UserRole, UserRoleLabel } from "@/types";
 import { useAuthStore } from "@/store/useAuthStore";
@@ -18,6 +19,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PaginationBar } from "@/components/ui/pagination-bar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -31,6 +33,7 @@ type VerificationFilter = "all" | "verified" | "unverified";
 
 export default function AdminUsersPage() {
     const queryClient = useQueryClient();
+    const usersPerPage = 8;
     const { userId } = useAuthStore();
     const [roleFilter, setRoleFilter] = useState<RoleFilter>("all");
     const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
@@ -114,6 +117,17 @@ export default function AdminUsersPage() {
                 .some((value) => value!.toLowerCase().includes(keyword));
         });
     }, [searchTerm, statusFilter, users, verificationFilter]);
+
+    const {
+        currentPage,
+        totalPages,
+        paginatedItems: paginatedUsers,
+        setCurrentPage,
+    } = useClientPagination({
+        items: filteredUsers,
+        itemsPerPage: usersPerPage,
+        resetKey: `${roleFilter}|${statusFilter}|${verificationFilter}|${searchTerm}|${users.length}`,
+    });
 
     return (
         <div className="mx-auto max-w-[1160px] space-y-6">
@@ -230,7 +244,7 @@ export default function AdminUsersPage() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {filteredUsers.map((user) => (
+                                {paginatedUsers.map((user) => (
                                     <TableRow key={user.ID}>
                                         <TableCell className="font-medium text-foreground">{user.Email}</TableCell>
                                         <TableCell>
@@ -292,6 +306,16 @@ export default function AdminUsersPage() {
                         </Table>
                         </div>
                     )}
+
+                    <PaginationBar
+                        currentPage={currentPage}
+                        totalPages={totalPages}
+                        totalItems={filteredUsers.length}
+                        itemsPerPage={usersPerPage}
+                        itemLabel="tài khoản"
+                        className="mt-4"
+                        onPageChange={setCurrentPage}
+                    />
                 </CardContent>
             </Card>
 

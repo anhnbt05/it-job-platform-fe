@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useClientPagination } from "@/hooks/use-client-pagination";
 import { notificationService } from "@/services/notification.service";
 import { UserNotification, UserNotificationType, UserNotificationTypeLabel } from "@/types";
 import { Badge } from "@/components/ui/badge";
@@ -14,6 +15,7 @@ import {
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog";
+import { PaginationBar } from "@/components/ui/pagination-bar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -34,6 +36,7 @@ const notificationTypeOptions = Object.entries(UserNotificationTypeLabel) as [Us
 
 export default function NotificationCenter() {
     const queryClient = useQueryClient();
+    const notificationsPerPage = 8;
     const [statusFilter, setStatusFilter] = useState<NotificationStatusFilter>("all");
     const [typeFilter, setTypeFilter] = useState<UserNotificationType | "all">("all");
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -82,7 +85,7 @@ export default function NotificationCenter() {
         onError: () => toast.error("Không thể xóa thông báo"),
     });
 
-    const notifications = useMemo(
+    const filteredNotifications = useMemo(
         () => sortNotificationsByNewest(notificationsQuery.data || []),
         [notificationsQuery.data],
     );
@@ -91,6 +94,17 @@ export default function NotificationCenter() {
         () => sortNotificationsByNewest(allNotificationsQuery.data || []),
         [allNotificationsQuery.data],
     );
+
+    const {
+        currentPage,
+        totalPages,
+        paginatedItems: paginatedNotifications,
+        setCurrentPage,
+    } = useClientPagination<UserNotification>({
+        items: filteredNotifications,
+        itemsPerPage: notificationsPerPage,
+        resetKey: `${statusFilter}|${typeFilter}|${filteredNotifications.length}`,
+    });
 
     const stats = useMemo(() => {
         const unreadCount = allNotifications.filter((notification) => !notification.IsRead).length;
@@ -102,8 +116,11 @@ export default function NotificationCenter() {
         };
     }, [allNotifications]);
 
-    const visibleUnreadIds = notifications.filter((notification) => !notification.IsRead).map((notification) => notification.ID);
+    const visibleUnreadIds = paginatedNotifications.filter((notification) => !notification.IsRead).map((notification) => notification.ID);
     const isLoading = notificationsQuery.isLoading || allNotificationsQuery.isLoading;
+    const allVisibleSelected =
+        paginatedNotifications.length > 0 &&
+        paginatedNotifications.every((notification) => selectedIds.includes(notification.ID));
 
     const handleOpenNotification = (notification: UserNotification) => {
         setActiveNotificationId(notification.ID);
@@ -122,12 +139,14 @@ export default function NotificationCenter() {
     };
 
     const toggleSelectAllVisible = () => {
-        if (selectedIds.length === notifications.length) {
-            setSelectedIds([]);
+        const visibleIds = paginatedNotifications.map((notification) => notification.ID);
+
+        if (allVisibleSelected) {
+            setSelectedIds((current) => current.filter((id) => !visibleIds.includes(id)));
             return;
         }
 
-        setSelectedIds(notifications.map((notification) => notification.ID));
+        setSelectedIds((current) => Array.from(new Set([...current, ...visibleIds])));
     };
 
     return (
@@ -202,9 +221,9 @@ export default function NotificationCenter() {
                             variant="ghost"
                             className="justify-start text-muted-foreground sm:justify-center"
                             onClick={toggleSelectAllVisible}
-                            disabled={notifications.length === 0}
+                            disabled={paginatedNotifications.length === 0}
                         >
-                            {selectedIds.length === notifications.length && notifications.length > 0 ? "Bỏ chọn tất cả" : "Chọn tất cả"}
+                            {allVisibleSelected ? "Bỏ chọn tất cả" : "Chọn tất cả"}
                         </Button>
                     </div>
                 </div>
@@ -216,7 +235,7 @@ export default function NotificationCenter() {
                         <Skeleton key={index} className="h-[108px] rounded-2xl" />
                     ))}
                 </div>
-            ) : notifications.length === 0 ? (
+            ) : filteredNotifications.length === 0 ? (
                 <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-card py-20 text-center">
                     <div className="rounded-full bg-muted p-4">
                         <Clock3 size={28} className="text-muted-foreground" />
@@ -228,7 +247,7 @@ export default function NotificationCenter() {
                 </div>
             ) : (
                 <div className="space-y-3">
-                    {notifications.map((notification) => {
+                    {paginatedNotifications.map((notification) => {
                         const appearance = getNotificationAppearance(notification.Notification?.Type);
                         const Icon = appearance.icon;
                         const isSelected = selectedIds.includes(notification.ID);
@@ -334,6 +353,15 @@ export default function NotificationCenter() {
                             </Card>
                         );
                     })}
+
+                    <PaginationBar
+                        currentPage={currentPage}
+                        totalPages={totalPages}
+                        totalItems={filteredNotifications.length}
+                        itemsPerPage={notificationsPerPage}
+                        itemLabel="thông báo"
+                        onPageChange={setCurrentPage}
+                    />
                 </div>
             )}
 

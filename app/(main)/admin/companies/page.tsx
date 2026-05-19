@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useClientPagination } from "@/hooks/use-client-pagination";
 import { adminService } from "@/services/admin.service";
 import { CompanyFormValues, type Company } from "@/types";
 import { Badge } from "@/components/ui/badge";
@@ -18,6 +19,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PaginationBar } from "@/components/ui/pagination-bar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -42,6 +44,7 @@ const defaultCompanyValues: CompanyFormValues = {
 
 export default function AdminCompaniesPage() {
     const queryClient = useQueryClient();
+    const companiesPerPage = 8;
     const [dialogState, setDialogState] = useState<CompanyDialogState | null>(null);
     const [searchTerm, setSearchTerm] = useState("");
     const [filter, setFilter] = useState<CompanyFilter>("all");
@@ -119,6 +122,17 @@ export default function AdminCompaniesPage() {
             return true;
         });
     }, [companies, filter, searchTerm]);
+
+    const {
+        currentPage,
+        totalPages,
+        paginatedItems: paginatedCompanies,
+        setCurrentPage,
+    } = useClientPagination({
+        items: filteredCompanies,
+        itemsPerPage: companiesPerPage,
+        resetKey: `${searchTerm}|${filter}|${companies.length}`,
+    });
 
     return (
         <div className="mx-auto max-w-[1160px] space-y-6">
@@ -218,7 +232,7 @@ export default function AdminCompaniesPage() {
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                    {filteredCompanies.map((company) => (
+                                    {paginatedCompanies.map((company) => (
                                         <TableRow key={company.ID}>
                                             <TableCell>
                                                 <div className="flex items-center gap-3">
@@ -276,6 +290,16 @@ export default function AdminCompaniesPage() {
                             </Table>
                         </div>
                     )}
+
+                    <PaginationBar
+                        currentPage={currentPage}
+                        totalPages={totalPages}
+                        totalItems={filteredCompanies.length}
+                        itemsPerPage={companiesPerPage}
+                        itemLabel="công ty"
+                        className="mt-4"
+                        onPageChange={setCurrentPage}
+                    />
                 </CardContent>
             </Card>
 

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useClientPagination } from "@/hooks/use-client-pagination";
 import { adminService } from "@/services/admin.service";
 import { CompanyBranch, CompanyFormValues } from "@/types";
 import { Badge } from "@/components/ui/badge";
@@ -19,6 +20,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PaginationBar } from "@/components/ui/pagination-bar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -59,6 +61,7 @@ const emptyBranchForm: BranchFormValues = {
 export default function AdminCompanyDetailPage() {
     const params = useParams<{ id: string }>();
     const queryClient = useQueryClient();
+    const branchesPerPage = 6;
     const companyId = typeof params?.id === "string" ? params.id : "";
     const [formValues, setFormValues] = useState<CompanyFormValues | null>(null);
     const [searchTerm, setSearchTerm] = useState("");
@@ -218,6 +221,17 @@ export default function AdminCompanyDetailPage() {
                 .some((value) => value!.toLowerCase().includes(keyword));
         });
     }, [branchQuery.data, cityFilter, countryFilter, searchTerm]);
+
+    const {
+        currentPage,
+        totalPages,
+        paginatedItems: paginatedBranches,
+        setCurrentPage,
+    } = useClientPagination({
+        items: filteredBranches,
+        itemsPerPage: branchesPerPage,
+        resetKey: `${searchTerm}|${cityFilter}|${countryFilter}|${branchStats.total}`,
+    });
 
     const cityOptions = useMemo(() => {
         const values = Array.from(new Set((branchQuery.data || []).map((branch) => branch.City || "unknown")));
@@ -547,51 +561,62 @@ export default function AdminCompanyDetailPage() {
                                             </p>
                                         </div>
                                     ) : (
-                                        <div className="grid gap-4 lg:grid-cols-2">
-                                            {filteredBranches.map((branch) => (
-                                                <Card key={branch.ID} className="border-border shadow-sm">
-                                                    <CardContent className="space-y-4 p-5">
-                                                        <div className="flex items-start justify-between gap-3">
-                                                            <div>
-                                                                <h3 className="text-lg font-semibold text-foreground">
-                                                                    {branch.BranchName || "Chi nhánh chưa đặt tên"}
-                                                                </h3>
-                                                                <p className="mt-2 text-sm text-muted-foreground">
-                                                                    {formatBranchLocation(branch)}
-                                                                </p>
+                                        <div className="space-y-4">
+                                            <div className="grid gap-4 lg:grid-cols-2">
+                                                {paginatedBranches.map((branch) => (
+                                                    <Card key={branch.ID} className="border-border shadow-sm">
+                                                        <CardContent className="space-y-4 p-5">
+                                                            <div className="flex items-start justify-between gap-3">
+                                                                <div>
+                                                                    <h3 className="text-lg font-semibold text-foreground">
+                                                                        {branch.BranchName || "Chi nhánh chưa đặt tên"}
+                                                                    </h3>
+                                                                    <p className="mt-2 text-sm text-muted-foreground">
+                                                                        {formatBranchLocation(branch)}
+                                                                    </p>
+                                                                </div>
+
+                                                                <Button
+                                                                    type="button"
+                                                                    size="sm"
+                                                                    variant="outline"
+                                                                    onClick={() =>
+                                                                        setBranchDialogState({
+                                                                            mode: "edit",
+                                                                            branch,
+                                                                            values: {
+                                                                                BranchName: branch.BranchName || "",
+                                                                                Address: branch.Address || "",
+                                                                                City: branch.City || "",
+                                                                                Country: branch.Country || "",
+                                                                            },
+                                                                        })
+                                                                    }
+                                                                >
+                                                                    <Pencil size={14} className="mr-1.5" />
+                                                                    Sửa
+                                                                </Button>
                                                             </div>
 
-                                                            <Button
-                                                                type="button"
-                                                                size="sm"
-                                                                variant="outline"
-                                                                onClick={() =>
-                                                                    setBranchDialogState({
-                                                                        mode: "edit",
-                                                                        branch,
-                                                                        values: {
-                                                                            BranchName: branch.BranchName || "",
-                                                                            Address: branch.Address || "",
-                                                                            City: branch.City || "",
-                                                                            Country: branch.Country || "",
-                                                                        },
-                                                                    })
-                                                                }
-                                                            >
-                                                                <Pencil size={14} className="mr-1.5" />
-                                                                Sửa
-                                                            </Button>
-                                                        </div>
+                                                            <div className="grid gap-3 sm:grid-cols-2">
+                                                                <InfoTile label="Địa chỉ" value={branch.Address || "Chưa cập nhật"} />
+                                                                <InfoTile label="Thành phố" value={branch.City || "Chưa cập nhật"} />
+                                                                <InfoTile label="Quốc gia" value={branch.Country || "Chưa cập nhật"} />
+                                                                <InfoTile label="Cập nhật" value={formatDate(branch.UpdatedAt)} />
+                                                            </div>
+                                                        </CardContent>
+                                                    </Card>
+                                                ))}
+                                            </div>
 
-                                                        <div className="grid gap-3 sm:grid-cols-2">
-                                                            <InfoTile label="Địa chỉ" value={branch.Address || "Chưa cập nhật"} />
-                                                            <InfoTile label="Thành phố" value={branch.City || "Chưa cập nhật"} />
-                                                            <InfoTile label="Quốc gia" value={branch.Country || "Chưa cập nhật"} />
-                                                            <InfoTile label="Cập nhật" value={formatDate(branch.UpdatedAt)} />
-                                                        </div>
-                                                    </CardContent>
-                                                </Card>
-                                            ))}
+                                            <PaginationBar
+                                                currentPage={currentPage}
+                                                totalPages={totalPages}
+                                                totalItems={filteredBranches.length}
+                                                itemsPerPage={branchesPerPage}
+                                                itemLabel="chi nhánh"
+                                                onPageChange={setCurrentPage}
+                                            />
                                         </div>
                                     )}
                                 </CardContent>

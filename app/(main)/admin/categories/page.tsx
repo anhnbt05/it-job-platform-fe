@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useClientPagination } from "@/hooks/use-client-pagination";
 import { categoryService } from "@/services/category.service";
 import { AdminCategory } from "@/types";
 import { Badge } from "@/components/ui/badge";
@@ -17,6 +18,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PaginationBar } from "@/components/ui/pagination-bar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -33,6 +35,7 @@ type CategoryFilter = "all" | "updated_7d" | "stale_30d";
 
 export default function AdminCategoriesPage() {
     const queryClient = useQueryClient();
+    const categoriesPerPage = 10;
     const [dialogState, setDialogState] = useState<CategoryDialogState | null>(null);
     const [deleteTarget, setDeleteTarget] = useState<AdminCategory | null>(null);
     const [searchTerm, setSearchTerm] = useState("");
@@ -122,6 +125,17 @@ export default function AdminCategoriesPage() {
             return diffDays >= 30;
         });
     }, [categories, filter, searchTerm, viewTimestamp]);
+
+    const {
+        currentPage,
+        totalPages,
+        paginatedItems: paginatedCategories,
+        setCurrentPage,
+    } = useClientPagination({
+        items: filteredCategories,
+        itemsPerPage: categoriesPerPage,
+        resetKey: `${searchTerm}|${filter}|${categories.length}`,
+    });
 
     return (
         <div className="mx-auto max-w-[1120px] space-y-6">
@@ -222,7 +236,7 @@ export default function AdminCategoriesPage() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {filteredCategories.map((category) => (
+                                {paginatedCategories.map((category) => (
                                     <TableRow key={category.ID}>
                                         <TableCell>
                                             <Badge variant="secondary" className="bg-primary/5 text-primary">
@@ -275,6 +289,16 @@ export default function AdminCategoriesPage() {
                         </Table>
                         </div>
                     )}
+
+                    <PaginationBar
+                        currentPage={currentPage}
+                        totalPages={totalPages}
+                        totalItems={filteredCategories.length}
+                        itemsPerPage={categoriesPerPage}
+                        itemLabel="danh mục"
+                        className="mt-4"
+                        onPageChange={setCurrentPage}
+                    />
                 </CardContent>
             </Card>
 
