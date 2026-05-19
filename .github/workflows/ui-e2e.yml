@@ -21,6 +21,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
+      VPS_BACKEND_PATH: ${{ vars.VPS_BACKEND_PATH }}
       E2E_BASE_URL: ${{ vars.E2E_BASE_URL }}
       E2E_ADMIN_EMAIL: ${{ vars.E2E_ADMIN_EMAIL }}
       E2E_ADMIN_PASSWORD: ${{ secrets.E2E_ADMIN_PASSWORD }}
@@ -28,6 +29,7 @@ jobs:
       E2E_RECRUITER_PASSWORD: ${{ secrets.E2E_RECRUITER_PASSWORD }}
       E2E_CANDIDATE_EMAIL: ${{ vars.E2E_CANDIDATE_EMAIL }}
       E2E_CANDIDATE_PASSWORD: ${{ secrets.E2E_CANDIDATE_PASSWORD }}
+      AUTOMATION_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
     steps:
       - name: Checkout frontend repository
         uses: actions/checkout@v4
@@ -51,7 +53,13 @@ jobs:
             exit 1
           fi
 
+      - name: Mark UI E2E start
+        id: mark_start
+        run: echo "epoch=$(date +%s)" >> "$GITHUB_OUTPUT"
+
       - name: Run Playwright UI E2E
+        id: run_e2e
+        continue-on-error: true
         run: npm run test:e2e
 
       - name: Upload Playwright report
@@ -63,3 +71,52 @@ jobs:
             playwright-report
             test-results
           if-no-files-found: ignore
+
+      - name: Compute UI E2E result
+        id: e2e_result
+        if: always()
+        shell: bash
+        run: |
+          end_epoch=$(date +%s)
+          duration_ms=$(( (end_epoch - ${{ steps.mark_start.outputs.epoch }}) * 1000 ))
+          status="failed"
+          if [ "${{ steps.run_e2e.outcome }}" = "success" ]; then
+            status="passed"
+          fi
+          echo "duration_ms=$duration_ms" >> "$GITHUB_OUTPUT"
+          echo "status=$status" >> "$GITHUB_OUTPUT"
+
+      - name: Log UI E2E result to Loki source file
+        if: always()
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_PORT || 22 }}
+          script_stop: true
+          command_timeout: 10m
+          script: |
+            set -euo pipefail
+
+            BACKEND_PATH="${VPS_BACKEND_PATH:-/opt/it-job/it-job-platform}"
+            cd "$BACKEND_PATH"
+
+            AUTOMATION_SUITE="ui-e2e" \
+            AUTOMATION_KIND="playwright" \
+            AUTOMATION_SOURCE="github-actions" \
+            AUTOMATION_STATUS="${{ steps.e2e_result.outputs.status }}" \
+            AUTOMATION_DURATION_MS="${{ steps.e2e_result.outputs.duration_ms }}" \
+            AUTOMATION_RUN_ID="${{ github.run_id }}" \
+            AUTOMATION_RUN_URL="${{ env.AUTOMATION_RUN_URL }}" \
+            AUTOMATION_REPOSITORY="${{ github.repository }}" \
+            AUTOMATION_WORKFLOW="${{ github.workflow }}" \
+            AUTOMATION_SUMMARY="UI E2E workflow completed with status ${{ steps.e2e_result.outputs.status }} against ${{ vars.E2E_BASE_URL }}." \
+            bash ./scripts/dev/write-automation-log.sh
+
+      - name: Fail workflow when UI E2E fails
+        if: steps.run_e2e.outcome != 'success'
+        shell: bash
+        run: |
+          echo "UI E2E tests failed." >&2
+          exit 1
