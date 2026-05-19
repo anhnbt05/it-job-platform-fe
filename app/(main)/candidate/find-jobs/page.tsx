@@ -1,7 +1,6 @@
 "use client";
 
 import "swiper/css";
-import "swiper/css/navigation";
 import "swiper/css/pagination";
 
 import Link from "next/link";
@@ -22,7 +21,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import {
     BrainCircuit,
     Briefcase,
-    ChevronLeft,
     ChevronRight,
     Clock,
     DollarSign,
@@ -33,7 +31,7 @@ import {
     Tag,
 } from "lucide-react";
 import { toast } from "react-toastify";
-import { Autoplay, Navigation, Pagination } from "swiper/modules";
+import { Autoplay, Pagination } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
 
 export default function FindJobsPage() {
@@ -138,7 +136,7 @@ export default function FindJobsPage() {
                             Hệ thống đang ưu tiên các vị trí phù hợp với level hiện tại trong hồ sơ ứng viên của bạn để bạn lọc nhanh hơn.
                         </p>
 
-                        <div className="mt-4 flex flex-wrap gap-3">
+                        <div className="mt-4 grid max-w-[560px] gap-3 sm:grid-cols-3">
                             <div className="rounded-2xl border border-white/70 bg-white/80 px-4 py-3 shadow-sm dark:border-white/10 dark:bg-white/5 dark:shadow-none">
                                 <p className="text-xs uppercase tracking-wide text-muted-foreground">Level hồ sơ</p>
                                 <p className="mt-1 text-sm font-semibold text-primary">
@@ -149,6 +147,12 @@ export default function FindJobsPage() {
                                 <p className="text-xs uppercase tracking-wide text-muted-foreground">Số gợi ý</p>
                                 <p className="mt-1 text-sm font-semibold text-primary">
                                     {isLoadingRecommended ? "Đang tải..." : `${recommendedJobs.length} công việc`}
+                                </p>
+                            </div>
+                            <div className="rounded-2xl border border-white/70 bg-white/80 px-4 py-3 shadow-sm dark:border-white/10 dark:bg-white/5 dark:shadow-none">
+                                <p className="text-xs uppercase tracking-wide text-muted-foreground">Đã lưu</p>
+                                <p className="mt-1 text-sm font-semibold text-primary">
+                                    {favorites.length} công việc
                                 </p>
                             </div>
                         </div>
@@ -180,8 +184,8 @@ export default function FindJobsPage() {
                                     Vuốt hoặc để slider tự chạy để xem thêm công việc phù hợp với cấp độ hiện tại của bạn.
                                 </p>
                                 <Swiper
-                                    modules={[Autoplay, Navigation, Pagination]}
-                                    className="pb-10"
+                                    modules={[Autoplay, Pagination]}
+                                    className="pb-12 [&_.swiper-pagination]:!bottom-0 [&_.swiper-pagination-bullet]:bg-slate-300 [&_.swiper-pagination-bullet]:opacity-100 [&_.swiper-pagination-bullet-active]:!bg-primary"
                                     spaceBetween={16}
                                     loop={recommendedJobs.length > 1}
                                     autoplay={
@@ -193,7 +197,6 @@ export default function FindJobsPage() {
                                             }
                                             : false
                                     }
-                                    navigation={recommendedJobs.length > 1}
                                     pagination={recommendedJobs.length > 1 ? { clickable: true } : false}
                                     breakpoints={{
                                         0: { slidesPerView: 1 },
