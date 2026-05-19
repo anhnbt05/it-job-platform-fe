@@ -1,11 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-FRONTEND_DIR="${FRONTEND_DIR:-/opt/it-job/it-job-platform-fe}"
 PLATFORM_DIR="${PLATFORM_DIR:-/opt/it-job/it-job-platform}"
 FRONTEND_PORT="${FRONTEND_PORT:-3000}"
-
-cd "$FRONTEND_DIR"
 
 log() {
   printf '>>> [%s] %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$*"
@@ -22,12 +19,12 @@ wait_http() {
   log "${name} is responding at ${url}"
 }
 
-log "building frontend image"
 cd "$PLATFORM_DIR"
-docker compose -f docker-compose.yml -f docker-compose.app.yml build frontend
+log "pulling frontend image"
+docker compose -f docker-compose.yml -f docker-compose.app.yml pull frontend
 
 log "starting frontend container"
-docker compose -f docker-compose.yml -f docker-compose.app.yml up -d frontend
+docker compose -f docker-compose.yml -f docker-compose.app.yml up -d --force-recreate frontend
 
 wait_http "http://127.0.0.1:${FRONTEND_PORT}" frontend
 
