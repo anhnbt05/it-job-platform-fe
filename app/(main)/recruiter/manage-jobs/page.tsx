@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useClientPagination } from "@/hooks/use-client-pagination";
+import { toastApiError, toastApiSuccess } from "@/lib/axios";
 import { jobService } from "@/services/job.service";
 import { useAuthStore } from "@/store/useAuthStore";
 import { JobListItem, JobStatus, JobStatusLabel, JobTypeLabel, LevelLabel, JobType, Level } from "@/types";
@@ -56,12 +57,12 @@ export default function ManageJobsPage() {
 
     const deleteMutation = useMutation({
         mutationFn: (id: string) => jobService.deleteJob(id),
-        onSuccess: () => {
-            toast.success("Đã xoá bài đăng");
+        onSuccess: (response) => {
+            toastApiSuccess(response);
             queryClient.invalidateQueries({ queryKey: ["recruiter-jobs"] });
             setDeleteDialogOpen(false);
         },
-        onError: () => toast.error("Có lỗi xảy ra"),
+        onError: (error) => toastApiError(error),
     });
 
     const filteredJobs = useMemo(() => (jobs || []).filter((job) => {

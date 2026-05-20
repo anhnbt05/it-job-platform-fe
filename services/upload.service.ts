@@ -1,13 +1,18 @@
 import { api } from "@/lib/axios";
-import { unwrapData } from "@/services/mappers";
 import { UploadedFileAsset } from "@/types";
 
+type UploadFileResponse = {
+    success?: boolean;
+    message?: string;
+    data?: UploadedFileAsset;
+};
+
 export const uploadService = {
-    async uploadFile(file: File, folder?: string): Promise<UploadedFileAsset> {
+    async uploadFile(file: File, folder?: string): Promise<UploadFileResponse> {
         const formData = new FormData();
         formData.append("file", file);
 
-        const response = await api.post("/identity/uploads/file", formData, {
+        return api.post("/identity/uploads/file", formData, {
             params: {
                 folder: folder?.trim() || undefined,
             },
@@ -15,7 +20,5 @@ export const uploadService = {
                 "Content-Type": "multipart/form-data",
             },
         });
-
-        return unwrapData<UploadedFileAsset>(response);
     },
 };

@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { MailCheck, Loader2, ArrowLeft, ShieldCheck } from "lucide-react";
+import { toastApiError, toastApiSuccess } from "@/lib/axios";
 import { authService } from "@/services/auth.service";
 import { toast } from "react-toastify";
 
@@ -28,11 +29,11 @@ function VerifyEmailContent() {
 
         setIsLoading(true);
         try {
-            await authService.verifyEmailOtp(email.trim(), otp.trim());
-            toast.success("Xác thực email thành công");
+            const response = await authService.verifyEmailOtp(email.trim(), otp.trim());
+            toastApiSuccess(response);
             router.push("/login");
-        } catch {
-            toast.error("Mã OTP không hợp lệ hoặc đã hết hạn");
+        } catch (error) {
+            toastApiError(error);
         } finally {
             setIsLoading(false);
         }

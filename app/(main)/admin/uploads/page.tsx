@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
+import { toastApiError, toastApiSuccess } from "@/lib/axios";
+import { unwrapData } from "@/services/mappers";
 import { uploadService } from "@/services/upload.service";
 import { UploadedFileAsset } from "@/types";
 import { Badge } from "@/components/ui/badge";
@@ -25,9 +27,9 @@ export default function AdminUploadsPage() {
 
             return uploadService.uploadFile(selectedFile, folder);
         },
-        onSuccess: (data) => {
-            setUploadedFile(data);
-            toast.success("Đã upload tệp");
+        onSuccess: (response) => {
+            setUploadedFile(unwrapData<UploadedFileAsset>(response));
+            toastApiSuccess(response);
         },
         onError: (error) => {
             if (error instanceof Error && error.message === "missing_file") {
@@ -35,7 +37,7 @@ export default function AdminUploadsPage() {
                 return;
             }
 
-            toast.error("Không thể upload tệp");
+            toastApiError(error);
         },
     });
 

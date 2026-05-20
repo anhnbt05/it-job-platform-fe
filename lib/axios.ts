@@ -15,7 +15,83 @@ type QueuedRequest = {
   resolve: (token: string) => void;
 };
 
+type ApiErrorPayload = {
+  message?: string;
+  error?: string;
+  data?: {
+    message?: string;
+    error?: string;
+  };
+};
+
+type ApiMessagePayload = {
+  message?: string;
+};
+
 const LOCAL_HOSTS = new Set(["localhost", "127.0.0.1"]);
+
+const INTERNAL_CLIENT_MESSAGE_PATTERN = /^[a-z0-9]+(?:[_-][a-z0-9]+)*$/;
+
+const MESSAGE_TRANSLATIONS: Record<string, string> = {
+  Unauthorized: "Bạn chưa được xác thực hoặc phiên đăng nhập đã hết hạn.",
+  Forbidden: "Bạn không có quyền thực hiện thao tác này.",
+  "Bad Request": "Yêu cầu gửi lên không hợp lệ.",
+  "Not Found": "Không tìm thấy dữ liệu yêu cầu.",
+  Conflict: "Dữ liệu đang bị xung đột.",
+  "Internal Server Error": "Hệ thống đang gặp lỗi nội bộ.",
+  "Network Error": "Không thể kết nối tới máy chủ.",
+};
+
+function normalizeDisplayMessage(message?: string | null): string {
+  const trimmed = message?.trim();
+  if (!trimmed) {
+    return "";
+  }
+
+  if (
+    INTERNAL_CLIENT_MESSAGE_PATTERN.test(trimmed) ||
+    trimmed === "Missing access token"
+  ) {
+    return "";
+  }
+
+  if (MESSAGE_TRANSLATIONS[trimmed]) {
+    return MESSAGE_TRANSLATIONS[trimmed];
+  }
+
+  if (/^Request failed with status code \d+$/.test(trimmed)) {
+    return "";
+  }
+
+  if (/timeout/i.test(trimmed)) {
+    return "Yêu cầu tới máy chủ đã quá thời gian chờ.";
+  }
+
+  return trimmed;
+}
+
+function extractPayloadMessage(payload: unknown): string {
+  if (!payload || typeof payload !== "object") {
+    return "";
+  }
+
+  const record = payload as Record<string, unknown>;
+  const directMessage =
+    typeof record.message === "string" ? normalizeDisplayMessage(record.message) : "";
+  if (directMessage) {
+    return directMessage;
+  }
+
+  const nestedData = record.data;
+  if (nestedData && typeof nestedData === "object") {
+    const nestedMessage = extractPayloadMessage(nestedData);
+    if (nestedMessage) {
+      return nestedMessage;
+    }
+  }
+
+  return "";
+}
 
 function resolveApiBaseUrl() {
   const configuredBaseUrl = process.env.NEXT_PUBLIC_API_URL?.trim();
@@ -48,6 +124,92 @@ function resolveApiBaseUrl() {
 }
 
 const baseURL = resolveApiBaseUrl();
+
+export function getApiErrorMessage(
+  error: unknown,
+  fallbackMessage: string,
+): string {
+  if (axios.isAxiosError<ApiErrorPayload>(error)) {
+    const responseMessage = extractPayloadMessage(error.response?.data);
+    if (responseMessage) {
+      return responseMessage;
+    }
+
+    const errorMessage = normalizeDisplayMessage(
+      error.response?.data?.error ?? error.response?.data?.data?.error,
+    );
+    if (errorMessage) {
+      return errorMessage;
+    }
+  }
+
+  if (error instanceof Error) {
+    const normalizedErrorMessage = normalizeDisplayMessage(error.message);
+    if (normalizedErrorMessage) {
+      return normalizedErrorMessage;
+    }
+  }
+
+  return normalizeDisplayMessage(fallbackMessage);
+}
+
+export function getApiMessage(
+  payload: unknown,
+  fallbackMessage = "",
+): string {
+  if (Array.isArray(payload)) {
+    for (const item of payload) {
+      const nestedMessage = getApiMessage(item);
+      if (nestedMessage) {
+        return nestedMessage;
+      }
+    }
+
+    return fallbackMessage;
+  }
+
+  if (payload && typeof payload === "object") {
+    const message = extractPayloadMessage(payload);
+    if (message) {
+      return message;
+    }
+  }
+
+  return normalizeDisplayMessage(fallbackMessage);
+}
+
+export function toastApiSuccess(
+  payload: unknown,
+  fallbackMessage = "",
+) {
+  if (Array.isArray(payload)) {
+    const messages = payload
+      .map((item) => getApiMessage(item))
+      .filter((message): message is string => Boolean(message));
+
+    if (messages.length > 0) {
+      for (const message of messages) {
+        toast.success(message);
+      }
+      return;
+    }
+  }
+
+  const message = getApiMessage(payload, fallbackMessage);
+  if (message) {
+    toast.success(message);
+  }
+}
+
+export function toastApiError(
+  error: unknown,
+  fallbackMessage = "",
+) {
+  const message = getApiErrorMessage(error, fallbackMessage);
+  if (message) {
+    toast.error(message);
+  }
+}
 
 export const api = axios.create({
   baseURL,

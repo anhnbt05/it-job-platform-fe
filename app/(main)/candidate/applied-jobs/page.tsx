@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useClientPagination } from "@/hooks/use-client-pagination";
+import { toastApiError, toastApiSuccess } from "@/lib/axios";
 import { applicationService } from "@/services/application.service";
 import { Application, ApplicationStatus, ApplicationStatusLabel } from "@/types";
 import { Badge } from "@/components/ui/badge";
@@ -46,12 +47,12 @@ export default function AppliedJobsPage() {
 
     const deleteMutation = useMutation({
         mutationFn: (applicationId: string) => applicationService.deleteApplication(applicationId),
-        onSuccess: () => {
-            toast.success("Đã hủy đơn ứng tuyển");
+        onSuccess: (response) => {
+            toastApiSuccess(response);
             setSelectedApplication(null);
             queryClient.invalidateQueries({ queryKey: ["applied-jobs"] });
         },
-        onError: () => toast.error("Không thể hủy đơn ứng tuyển"),
+        onError: (error) => toastApiError(error),
     });
 
     const filteredApplications = useMemo(() => {

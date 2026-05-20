@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toastApiError, toastApiSuccess } from "@/lib/axios";
 import { notificationService } from "@/services/notification.service";
 import { useAuthStore } from "@/store/useAuthStore";
 import { Button } from "@/components/ui/button";
@@ -41,10 +42,11 @@ export default function NotificationBell() {
 
     const markAsReadMutation = useMutation({
         mutationFn: (ids: string[]) => notificationService.markAsRead(ids),
-        onSuccess: () => {
+        onSuccess: (response) => {
+            toastApiSuccess(response);
             queryClient.invalidateQueries({ queryKey: notificationQueryKeys.all });
         },
-        onError: () => toast.error("Không thể cập nhật thông báo"),
+        onError: (error) => toastApiError(error),
     });
 
     const sortedNotifications = useMemo(
@@ -128,10 +130,11 @@ export default function NotificationBell() {
                                     onClick={async () => {
                                         if (!notification.IsRead) {
                                             try {
-                                                await notificationService.markAsRead([notification.ID]);
+                                                const response = await notificationService.markAsRead([notification.ID]);
+                                                toastApiSuccess(response);
                                                 queryClient.invalidateQueries({ queryKey: notificationQueryKeys.all });
-                                            } catch {
-                                                toast.error("Không thể cập nhật thông báo");
+                                            } catch (error) {
+                                                toastApiError(error);
                                             }
                                         }
 

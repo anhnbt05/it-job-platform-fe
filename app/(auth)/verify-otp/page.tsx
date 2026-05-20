@@ -3,6 +3,7 @@
 import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "react-toastify";
+import { toastApiError, toastApiSuccess } from "@/lib/axios";
 import { authService } from "@/services/auth.service";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -34,10 +35,10 @@ function VerifyOTPContent() {
                 throw new Error("missing-token");
             }
 
-            toast.success("Xác thực OTP thành công");
+            toastApiSuccess(response);
             router.push(`/reset-password?token=${encodeURIComponent(data.token)}&email=${encodeURIComponent(email)}`);
-        } catch {
-            toast.error("Mã OTP không hợp lệ hoặc đã hết hạn");
+        } catch (error) {
+            toastApiError(error);
         } finally {
             setIsLoading(false);
         }

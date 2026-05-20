@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { toast } from "react-toastify";
+import { toastApiError, toastApiSuccess } from "@/lib/axios";
 import { authService } from "@/services/auth.service";
 import { recruiterService } from "@/services/recruiter.service";
 import { Company } from "@/types";
@@ -112,7 +113,7 @@ export default function RecruiterRegisterPage() {
       .then((res: any) =>
         setCompanies(Array.isArray(res) ? res : (res.data ?? [])),
       )
-      .catch(() => toast.error("Không thể tải danh sách công ty"))
+      .catch((error) => toastApiError(error))
       .finally(() => setCompaniesLoading(false));
   }, [step, companyMode]);
 
@@ -156,7 +157,7 @@ export default function RecruiterRegisterPage() {
 
     setIsLoading(true);
     try {
-      await authService.signUpRecruiter({
+      const response = await authService.signUpRecruiter({
         email: email.trim(),
         password: password.trim(),
         full_name: fullName.trim(),
@@ -182,10 +183,10 @@ export default function RecruiterRegisterPage() {
           },
         },
       });
-      toast.success("Đăng ký thành công! Vui lòng kiểm tra email để xác thực.");
+      toastApiSuccess(response);
       router.push("/verify-email?email=" + encodeURIComponent(email));
-    } catch {
-      toast.error("Đăng ký thất bại. Vui lòng thử lại.");
+    } catch (error) {
+      toastApiError(error);
     } finally {
       setIsLoading(false);
     }

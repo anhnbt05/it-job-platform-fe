@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useClientPagination } from "@/hooks/use-client-pagination";
+import { toastApiError, toastApiSuccess } from "@/lib/axios";
 import { applicationService } from "@/services/application.service";
 import { jobService } from "@/services/job.service";
 import { ApplicationRecruiter, ApplicationStatus, ApplicationStatusLabel, JobListItem } from "@/types";
@@ -228,22 +229,22 @@ function CandidateCard({
 
     const acceptMutation = useMutation({
         mutationFn: () => applicationService.acceptApplications([application.ID]),
-        onSuccess: () => {
-            toast.success("Đã duyệt ứng viên");
+        onSuccess: (response) => {
+            toastApiSuccess(response);
             queryClient.invalidateQueries({ queryKey: ["job-applications", jobId] });
         },
-        onError: () => toast.error("Không thể duyệt ứng viên"),
+        onError: (error) => toastApiError(error),
     });
 
     const rejectMutation = useMutation({
         mutationFn: () => applicationService.rejectApplication(application.ID, rejectReason.trim() || undefined),
-        onSuccess: () => {
-            toast.success("Đã từ chối ứng viên");
+        onSuccess: (response) => {
+            toastApiSuccess(response);
             setRejectDialogOpen(false);
             setRejectReason("");
             queryClient.invalidateQueries({ queryKey: ["job-applications", jobId] });
         },
-        onError: () => toast.error("Không thể từ chối ứng viên"),
+        onError: (error) => toastApiError(error),
     });
 
     const isPending = application.Status === ApplicationStatus.PENDING;

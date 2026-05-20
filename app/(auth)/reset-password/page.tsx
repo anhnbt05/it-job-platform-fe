@@ -3,6 +3,7 @@
 import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "react-toastify";
+import { toastApiError, toastApiSuccess } from "@/lib/axios";
 import { authService } from "@/services/auth.service";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -46,11 +47,11 @@ function ResetPasswordContent() {
 
         setIsLoading(true);
         try {
-            await authService.resetPassword(password.trim(), token);
-            toast.success("Đặt lại mật khẩu thành công");
+            const response = await authService.resetPassword(password.trim(), token);
+            toastApiSuccess(response);
             router.push("/login");
-        } catch {
-            toast.error("Không thể đặt lại mật khẩu");
+        } catch (error) {
+            toastApiError(error);
         } finally {
             setIsLoading(false);
         }

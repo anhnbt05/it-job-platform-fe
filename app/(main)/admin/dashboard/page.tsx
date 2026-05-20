@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
+import { toastApiError } from "@/lib/axios";
 import { adminService } from "@/services/admin.service";
 import { AdminReportType } from "@/types";
 import { Badge } from "@/components/ui/badge";
@@ -54,8 +55,7 @@ export default function AdminDashboardPage() {
             link.click();
             window.URL.revokeObjectURL(url);
         },
-        onSuccess: () => toast.success("Đã tải báo cáo"),
-        onError: () => toast.error("Không thể tải báo cáo"),
+        onError: (error) => toastApiError(error),
     });
 
     const jobStats = summary?.jobStats;

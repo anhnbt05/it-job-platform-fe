@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation } from "@tanstack/react-query";
+import { toastApiError, toastApiSuccess } from "@/lib/axios";
 import { jobService } from "@/services/job.service";
 import { CreateJobPayload, JobTypeLabel, LevelLabel } from "@/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -39,11 +40,11 @@ export default function PostJobPage() {
 
     const createMutation = useMutation({
         mutationFn: (data: CreateJobPayload) => jobService.createJob(data),
-        onSuccess: () => {
-            toast.success("Đã đăng tin tuyển dụng thành công!");
+        onSuccess: (response) => {
+            toastApiSuccess(response);
             router.push("/recruiter/manage-jobs");
         },
-        onError: () => toast.error("Đăng tin thất bại"),
+        onError: (error) => toastApiError(error),
     });
 
     const computeSalary = () => {

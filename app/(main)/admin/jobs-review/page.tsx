@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useClientPagination } from "@/hooks/use-client-pagination";
+import { toastApiError, toastApiSuccess } from "@/lib/axios";
 import { jobService } from "@/services/job.service";
 import { JobDetail, JobListItem, JobType, JobTypeLabel, Level, LevelLabel } from "@/types";
 import { Badge } from "@/components/ui/badge";
@@ -56,19 +57,19 @@ export default function AdminJobsReviewPage() {
 
     const approveMutation = useMutation({
         mutationFn: (jobId: string) => jobService.approveJob(jobId),
-        onSuccess: () => {
-            toast.success("Đã duyệt tin tuyển dụng");
+        onSuccess: (response) => {
+            toastApiSuccess(response);
             queryClient.invalidateQueries({ queryKey: ["admin-pending-jobs"] });
             queryClient.invalidateQueries({ queryKey: ["admin-dashboard-summary"] });
             setDetailJobId(null);
         },
-        onError: () => toast.error("Không thể duyệt tin tuyển dụng"),
+        onError: (error) => toastApiError(error),
     });
 
     const rejectMutation = useMutation({
         mutationFn: () => jobService.rejectJob(rejectState.jobId || "", rejectState.reason.trim() || undefined),
-        onSuccess: () => {
-            toast.success("Đã từ chối tin tuyển dụng");
+        onSuccess: (response) => {
+            toastApiSuccess(response);
             queryClient.invalidateQueries({ queryKey: ["admin-pending-jobs"] });
             queryClient.invalidateQueries({ queryKey: ["admin-dashboard-summary"] });
             setRejectState({ jobId: null, reason: "" });
@@ -76,7 +77,7 @@ export default function AdminJobsReviewPage() {
                 setDetailJobId(null);
             }
         },
-        onError: () => toast.error("Không thể từ chối tin tuyển dụng"),
+        onError: (error) => toastApiError(error),
     });
 
     const pendingJobs = jobs.filter((job) => job.Status === "pending");

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useClientPagination } from "@/hooks/use-client-pagination";
+import { toastApiError, toastApiSuccess } from "@/lib/axios";
 import { adminService } from "@/services/admin.service";
 import { CompanyFormValues, type Company } from "@/types";
 import { Badge } from "@/components/ui/badge";
@@ -67,8 +68,8 @@ export default function AdminCompaniesPage() {
 
             return adminService.createCompany(normalized);
         },
-        onSuccess: () => {
-            toast.success("Đã tạo công ty");
+        onSuccess: (response) => {
+            toastApiSuccess(response);
             setDialogState(null);
             queryClient.invalidateQueries({ queryKey: ["admin-companies"] });
         },
@@ -78,7 +79,7 @@ export default function AdminCompaniesPage() {
                 return;
             }
 
-            toast.error("Không thể tạo công ty");
+            toastApiError(error);
         },
     });
 

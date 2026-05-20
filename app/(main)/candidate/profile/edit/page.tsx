@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toastApiError, toastApiSuccess } from "@/lib/axios";
 import { candidateService } from "@/services/candidate.service";
 import { Candidate, JobTypeLabel, LevelLabel } from "@/types";
 import {
@@ -89,24 +90,27 @@ export default function EditProfilePage() {
 
   const updateProfileMutation = useMutation({
     mutationFn: async (payload: Partial<Candidate>) => {
-      await candidateService.updateProfile(payload);
+      const responses: unknown[] = [];
+      responses.push(await candidateService.updateProfile(payload));
 
       if (pendingAvatarFile) {
-        await candidateService.uploadAvatar(pendingAvatarFile);
+        responses.push(await candidateService.uploadAvatar(pendingAvatarFile));
       }
 
       if (pendingResumeFile) {
-        await candidateService.uploadResume(pendingResumeFile);
+        responses.push(await candidateService.uploadResume(pendingResumeFile));
       }
+
+      return responses;
     },
-    onSuccess: () => {
-      toast.success("Đã cập nhật hồ sơ");
+    onSuccess: (responses) => {
+      toastApiSuccess(responses);
       setPendingAvatarFile(null);
       setPendingResumeFile(null);
       queryClient.invalidateQueries({ queryKey: ["candidate-profile"] });
       router.push("/candidate/profile");
     },
-    onError: () => toast.error("Không thể cập nhật hồ sơ"),
+    onError: (error) => toastApiError(error),
   });
 
   const saveExperienceMutation = useMutation({
@@ -127,32 +131,32 @@ export default function EditProfilePage() {
 
       return candidateService.addWorkExperience(requestBody);
     },
-    onSuccess: () => {
-      toast.success("Đã lưu kinh nghiệm làm việc");
+    onSuccess: (response) => {
+      toastApiSuccess(response);
       setExperienceDialogOpen(false);
       setExperienceForm(initialExperienceState);
       queryClient.invalidateQueries({ queryKey: ["candidate-profile"] });
     },
-    onError: () => toast.error("Không thể lưu kinh nghiệm làm việc"),
+    onError: (error) => toastApiError(error),
   });
 
   const deleteExperienceMutation = useMutation({
     mutationFn: (experienceId: string) =>
       candidateService.deleteWorkExperience(experienceId),
-    onSuccess: () => {
-      toast.success("Đã xóa kinh nghiệm làm việc");
+    onSuccess: (response) => {
+      toastApiSuccess(response);
       queryClient.invalidateQueries({ queryKey: ["candidate-profile"] });
     },
-    onError: () => toast.error("Không thể xóa kinh nghiệm làm việc"),
+    onError: (error) => toastApiError(error),
   });
 
   const deleteAccountMutation = useMutation({
     mutationFn: () => candidateService.deleteAccount(),
-    onSuccess: () => {
+    onSuccess: (response) => {
       setDeleteAccountDialogOpen(false);
       queryClient.clear();
       useAuthStore.getState().logout();
-      toast.success("Tài khoản đã được xóa. Đang chuyển về trang đăng nhập...");
+      toastApiSuccess(response);
 
       if (typeof window !== "undefined") {
         window.setTimeout(() => {
@@ -160,7 +164,7 @@ export default function EditProfilePage() {
         }, 1200);
       }
     },
-    onError: () => toast.error("Không thể xóa tài khoản"),
+    onError: (error) => toastApiError(error),
   });
 
   const summaryText = form.SummaryText ?? candidate?.Summary.join("\n") ?? "";

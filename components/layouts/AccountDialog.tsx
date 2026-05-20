@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toastApiError, toastApiSuccess } from "@/lib/axios";
 import { Loader2 } from "lucide-react";
 import { toast } from "react-toastify";
 import { accountService } from "@/services/account.service";
@@ -61,25 +62,32 @@ export default function AccountDialog({
                 throw new Error("missing-account");
             }
 
+            const responses: unknown[] = [];
+
             if (isEditing) {
-                await accountService.updateProfile({
+                const profileResponse = await accountService.updateProfile({
                     FullName: form.FullName.trim(),
                     PhoneNumber: form.PhoneNumber.trim(),
                     Bio: form.Bio.trim(),
                 });
+                responses.push(profileResponse);
             }
 
             if (pendingAvatarFile) {
-                await accountService.uploadAvatar(pendingAvatarFile);
+                const avatarResponse =
+                    await accountService.uploadAvatar(pendingAvatarFile);
+                responses.push(avatarResponse);
             }
+
+            return responses;
         },
-        onSuccess: async () => {
-            toast.success("Đã lưu thay đổi tài khoản");
+        onSuccess: async (responses) => {
+            toastApiSuccess(responses);
             setIsEditing(false);
             setPendingAvatarFile(null);
             await invalidateAccountQueries(queryClient);
         },
-        onError: () => toast.error("Không thể lưu thay đổi tài khoản"),
+        onError: (error) => toastApiError(error),
     });
 
     const signOutMutation = useMutation({

@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useClientPagination } from "@/hooks/use-client-pagination";
+import { toastApiError, toastApiSuccess } from "@/lib/axios";
 import { categoryService } from "@/services/category.service";
 import { AdminCategory } from "@/types";
 import { Badge } from "@/components/ui/badge";
@@ -64,8 +65,8 @@ export default function AdminCategoriesPage() {
 
             return categoryService.updateCategory(dialogState.category!.ID, { name });
         },
-        onSuccess: () => {
-            toast.success(dialogState?.mode === "create" ? "Đã tạo danh mục" : "Đã cập nhật danh mục");
+        onSuccess: (response) => {
+            toastApiSuccess(response);
             setDialogState(null);
             queryClient.invalidateQueries({ queryKey: ["admin-categories"] });
         },
@@ -75,18 +76,18 @@ export default function AdminCategoriesPage() {
                 return;
             }
 
-            toast.error(dialogState?.mode === "create" ? "Không thể tạo danh mục" : "Không thể cập nhật danh mục");
+            toastApiError(error);
         },
     });
 
     const deleteMutation = useMutation({
         mutationFn: (id: string) => categoryService.deleteCategory(id),
-        onSuccess: () => {
-            toast.success("Đã xóa danh mục");
+        onSuccess: (response) => {
+            toastApiSuccess(response);
             setDeleteTarget(null);
             queryClient.invalidateQueries({ queryKey: ["admin-categories"] });
         },
-        onError: () => toast.error("Không thể xóa danh mục"),
+        onError: (error) => toastApiError(error),
     });
 
     const stats = useMemo(() => ({

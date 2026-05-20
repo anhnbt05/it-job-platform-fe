@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useClientPagination } from "@/hooks/use-client-pagination";
+import { toastApiError, toastApiSuccess } from "@/lib/axios";
 import { adminService } from "@/services/admin.service";
 import { AdminUser, AdminUserStatus, AdminUserStatusLabel, UserRole, UserRoleLabel } from "@/types";
 import { useAuthStore } from "@/store/useAuthStore";
@@ -67,13 +68,13 @@ export default function AdminUsersPage() {
                 status: statusDialog.nextStatus!,
                 reason: statusDialog.reason.trim() || undefined,
             }),
-        onSuccess: () => {
-            toast.success("Đã cập nhật trạng thái người dùng");
+        onSuccess: (response) => {
+            toastApiSuccess(response);
             setStatusDialog({ user: null, nextStatus: null, reason: "" });
             queryClient.invalidateQueries({ queryKey: ["admin-users"] });
             queryClient.invalidateQueries({ queryKey: ["admin-user-detail"] });
         },
-        onError: () => toast.error("Không thể cập nhật trạng thái người dùng"),
+        onError: (error) => toastApiError(error),
     });
 
     const stats = useMemo(() => ({

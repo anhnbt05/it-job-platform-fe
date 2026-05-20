@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { toast } from "react-toastify";
+import { toastApiError, toastApiSuccess } from "@/lib/axios";
 import { useAuthStore } from "@/store/useAuthStore";
 import { authService } from "@/services/auth.service";
 import { decodeJwtPayload } from "@/lib/auth-token";
@@ -72,7 +73,7 @@ export default function LoginPage() {
             const userId = payload.id as string;
 
             setAuth(token, refreshToken, role, userId);
-            toast.success("Đăng nhập thành công!");
+            toastApiSuccess(response);
 
             if (role === "recruiter") {
                 router.push("/recruiter/manage-jobs");
@@ -81,8 +82,8 @@ export default function LoginPage() {
             } else {
                 router.push("/candidate/find-jobs");
             }
-        } catch {
-            toast.error("Email hoặc mật khẩu không đúng");
+        } catch (error) {
+            toastApiError(error);
         } finally {
             setIsLoading(false);
         }

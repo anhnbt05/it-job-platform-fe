@@ -123,8 +123,8 @@ export const adminService = {
     );
   },
 
-  async createCompany(payload: CompanyFormValues): Promise<Company> {
-    const response = await api.post("/organization/companies", {
+  createCompany(payload: CompanyFormValues) {
+    return api.post("/organization/companies", {
       name: sanitizeText(payload.Name),
       description: sanitizeText(payload.Description),
       website: sanitizeText(payload.WebsiteUrl),
@@ -132,8 +132,6 @@ export const adminService = {
       location: sanitizeText(payload.Location),
       size: payload.Size ?? undefined,
     });
-
-    return mapCompany(unwrapData<Record<string, unknown>>(response));
   },
 
   updateCompany(id: string, payload: CompanyFormValues) {

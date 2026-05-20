@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toastApiError, toastApiSuccess } from "@/lib/axios";
 import { applicationService } from "@/services/application.service";
 import { ApplicationStatus, ApplicationStatusLabel, JobType, JobTypeLabel, Level, LevelLabel } from "@/types";
 import { Badge } from "@/components/ui/badge";
@@ -50,13 +51,13 @@ export default function CandidateApplicationDetailPage() {
 
     const deleteMutation = useMutation({
         mutationFn: () => applicationService.deleteApplication(applicationId),
-        onSuccess: () => {
-            toast.success("Đã hủy đơn ứng tuyển");
+        onSuccess: (response) => {
+            toastApiSuccess(response);
             queryClient.invalidateQueries({ queryKey: ["applied-jobs"] });
             queryClient.invalidateQueries({ queryKey: ["applied-job-detail", applicationId] });
             router.push("/candidate/applied-jobs");
         },
-        onError: () => toast.error("Không thể hủy đơn ứng tuyển"),
+        onError: (error) => toastApiError(error),
     });
 
     if (isLoading) {

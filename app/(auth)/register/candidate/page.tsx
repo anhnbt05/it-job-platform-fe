@@ -4,6 +4,7 @@ import { useState, KeyboardEvent } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { toast } from "react-toastify";
+import { toastApiError, toastApiSuccess } from "@/lib/axios";
 import { authService } from "@/services/auth.service";
 import { Level, LevelLabel } from "@/types/enums";
 import { Button } from "@/components/ui/button";
@@ -145,7 +146,7 @@ export default function CandidateRegisterPage() {
 
     setIsLoading(true);
     try {
-      await authService.signUpCandidate({
+      const response = await authService.signUpCandidate({
         email: email.trim(),
         password: password.trim(),
         full_name: fullName.trim(),
@@ -172,10 +173,10 @@ export default function CandidateRegisterPage() {
         },
       });
 
-      toast.success("Đăng ký thành công! Vui lòng kiểm tra email để xác thực.");
+      toastApiSuccess(response);
       router.push("/verify-email?email=" + encodeURIComponent(email));
-    } catch {
-      toast.error("Đăng ký thất bại. Vui lòng thử lại.");
+    } catch (error) {
+      toastApiError(error);
     } finally {
       setIsLoading(false);
     }

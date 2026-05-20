@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useClientPagination } from "@/hooks/use-client-pagination";
+import { toastApiError, toastApiSuccess } from "@/lib/axios";
 import { recruiterService } from "@/services/recruiter.service";
 import { CompanyBranch } from "@/types";
 import { Badge } from "@/components/ui/badge";
@@ -85,8 +86,8 @@ export default function RecruiterBranchesPage() {
                 ...payload,
             });
         },
-        onSuccess: async () => {
-            toast.success("Đã tạo chi nhánh");
+        onSuccess: async (response) => {
+            toastApiSuccess(response);
             setDialogState(null);
             await queryClient.invalidateQueries({ queryKey: ["recruiter-branches"] });
         },
@@ -96,7 +97,7 @@ export default function RecruiterBranchesPage() {
                 return;
             }
 
-            toast.error("Không thể tạo chi nhánh");
+            toastApiError(error);
         },
     });
 
@@ -113,8 +114,8 @@ export default function RecruiterBranchesPage() {
 
             return recruiterService.updateBranch(dialogState.branch.ID, payload);
         },
-        onSuccess: async () => {
-            toast.success("Đã cập nhật chi nhánh");
+        onSuccess: async (response) => {
+            toastApiSuccess(response);
             setDialogState(null);
             await queryClient.invalidateQueries({ queryKey: ["recruiter-branches"] });
             await queryClient.invalidateQueries({ queryKey: ["recruiter-profile"] });
@@ -125,7 +126,7 @@ export default function RecruiterBranchesPage() {
                 return;
             }
 
-            toast.error("Không thể cập nhật chi nhánh");
+            toastApiError(error);
         },
     });
 

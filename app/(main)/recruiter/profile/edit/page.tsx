@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toastApiError, toastApiSuccess } from "@/lib/axios";
 import { recruiterService } from "@/services/recruiter.service";
 import { RecruiterInfo } from "@/types";
 import { Button } from "@/components/ui/button";
@@ -145,14 +146,18 @@ function RecruiterProfileFormCard({ recruiter }: { recruiter: RecruiterInfo }) {
                 );
             }
 
-            await Promise.all(requests);
+            const responses = await Promise.all(requests);
 
             if (pendingAvatarFile) {
-                await recruiterService.uploadAvatar(pendingAvatarFile);
+                responses.push(
+                    await recruiterService.uploadAvatar(pendingAvatarFile),
+                );
             }
+
+            return responses;
         },
-        onSuccess: () => {
-            toast.success("Đã cập nhật hồ sơ recruiter, công ty và chi nhánh");
+        onSuccess: (responses) => {
+            toastApiSuccess(responses);
             setPendingAvatarFile(null);
             queryClient.invalidateQueries({ queryKey: ["recruiter-profile"] });
             router.push("/recruiter/profile");
@@ -163,17 +168,17 @@ function RecruiterProfileFormCard({ recruiter }: { recruiter: RecruiterInfo }) {
                 return;
             }
 
-            toast.error("Không thể cập nhật thông tin recruiter");
+            toastApiError(error);
         },
     });
 
     const deleteAccountMutation = useMutation({
         mutationFn: () => recruiterService.deleteAccount(),
-        onSuccess: () => {
+        onSuccess: (response) => {
             setDeleteAccountDialogOpen(false);
             queryClient.clear();
             useAuthStore.getState().logout();
-            toast.success("Tài khoản đã được xóa. Đang chuyển về trang đăng nhập...");
+            toastApiSuccess(response);
 
             if (typeof window !== "undefined") {
                 window.setTimeout(() => {
@@ -181,7 +186,7 @@ function RecruiterProfileFormCard({ recruiter }: { recruiter: RecruiterInfo }) {
                 }, 1200);
             }
         },
-        onError: () => toast.error("Không thể xóa tài khoản"),
+        onError: (error) => toastApiError(error),
     });
 
     const handleSubmit = (event: React.FormEvent) => {

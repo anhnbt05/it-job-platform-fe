@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useClientPagination } from "@/hooks/use-client-pagination";
+import { toastApiError, toastApiSuccess } from "@/lib/axios";
 import { adminService } from "@/services/admin.service";
 import { CompanyBranch, CompanyFormValues } from "@/types";
 import { Badge } from "@/components/ui/badge";
@@ -108,8 +109,8 @@ export default function AdminCompanyDetailPage() {
                 Size: formValues.Size ?? null,
             });
         },
-        onSuccess: async () => {
-            toast.success("Đã cập nhật thông tin công ty");
+        onSuccess: async (response) => {
+            toastApiSuccess(response);
             await queryClient.invalidateQueries({ queryKey: ["admin-companies"] });
             await queryClient.invalidateQueries({ queryKey: ["admin-company-detail", companyId] });
         },
@@ -119,7 +120,7 @@ export default function AdminCompanyDetailPage() {
                 return;
             }
 
-            toast.error("Không thể cập nhật thông tin công ty");
+            toastApiError(error);
         },
     });
 
@@ -142,8 +143,8 @@ export default function AdminCompanyDetailPage() {
                 country: payload.Country,
             });
         },
-        onSuccess: async () => {
-            toast.success("Đã tạo chi nhánh");
+        onSuccess: async (response) => {
+            toastApiSuccess(response);
             setBranchDialogState(null);
             await queryClient.invalidateQueries({ queryKey: ["admin-company-branches", companyId] });
         },
@@ -168,8 +169,8 @@ export default function AdminCompanyDetailPage() {
                 country: payload.Country,
             });
         },
-        onSuccess: async () => {
-            toast.success("Đã cập nhật chi nhánh");
+        onSuccess: async (response) => {
+            toastApiSuccess(response);
             setBranchDialogState(null);
             await queryClient.invalidateQueries({ queryKey: ["admin-company-branches", companyId] });
         },
@@ -833,5 +834,5 @@ function handleBranchMutationError(error: unknown) {
         return;
     }
 
-    toast.error("Không thể cập nhật dữ liệu chi nhánh");
+    toastApiError(error);
 }

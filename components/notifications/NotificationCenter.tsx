@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useClientPagination } from "@/hooks/use-client-pagination";
+import { toastApiError, toastApiSuccess } from "@/lib/axios";
 import { notificationService } from "@/services/notification.service";
 import { UserNotification, UserNotificationType, UserNotificationTypeLabel } from "@/types";
 import { Badge } from "@/components/ui/badge";
@@ -72,24 +73,25 @@ export default function NotificationCenter() {
 
     const markAsReadMutation = useMutation({
         mutationFn: (ids: string[]) => notificationService.markAsRead(ids),
-        onSuccess: () => {
+        onSuccess: (response) => {
+            toastApiSuccess(response);
             queryClient.invalidateQueries({ queryKey: notificationQueryKeys.all });
         },
-        onError: () => toast.error("Không thể cập nhật trạng thái thông báo"),
+        onError: (error) => toastApiError(error),
     });
 
     const deleteNotificationsMutation = useMutation({
         mutationFn: (ids: string[]) => notificationService.deleteNotifications(ids),
-        onSuccess: (_, ids) => {
+        onSuccess: (response, ids) => {
             if (ids.includes(activeNotificationId || "")) {
                 setActiveNotificationId(null);
             }
 
             setSelectedIds((current) => current.filter((id) => !ids.includes(id)));
-            toast.success(ids.length > 1 ? "Đã xóa các thông báo đã chọn" : "Đã xóa thông báo");
+            toastApiSuccess(response);
             queryClient.invalidateQueries({ queryKey: notificationQueryKeys.all });
         },
-        onError: () => toast.error("Không thể xóa thông báo"),
+        onError: (error) => toastApiError(error),
     });
 
     const allNotifications = useMemo(

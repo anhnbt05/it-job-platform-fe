@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toastApiError, toastApiSuccess } from "@/lib/axios";
 import { jobService } from "@/services/job.service";
 import { CreateJobPayload, JobDetail, JobTypeLabel, LevelLabel } from "@/types";
 import { Button } from "@/components/ui/button";
@@ -84,13 +85,13 @@ function EditJobForm({ job, jobId }: { job: JobDetail; jobId: string }) {
 
     const updateMutation = useMutation({
         mutationFn: (data: Partial<CreateJobPayload>) => jobService.updateJob(jobId, data),
-        onSuccess: () => {
-            toast.success("Cập nhật thành công!");
+        onSuccess: (response) => {
+            toastApiSuccess(response);
             queryClient.invalidateQueries({ queryKey: ["recruiter-jobs"] });
             queryClient.invalidateQueries({ queryKey: ["job", jobId] });
             router.push("/recruiter/manage-jobs");
         },
-        onError: () => toast.error("Cập nhật thất bại"),
+        onError: (error) => toastApiError(error),
     });
 
     const handleSubmit = (event: React.FormEvent) => {

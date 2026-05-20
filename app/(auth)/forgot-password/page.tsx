@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { toast } from "react-toastify";
 import { useRouter } from "next/navigation";
+import { toastApiError, toastApiSuccess } from "@/lib/axios";
 import { authService } from "@/services/auth.service";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,11 +26,11 @@ export default function ForgotPasswordPage() {
 
         setIsLoading(true);
         try {
-            await authService.forgotPassword(email.trim());
-            toast.success("Đã gửi mã OTP đến email của bạn");
+            const response = await authService.forgotPassword(email.trim());
+            toastApiSuccess(response);
             router.push("/verify-otp?email=" + encodeURIComponent(email));
-        } catch {
-            toast.error("Không tìm thấy tài khoản với email này");
+        } catch (error) {
+            toastApiError(error);
         } finally {
             setIsLoading(false);
         }

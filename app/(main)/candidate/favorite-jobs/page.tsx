@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useClientPagination } from "@/hooks/use-client-pagination";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toastApiError, toastApiSuccess } from "@/lib/axios";
 import { PaginationBar } from "@/components/ui/pagination-bar";
 import { jobService } from "@/services/job.service";
 import { JobType, JobTypeLabel, Level, LevelLabel } from "@/types";
@@ -41,11 +42,11 @@ export default function FavoriteJobsPage() {
 
     const removeMutation = useMutation({
         mutationFn: (jobId: string) => jobService.removeFavoriteJob(jobId),
-        onSuccess: () => {
-            toast.success("Đã xóa khỏi danh sách yêu thích");
+        onSuccess: (response) => {
+            toastApiSuccess(response);
             queryClient.invalidateQueries({ queryKey: ["favorite-jobs"] });
         },
-        onError: () => toast.error("Không thể xóa công việc"),
+        onError: (error) => toastApiError(error),
     });
 
     return (

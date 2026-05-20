@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toastApiError, toastApiSuccess } from "@/lib/axios";
 import { applicationService } from "@/services/application.service";
 import { candidateService } from "@/services/candidate.service";
 import { jobService } from "@/services/job.service";
@@ -82,11 +83,11 @@ export default function JobDetailPage() {
 
     const favoriteMutation = useMutation({
         mutationFn: () => (isFavorite ? jobService.removeFavoriteJob(jobId) : jobService.addFavoriteJob(jobId)),
-        onSuccess: () => {
-            toast.success(isFavorite ? "Đã bỏ lưu công việc" : "Đã lưu công việc");
+        onSuccess: (response) => {
+            toastApiSuccess(response);
             queryClient.invalidateQueries({ queryKey: ["favorite-jobs"] });
         },
-        onError: () => toast.error("Không thể cập nhật yêu thích"),
+        onError: (error) => toastApiError(error),
     });
 
     const applyMutation = useMutation({
@@ -96,6 +97,7 @@ export default function JobDetailPage() {
             }
 
             let resumeUrl = candidate.ResumeUrl || candidate.ResumeUrls[0] || null;
+            const responses: unknown[] = [];
 
             if (resumeFile) {
                 const uploadResponse = await candidateService.uploadResume(resumeFile);
@@ -106,22 +108,26 @@ export default function JobDetailPage() {
                 };
 
                 resumeUrl = uploadData.data?.resumeUrl ?? resumeUrl;
+                responses.push(uploadResponse);
             }
 
             if (!resumeUrl) {
                 throw new Error("missing-resume");
             }
 
-            return applicationService.applyForJob({
+            const applicationResponse = await applicationService.applyForJob({
                 jobId: job.ID,
                 resumeUrl,
                 candidateName: candidate.FullName ?? "",
                 jobTitle: job.Title,
                 recruiterId: job.RecruiterId,
             });
+
+            responses.push(applicationResponse);
+            return responses;
         },
-        onSuccess: () => {
-            toast.success("Ứng tuyển thành công");
+        onSuccess: (responses) => {
+            toastApiSuccess(responses);
             setApplyDialogOpen(false);
             setResumeFile(null);
             queryClient.invalidateQueries({ queryKey: ["applied-jobs"] });
@@ -133,7 +139,7 @@ export default function JobDetailPage() {
                 return;
             }
 
-            toast.error("Không thể gửi đơn ứng tuyển");
+            toastApiError(error);
         },
     });
 

@@ -7,6 +7,7 @@ import Link from "next/link";
 import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toastApiError, toastApiSuccess } from "@/lib/axios";
 import { candidateService } from "@/services/candidate.service";
 import { categoryService } from "@/services/category.service";
 import { jobService } from "@/services/job.service";
@@ -210,11 +211,11 @@ export default function FindJobsPage() {
 
             return jobService.removeFavoriteJob(jobId);
         },
-        onSuccess: (_, variables) => {
-            toast.success(variables.shouldSave ? "Đã lưu công việc" : "Đã bỏ lưu công việc");
+        onSuccess: (response) => {
+            toastApiSuccess(response);
             queryClient.invalidateQueries({ queryKey: ["favorite-jobs"] });
         },
-        onError: () => toast.error("Không thể cập nhật danh sách yêu thích"),
+        onError: (error) => toastApiError(error),
     });
 
     const filterBadges = useMemo(() => getFilterBadges(filters), [filters]);
