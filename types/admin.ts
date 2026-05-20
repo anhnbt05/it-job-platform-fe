@@ -29,6 +29,9 @@ export interface AdminDashboardSummary {
         accepted: number;
         rejected: number;
     };
+    degraded?: boolean;
+    dependencyStatus?: Record<string, string>;
+    dependencyErrors?: Record<string, string>;
 }
 
 export interface AdminUser {

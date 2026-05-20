@@ -11,7 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
-import { BarChart3, CircleDollarSign, Download, FileSpreadsheet, FileText, Loader2, PieChart as PieChartIcon } from "lucide-react";
+import { BarChart3, CircleAlert, CircleDollarSign, Download, FileSpreadsheet, FileText, Loader2, PieChart as PieChartIcon } from "lucide-react";
 import {
     Bar,
     BarChart,
@@ -60,6 +60,9 @@ export default function AdminDashboardPage() {
 
     const jobStats = summary?.jobStats;
     const applicationStats = summary?.applicationStats;
+    const dependencyErrors = summary?.dependencyErrors
+        ? Object.entries(summary.dependencyErrors)
+        : [];
     const chartColors = {
         grid: "hsl(var(--border))",
         axis: "hsl(var(--muted-foreground))",
@@ -159,6 +162,38 @@ export default function AdminDashboardPage() {
                     </div>
                 </CardContent>
             </Card>
+
+            {summary?.degraded && (
+                <Card className="border-amber-300 bg-amber-50/80 shadow-sm">
+                    <CardContent className="space-y-4 p-5">
+                        <div className="flex items-start gap-3">
+                            <div className="rounded-full bg-amber-100 p-2 text-amber-700">
+                                <CircleAlert size={18} />
+                            </div>
+                            <div className="space-y-1">
+                                <p className="font-semibold text-amber-900">
+                                    Dashboard đang ở chế độ suy giảm
+                                </p>
+                                <p className="text-sm text-amber-800">
+                                    Một hoặc nhiều dịch vụ phụ trợ đang tạm thời không khả dụng. Hệ thống vẫn trả về dữ liệu một phần để quản trị viên tiếp tục theo dõi.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="grid gap-3 md:grid-cols-2">
+                            {dependencyErrors.map(([dependency, error]) => (
+                                <div
+                                    key={dependency}
+                                    className="rounded-xl border border-amber-200 bg-white/80 p-4"
+                                >
+                                    <p className="text-sm font-semibold text-foreground">{dependency}</p>
+                                    <p className="mt-1 text-sm text-muted-foreground">{error}</p>
+                                </div>
+                            ))}
+                        </div>
+                    </CardContent>
+                </Card>
+            )}
 
             {isLoading ? (
                 <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
