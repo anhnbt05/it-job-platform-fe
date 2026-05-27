@@ -101,30 +101,36 @@ export default function AdminCategoriesPage() {
     const filteredCategories = useMemo(() => {
         const keyword = searchTerm.trim().toLowerCase();
 
-        return categories.filter((category) => {
-            const matchesKeyword = !keyword || category.Name.toLowerCase().includes(keyword);
+        return categories
+            .filter((category) => {
+                const matchesKeyword = !keyword || category.Name.toLowerCase().includes(keyword);
 
-            if (!matchesKeyword) {
-                return false;
-            }
+                if (!matchesKeyword) {
+                    return false;
+                }
 
-            if (filter === "all") {
-                return true;
-            }
+                if (filter === "all") {
+                    return true;
+                }
 
-            const updatedAt = category.UpdatedAt ? new Date(category.UpdatedAt) : null;
-            if (!updatedAt || Number.isNaN(updatedAt.getTime())) {
-                return filter === "stale_30d";
-            }
+                const updatedAt = category.UpdatedAt ? new Date(category.UpdatedAt) : null;
+                if (!updatedAt || Number.isNaN(updatedAt.getTime())) {
+                    return filter === "stale_30d";
+                }
 
-            const diffDays = Math.floor((viewTimestamp - updatedAt.getTime()) / (1000 * 60 * 60 * 24));
+                const diffDays = Math.floor((viewTimestamp - updatedAt.getTime()) / (1000 * 60 * 60 * 24));
 
-            if (filter === "updated_7d") {
-                return diffDays <= 7;
-            }
+                if (filter === "updated_7d") {
+                    return diffDays <= 7;
+                }
 
-            return diffDays >= 30;
-        });
+                return diffDays >= 30;
+            })
+            .sort((left, right) => {
+                const rightTime = new Date(right.CreatedAt || right.UpdatedAt || 0).getTime();
+                const leftTime = new Date(left.CreatedAt || left.UpdatedAt || 0).getTime();
+                return rightTime - leftTime;
+            });
     }, [categories, filter, searchTerm, viewTimestamp]);
 
     const {

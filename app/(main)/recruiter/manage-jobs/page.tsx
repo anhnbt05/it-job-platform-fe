@@ -65,21 +65,25 @@ export default function ManageJobsPage() {
         onError: (error) => toastApiError(error),
     });
 
-    const filteredJobs = useMemo(() => (jobs || []).filter((job) => {
-        if (statusFilter !== "all" && job.Status !== statusFilter) return false;
+    const filteredJobs = useMemo(() => {
+        return (jobs || [])
+            .filter((job) => {
+                if (statusFilter !== "all" && job.Status !== statusFilter) return false;
 
-        const keyword = searchTerm.trim().toLowerCase();
-        if (!keyword) return true;
+                const keyword = searchTerm.trim().toLowerCase();
+                if (!keyword) return true;
 
-        return [
-            job.Title,
-            job.Address,
-            job.Salary,
-            ...job.Categories,
-        ]
-            .filter(Boolean)
-            .some((value) => value.toLowerCase().includes(keyword));
-    }), [jobs, searchTerm, statusFilter]);
+                return [
+                    job.Title,
+                    job.Address,
+                    job.Salary,
+                    ...job.Categories,
+                ]
+                    .filter(Boolean)
+                    .some((value) => value.toLowerCase().includes(keyword));
+            })
+            .sort((left, right) => new Date(right.PostedAt).getTime() - new Date(left.PostedAt).getTime());
+    }, [jobs, searchTerm, statusFilter]);
 
     const {
         currentPage,
