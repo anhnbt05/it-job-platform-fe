@@ -5,8 +5,10 @@ import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toastApiError, toastApiSuccess } from "@/lib/axios";
+import { categoryService } from "@/services/category.service";
 import { jobService } from "@/services/job.service";
 import { CreateJobPayload, JobDetail, JobTypeLabel, LevelLabel } from "@/types";
+import { CategoryMultiSelect } from "@/components/jobs/CategoryMultiSelect";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -24,7 +26,7 @@ type JobFormState = {
     Vacancies: number;
     Type: string;
     Level: string;
-    Categories: string;
+    Categories: string[];
     JobDescriptions: string;
     JobRequirements: string;
     JobBenefits: string;
@@ -73,7 +75,7 @@ function EditJobForm({ job, jobId }: { job: JobDetail; jobId: string }) {
         Vacancies: job.Vacancies || 1,
         Type: job.Type || "",
         Level: job.Level || "",
-        Categories: job.Categories?.join("\n") || "",
+        Categories: job.Categories || [],
         JobDescriptions: job.JobDescriptions?.join("\n") || "",
         JobRequirements: job.JobRequirements?.join("\n") || "",
         JobBenefits: job.JobBenefits?.join("\n") || "",
@@ -94,6 +96,11 @@ function EditJobForm({ job, jobId }: { job: JobDetail; jobId: string }) {
         onError: (error) => toastApiError(error),
     });
 
+    const { data: categories = [], isLoading: isLoadingCategories } = useQuery({
+        queryKey: ["categories"],
+        queryFn: () => categoryService.getCategories(),
+    });
+
     const handleSubmit = (event: React.FormEvent) => {
         event.preventDefault();
 
@@ -109,13 +116,13 @@ function EditJobForm({ job, jobId }: { job: JobDetail; jobId: string }) {
             return;
         }
 
-        const categories = splitLines(form.Categories);
+        const selectedCategories = form.Categories.map((category) => category.trim()).filter(Boolean);
         const descriptions = splitLines(form.JobDescriptions);
         const requirements = splitLines(form.JobRequirements);
         const benefits = splitLines(form.JobBenefits);
 
-        if (categories.length === 0 || descriptions.length === 0 || requirements.length === 0 || benefits.length === 0) {
-            toast.error("Vui lòng nhập ít nhất 1 dòng cho danh mục, mô tả, yêu cầu và quyền lợi");
+        if (selectedCategories.length === 0 || descriptions.length === 0 || requirements.length === 0 || benefits.length === 0) {
+            toast.error("Vui lòng chọn ít nhất 1 lĩnh vực và nhập mô tả, yêu cầu, quyền lợi");
             return;
         }
 
@@ -126,7 +133,7 @@ function EditJobForm({ job, jobId }: { job: JobDetail; jobId: string }) {
             Vacancies: form.Vacancies,
             Type: form.Type,
             Level: form.Level,
-            Categories: categories,
+            Categories: selectedCategories,
             JobDescriptions: descriptions,
             JobRequirements: requirements,
             JobBenefits: benefits,
@@ -204,8 +211,14 @@ function EditJobForm({ job, jobId }: { job: JobDetail; jobId: string }) {
                     </CardHeader>
                     <CardContent className="space-y-4">
                         <div className="space-y-2">
-                            <Label>Lĩnh vực (mỗi dòng 1)</Label>
-                            <Textarea value={form.Categories} onChange={(event) => setForm((current) => ({ ...current, Categories: event.target.value }))} rows={3} />
+                            <Label>Lĩnh vực</Label>
+                            <CategoryMultiSelect
+                                categories={categories}
+                                value={form.Categories}
+                                onChange={(value) => setForm((current) => ({ ...current, Categories: value }))}
+                                isLoading={isLoadingCategories}
+                                placeholder="Chọn một hoặc nhiều lĩnh vực"
+                            />
                         </div>
                         <div className="space-y-2">
                             <Label>Mô tả công việc</Label>

@@ -2,10 +2,12 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { toastApiError, toastApiSuccess } from "@/lib/axios";
+import { categoryService } from "@/services/category.service";
 import { jobService } from "@/services/job.service";
 import { CreateJobPayload, JobTypeLabel, LevelLabel } from "@/types";
+import { CategoryMultiSelect } from "@/components/jobs/CategoryMultiSelect";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,7 +27,7 @@ export default function PostJobPage() {
         Vacancies: 1,
         Type: "" as string,
         Level: "" as string,
-        Categories: "",
+        Categories: [] as string[],
         JobDescriptions: "",
         JobRequirements: "",
         JobBenefits: "",
@@ -45,6 +47,11 @@ export default function PostJobPage() {
             router.push("/recruiter/manage-jobs");
         },
         onError: (error) => toastApiError(error),
+    });
+
+    const { data: categories = [], isLoading: isLoadingCategories } = useQuery({
+        queryKey: ["categories"],
+        queryFn: () => categoryService.getCategories(),
     });
 
     const computeSalary = () => {
@@ -72,13 +79,13 @@ export default function PostJobPage() {
             return;
         }
 
-        const categories = form.Categories.split("\n").map((s) => s.trim()).filter(Boolean);
+        const selectedCategories = form.Categories.map((category) => category.trim()).filter(Boolean);
         const descriptions = form.JobDescriptions.split("\n").map((s) => s.trim()).filter(Boolean);
         const requirements = form.JobRequirements.split("\n").map((s) => s.trim()).filter(Boolean);
         const benefits = form.JobBenefits.split("\n").map((s) => s.trim()).filter(Boolean);
 
-        if (categories.length === 0 || descriptions.length === 0 || requirements.length === 0 || benefits.length === 0) {
-            toast.error("Vui lòng nhập ít nhất 1 dòng cho danh mục, mô tả, yêu cầu và quyền lợi");
+        if (selectedCategories.length === 0 || descriptions.length === 0 || requirements.length === 0 || benefits.length === 0) {
+            toast.error("Vui lòng chọn ít nhất 1 lĩnh vực và nhập mô tả, yêu cầu, quyền lợi");
             return;
         }
 
@@ -89,7 +96,7 @@ export default function PostJobPage() {
             Vacancies: form.Vacancies,
             Type: form.Type,
             Level: form.Level,
-            Categories: categories,
+            Categories: selectedCategories,
             JobDescriptions: descriptions,
             JobRequirements: requirements,
             JobBenefits: benefits,
@@ -166,8 +173,14 @@ export default function PostJobPage() {
                     </CardHeader>
                     <CardContent className="space-y-4">
                         <div className="space-y-2">
-                            <Label>Lĩnh vực (mỗi dòng 1 lĩnh vực)</Label>
-                            <Textarea value={form.Categories} onChange={(e) => setForm({ ...form, Categories: e.target.value })} placeholder={"VD:\nReactJS\nNodeJS\nTypeScript"} rows={3} />
+                            <Label>Lĩnh vực</Label>
+                            <CategoryMultiSelect
+                                categories={categories}
+                                value={form.Categories}
+                                onChange={(value) => setForm({ ...form, Categories: value })}
+                                isLoading={isLoadingCategories}
+                                placeholder="Chọn một hoặc nhiều lĩnh vực"
+                            />
                         </div>
                         <div className="space-y-2">
                             <Label>Mô tả công việc (mỗi dòng 1 mục)</Label>
